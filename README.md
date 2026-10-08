@@ -1,53 +1,41 @@
 # Leva Já
 
-Aplicação mobile de pedidos e entregas, orientada ao mercado angolano. Esta primeira versão estabelece o MVP visual com dados mockados e uma arquitectura preparada para integração com backend.
+Aplicação mobile de assistência automóvel e reboque em Luanda. Esta fase é inteiramente navegável com dados mockados, para validar o fluxo e a experiência antes da integração com backend.
+
+## Fluxo actual
+
+1. Início com pedido rápido de assistência
+2. Selecção do problema: reboque, bateria, pneu, combustível ou outro
+3. Escolha da viatura
+4. Confirmação da localização e destino opcional
+5. Estimativa de preço e tempo de chegada
+6. Procura de prestador verificado
+7. Acompanhamento do reboque, suporte e avaliação
+8. Histórico de assistências e perfil
 
 ## Stack
 
 - Expo + React Native + TypeScript
-- Expo Router para navegação
-- NativeWind para estilos utilitários
-- Zustand para estado de interface
-- TanStack Query preparado para dados remotos
-- React Hook Form + Zod para formulários
-- Reanimated, Moti e Gesture Handler para animações
-- Gorhom Bottom Sheet, FlashList e Expo Image
-- MMKV e Secure Store preparados para persistência e sessão
-
-## Estrutura
-
-```text
-src/
-├── app/             # rotas Expo Router
-├── components/      # UI reutilizável
-├── mocks/           # dados da Fase 1
-├── providers/       # providers globais
-├── services/        # cliente HTTP
-├── stores/          # Zustand
-├── theme/           # tokens de tema
-└── types/           # contratos partilhados
-```
+- Expo Router
+- NativeWind
+- Zustand para estado mockado
+- TanStack Query preparado para integração futura
+- React Hook Form + Zod
+- Moti e Reanimated
 
 ## Começar
 
 ```bash
 npm install
-npx expo start --dev-client
+npx expo start --web
 ```
 
-> Para testar apenas no Expo Go durante a fase visual, pode usar `npx expo start`. Recursos com módulos nativos, como MMKV, requerem Development Build.
+## Limites desta fase
 
-## Estado do MVP
+- Não há chamadas de API reais, pagamentos ou geolocalização real.
+- Valores, viaturas, localização, condutores e estados são mocks.
+- A navegação e as telas representam o fluxo do cliente para validação UI/UX.
 
-- [x] Navegação por separadores e detalhe de pedido
-- [x] Design system inicial e suporte de tema preparado
-- [x] Dados mockados e store Zustand
-- [x] Animação de entrada e bottom sheet
-- [ ] Autenticação e perfil real
-- [ ] Catálogo, carrinho e checkout
-- [ ] GPS, pagamentos, chat e notificações
-- [ ] Backend Hono + PostgreSQL + Drizzle
+## Próxima fase
 
-## Backend planeado
-
-Hono.js + TypeScript + Drizzle ORM + PostgreSQL. Redis, WebSockets e serviços de pagamento entram na Fase 2.
+Integrar backend, localização/GPS, mapa, disponibilidade de prestadores, chat, notificações e pagamentos.
