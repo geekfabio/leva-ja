@@ -18,7 +18,7 @@ export function AuthScaffold({ title, description, children, showBack = true, fo
       <View className="flex-1 px-6 pb-6 pt-3">
         <View className="mb-10 flex-row items-center justify-between">
           {showBack ? <View className="h-10 w-10 items-center justify-center rounded-2xl bg-white dark:bg-slate-900" onTouchEnd={() => router.back()}><ChevronLeft size={22} color="#17212B" /></View> : <View className="w-10" />}
-          <BrandMark compact />
+          <BrandMark />
           <View className="w-10" />
         </View>
 

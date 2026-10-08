@@ -22,6 +22,14 @@ O símbolo combina um camião-reboque, gancho e viatura. Representa assistência
 - Usar a marca verbal **LEVA JÁ** em tipografia forte, sem alterar o acento em “JÁ”.
 - Não usar laranja nem iconografia de entrega para esta aplicação.
 
+### Aplicação nas telas
+
+- **Splash nativa:** símbolo central, configurado em `app.json`.
+- **Boas-vindas e onboarding:** logótipo verbal no topo e símbolo no destaque visual.
+- **Telefone, OTP, localização e morada:** logótipo verbal no cabeçalho de autenticação.
+- **Fluxo de pedido, suporte, detalhe e conta:** símbolo compacto no cabeçalho, sem competir com a acção principal.
+- **Início:** símbolo compacto junto das notificações para reforçar a marca após a entrada.
+
 ## Cores
 
 | Nome | Hex |
