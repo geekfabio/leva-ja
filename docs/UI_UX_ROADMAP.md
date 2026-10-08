@@ -1,70 +1,40 @@
-# Leva Já — plano de UI/UX do MVP
+# Roadmap UI/UX — Leva Já
 
-O objectivo é criar uma experiência mobile directa, segura e adaptada a utilizadores que fazem pedidos rapidamente, sobretudo a partir de telemóvel.
+## Princípios
 
-## Etapa 1 — Fundação visual e entrada
+- Priorizar segurança e clareza sob pressão.
+- Manter sempre uma acção principal visível.
+- Mostrar preço e prazo antes de confirmar o pedido.
+- Usar texto directo, contraste alto e áreas de toque generosas.
+- Não simular funcionalidades reais: toda a fase usa dados mockados identificáveis.
 
-**Foco:** confiança desde o primeiro ecrã, marca consistente e navegação clara.
+## Telas do cliente
 
-- Splash e boas-vindas
-- Onboarding curto (como pedir, acompanhar e receber)
-- Entrar/criar conta por número de telefone
-- Validação OTP
-- Permissão de localização
-- Escolha do endereço inicial
+| Etapa | Tela | Decisão principal |
+| --- | --- | --- |
+| Entrada | Boas-vindas e onboarding | Conhecer serviço e activar conta |
+| Pedido | Início | Pedir assistência ou consultar pedido activo |
+| Pedido | Tipo de problema | Identificar o serviço certo |
+| Pedido | Viatura | Preparar o prestador |
+| Pedido | Localização | Definir recolha e destino opcional |
+| Pedido | Estimativa | Conhecer valor e ETA antes de confirmar |
+| Pedido | Procura | Saber que o pedido está a ser processado |
+| Acompanhamento | Detalhe da assistência | Consultar condutor, estado e suporte |
+| Pós-serviço | Avaliação | Registar qualidade do atendimento |
+| Gestão | Histórico e perfil | Rever assistências, viaturas e preferências |
 
-## Etapa 2 — Descoberta e catálogo
+## Melhorias incluídas nesta iteração
 
-**Foco:** permitir que o utilizador encontre o que procura em poucos toques.
+- Conversão do antigo modelo de entregas para assistência automóvel.
+- Hierarquia visual verde, preta e branca, com CTA consistente.
+- Sequência linear em quatro passos antes da confirmação.
+- Cartão de assistência activa sempre acessível no início.
+- Estados de pedido legíveis: procura, a caminho e concluído.
+- Suporte contextual com aviso de segurança.
 
-- Início com endereço, pesquisa e categorias
-- Pesquisa e resultados
-- Categorias: restaurantes, mercado, farmácia e entregas
-- Listagem de parceiros
-- Página do parceiro / loja
-- Detalhe de produto e personalização
-- Favoritos
+## Próxima iteração UI/UX
 
-## Etapa 3 — Pedido e checkout
-
-**Foco:** reduzir fricção entre a escolha e a confirmação.
-
-- Carrinho
-- Cupão e resumo de valores
-- Escolha ou criação de endereço
-- Instruções de entrega
-- Escolha de pagamento
-- Confirmação do pedido
-
-## Etapa 4 — Acompanhamento e suporte
-
-**Foco:** dar visibilidade, confiança e ajuda em tempo real.
-
-- Estado do pedido em tempo real
-- Mapa e ETA do entregador
-- Perfil do entregador
-- Ligar ou conversar com o entregador
-- Centro de ajuda / reportar problema
-- Avaliação e gorjeta após a entrega
-
-## Etapa 5 — Conta e retenção
-
-**Foco:** facilitar repetição de compras e gestão da conta.
-
-- Histórico e detalhe de pedidos
-- Repetir pedido
-- Perfil pessoal
-- Endereços guardados
-- Métodos de pagamento
-- Notificações e preferências
-- Definições, suporte e termos
-
-## Aplicações futuras separadas
-
-O MVP do cliente deve ficar separado das experiências seguintes:
-
-| Produto | Telas principais |
-| --- | --- |
-| Entregador | disponibilidade, aceitar pedido, navegação, ganhos, suporte |
-| Parceiro/loja | pedidos, preparação, catálogo, horários, relatórios |
-| Administração web | pedidos, utilizadores, parceiros, entregadores, pagamentos, suporte e métricas |
+1. Substituir o mapa mockado por mapa real e permissões explícitas.
+2. Criar estados vazios, erros e indisponibilidade por zona.
+3. Testar tamanhos de letra, contraste e leitor de ecrã.
+4. Testar o fluxo com condutores e clientes em Luanda.
