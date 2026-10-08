@@ -32,6 +32,35 @@
 - Estados de pedido legíveis: procura, a caminho e concluído.
 - Suporte contextual com aviso de segurança.
 
+## Cobertura actual e páginas em falta
+
+| Área | Estado | Página/fluxo em falta |
+| --- | --- | --- |
+| Entrada | Parcial | Splash screen nativa configurada; falta validar em dispositivo e criar estados de sessão persistente. |
+| Autenticação | Parcial | Telefone e OTP mockados existem; faltam reenvio de código, erro/bloqueio e sessão real. |
+| Pedido | Parcial | Falta seleccionar destino no mapa, notas/fotos do incidente e confirmação de pagamento. |
+| Acompanhamento | Parcial | Falta mapa GPS real, chat com o condutor, ligação activa e notificações push. |
+| Gestão | Parcial | Faltam CRUD real de viaturas, moradas e métodos de pagamento. |
+| Pós-serviço | Parcial | Falta recibo/factura, detalhe de preço final, cancelamento com motivo e resolução de reclamações. |
+| Segurança | Em falta | Falta botão SOS, contactos de emergência e consentimento explícito de localização. |
+| Prestador | Em falta | Falta aplicação/portal do condutor: disponibilidade, aceitar serviço, navegação e ganhos. |
+| Administração | Em falta | Falta painel web para pedidos, prestadores, zonas, preços, suporte e métricas. |
+
+### Rotas legadas a remover ou substituir
+
+As rotas de e-commerce ainda presentes no repositório (`cart`, `checkout`, `category`, `merchant`, `product`, `search` e componentes/mocks `commerce`) não fazem parte do Leva Já. Não estão expostas no fluxo novo e devem ser removidas na próxima limpeza técnica.
+
+## Activos de marca
+
+| Activo | Uso |
+| --- | --- |
+| `assets/brand/leva-ja-mark.png` | Símbolo principal e marca na app |
+| `assets/icons/app-icon.png` | Ícone para lojas e dispositivos |
+| `assets/icons/adaptive-icon.png` | Ícone Android adaptativo |
+| `assets/icons/favicon.png` | Favicon web |
+
+Paleta aprovada: verde `#16A34A`, quase-preto `#102018` e branco `#FFFFFF`.
+
 ## Próxima iteração UI/UX
 
 1. Substituir o mapa mockado por mapa real e permissões explícitas.
