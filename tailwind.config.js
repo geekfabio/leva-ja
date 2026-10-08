@@ -5,10 +5,10 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        brand: { DEFAULT: "#FF5B26", dark: "#E94A18", soft: "#FFF0EA" },
-        ink: "#17212B",
-        muted: "#6B7280",
-        surface: "#F8FAFC"
+        brand: { DEFAULT: "#16A34A", dark: "#15803D", soft: "#DCFCE7" },
+        ink: "#102018",
+        muted: "#64748B",
+        surface: "#F6F8F6"
       },
       borderRadius: { xl: "20px", '2xl': "28px" }
     }
