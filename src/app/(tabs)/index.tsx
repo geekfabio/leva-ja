@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import { BatteryCharging, Bell, CarFront, CircleHelp, Fuel, MapPin, ShieldCheck, Wrench } from 'lucide-react-native';
 import { MotiView } from 'moti';
 import { SectionTitle } from '@/components/ui/SectionTitle';
+import { BrandMark } from '@/components/ui/BrandMark';
 import { useOrderStore } from '@/stores/useOrderStore';
 
 const services = [
@@ -20,7 +21,7 @@ export default function HomeScreen() {
       <ScrollView contentContainerClassName="px-5 pb-28 pt-16">
         <View className="mb-7 flex-row items-center justify-between">
           <View><Text className="text-sm text-muted">Olá, Armando</Text><Text className="mt-1 text-2xl font-black text-ink dark:text-white">Como te ajudamos?</Text></View>
-          <Pressable accessibilityLabel="Notificações" className="h-11 w-11 items-center justify-center rounded-2xl bg-white dark:bg-slate-900"><Bell size={20} color="#102018" /></Pressable>
+          <View className="flex-row items-center gap-3"><BrandMark compact /><Pressable accessibilityLabel="Notificações" className="h-11 w-11 items-center justify-center rounded-2xl bg-white dark:bg-slate-900"><Bell size={20} color="#102018" /></Pressable></View>
         </View>
         <MotiView from={{ opacity: 0, translateY: 12 }} animate={{ opacity: 1, translateY: 0 }} transition={{ type: 'timing', duration: 450 }} className="mb-7 overflow-hidden rounded-[30px] bg-ink p-6">
           <View className="absolute -right-8 -top-9 h-40 w-40 rounded-full bg-brand/30" />
