@@ -36,6 +36,17 @@ npx expo start --web
 - Valores, viaturas, localização, condutores e estados são mocks.
 - A navegação e as telas representam o fluxo do cliente para validação UI/UX.
 
+## Identidade visual
+
+- Logótipo/símbolo: `assets/brand/leva-ja-mark.png`
+- Logótipos wordmark: `assets/brand/leva-ja-wordmark-light.svg` e `assets/brand/leva-ja-wordmark-dark.svg`
+- Ícone da aplicação: `assets/icons/app-icon.png`
+- Ícone Android adaptativo: `assets/icons/adaptive-icon.png`
+- Favicon web: `assets/icons/favicon.png`
+- Paleta: verde `#16A34A`, quase-preto `#102018` e branco `#FFFFFF`
+
+Os activos estão ligados em `app.json` para Android, iOS/web e splash screen.
+
 ## Próxima fase
 
 Integrar backend, localização/GPS, mapa, disponibilidade de prestadores, chat, notificações e pagamentos.

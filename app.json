@@ -4,12 +4,19 @@
     "slug": "leva-ja",
     "scheme": "levaja",
     "version": "0.1.0",
+    "icon": "./assets/icons/app-icon.png",
+    "splash": {
+      "image": "./assets/brand/leva-ja-mark.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#102018"
+    },
+    "web": { "favicon": "./assets/icons/favicon.png" },
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "plugins": ["expo-router", "expo-secure-store", "expo-location", "expo-notifications"],
     "experiments": { "typedRoutes": true },
-    "android": { "package": "ao.leva.app" },
+    "android": { "package": "ao.leva.app", "adaptiveIcon": { "foregroundImage": "./assets/icons/adaptive-icon.png", "backgroundColor": "#16A34A" } },
     "ios": { "bundleIdentifier": "ao.leva.app" }
   }
 }

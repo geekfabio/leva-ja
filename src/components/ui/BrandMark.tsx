@@ -1,5 +1,4 @@
-import { Text, View } from 'react-native';
-import { ArrowUpRight } from 'lucide-react-native';
+import { Image, Text, View } from 'react-native';
 
 type BrandMarkProps = {
   compact?: boolean;
@@ -11,8 +10,8 @@ export function BrandMark({ compact = false, inverse = false }: BrandMarkProps) 
 
   return (
     <View className="flex-row items-center gap-2">
-      <View className="h-10 w-10 items-center justify-center rounded-2xl bg-brand shadow-sm">
-        <ArrowUpRight size={22} color="#FFFFFF" strokeWidth={2.8} />
+      <View className="h-10 w-10 items-center justify-center overflow-hidden rounded-2xl bg-brand shadow-sm">
+        <Image source={require('../../../assets/brand/leva-ja-mark.png')} className="h-10 w-10" resizeMode="contain" accessibilityLabel="Símbolo Leva Já" />
       </View>
       {!compact ? <Text className={`text-lg font-black tracking-tight ${wordmark}`}>LEVA JÁ</Text> : null}
     </View>
