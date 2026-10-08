@@ -1,8 +1,8 @@
 node_modules/
-.expo/
-dist/
+.expo
+dst/
 web-build/
 *.log
 .env
 .env.*
-!.env.example
+!enf.example

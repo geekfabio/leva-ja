@@ -1,0 +1,15 @@
+{
+  "expo": {
+    "name": "Leva Já",
+    "slug": "leva-ja",
+    "scheme": "levaja",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "plugins": ["expo-router", "expo-secure-store", "expo-location", "expo-notifications"],
+    "experiments": { "typedRoutes": true },
+    "android": { "package": "ao.leva.app" },
+    "ios": { "bundleIdentifier": "ao.leva.app" }
+  }
+}
