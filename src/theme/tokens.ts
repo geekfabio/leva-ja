@@ -8,6 +8,9 @@ export const tokens = {
     primary: '#FF5B26',
     primarySoft: '#FFF0EA',
     success: '#16A34A',
+    warning: '#D97706',
+    info: '#2563EB',
+    overlay: 'rgba(23, 33, 43, 0.60)',
   },
   dark: {
     background: '#101820',
@@ -18,5 +21,8 @@ export const tokens = {
     primary: '#FF7A4F',
     primarySoft: '#3B251C',
     success: '#4ADE80',
+    warning: '#FBBF24',
+    info: '#60A5FA',
+    overlay: 'rgba(0, 0, 0, 0.68)',
   },
 } as const;
