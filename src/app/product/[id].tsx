@@ -1,0 +1,7 @@
+import { Image, ScrollView, Text, View } from 'react-native';
+import { router, useLocalSearchParams } from 'expo-router';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { AppButton } from '@/components/ui/AppButton';
+import { products } from '@/mocks/commerce';
+import { useCartStore } from '@/stores/useCartStore';
+export default function ProductScreen() { const { id } = useLocalSearchParams<{ id: string }>(); const product = products.find((item) => item.id === id) ?? products[0]; const add = useCartStore((state) => state.add); return <View className="flex-1 bg-surface px-5 dark:bg-slate-950"><ScreenHeader title="Detalhe do produto" /><ScrollView contentContainerClassName="pb-28"><Image source={{ uri: product.image }} className="h-72 w-full rounded-3xl" /><View className="mt-6"><Text className="text-3xl font-black text-ink dark:text-white">{product.name}</Text><Text className="mt-4 text-base leading-7 text-muted">{product.description}</Text><View className="mt-7 rounded-2xl bg-white p-4 dark:bg-slate-900"><Text className="text-sm text-muted">Preço</Text><Text className="mt-1 text-2xl font-black text-ink dark:text-white">{product.price.toLocaleString('pt-PT')} Kz</Text></View></View></ScrollView><View className="absolute bottom-5 left-5 right-5"><AppButton label="Adicionar ao carrinho" onPress={() => { add(product); router.push('/cart'); }} /></View></View>; }

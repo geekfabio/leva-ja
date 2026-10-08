@@ -9,6 +9,7 @@ export default function RootLayout() {
     <AppProviders>
       <StatusBar style="dark" />
       <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
+        <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="order/[id]" options={{ presentation: 'modal' }} />
         <Stack.Screen name="welcome" />

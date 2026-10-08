@@ -1,0 +1,6 @@
+import { Text, View } from 'react-native';
+import { router } from 'expo-router';
+import { CircleCheckBig, ReceiptText } from 'lucide-react-native';
+import { AppButton } from '@/components/ui/AppButton';
+import { useCartStore } from '@/stores/useCartStore';
+export default function ConfirmedScreen() { const clear = useCartStore((state) => state.clear); return <View className="flex-1 justify-between bg-ink px-6 pb-12 pt-20"><View><View className="mb-8 h-20 w-20 items-center justify-center rounded-[28px] bg-brand"><CircleCheckBig size={44} color="#FFFFFF" /></View><Text className="text-4xl font-black leading-tight text-white">Pedido confirmado!</Text><Text className="mt-4 max-w-sm text-base leading-7 text-slate-300">Recebemos o teu pedido. Vais acompanhar cada actualização aqui na app.</Text><View className="mt-10 rounded-3xl bg-white/10 p-5"><View className="flex-row items-center gap-3"><ReceiptText size={22} color="#FDBA74" /><View><Text className="font-black text-white">Pedido #LJ-2602</Text><Text className="mt-1 text-sm text-slate-300">Tempo estimado: 25–35 min</Text></View></View></View></View><View className="gap-3"><AppButton label="Acompanhar pedido" onPress={() => { clear(); router.replace('/order/LJ-2601'); }} /><AppButton label="Voltar ao início" variant="ghost" onPress={() => { clear(); router.replace('/(tabs)'); }} /></View></View>; }

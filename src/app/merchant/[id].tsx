@@ -1,0 +1,8 @@
+import { Image, ScrollView, Text, View } from 'react-native';
+import { router, useLocalSearchParams } from 'expo-router';
+import { Clock3, Star } from 'lucide-react-native';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { ProductCard } from '@/components/commerce/ProductCard';
+import { merchants, products } from '@/mocks/commerce';
+import { useCartStore } from '@/stores/useCartStore';
+export default function MerchantScreen() { const { id } = useLocalSearchParams<{ id: string }>(); const merchant = merchants.find((item) => item.id === id) ?? merchants[0]; const add = useCartStore((state) => state.add); return <View className="flex-1 bg-surface px-5 dark:bg-slate-950"><ScreenHeader title="Parceiro" /><ScrollView contentContainerClassName="pb-8"><Image source={{ uri: merchant.image }} className="h-48 w-full rounded-3xl" /><View className="mt-5"><Text className="text-2xl font-black text-ink dark:text-white">{merchant.name}</Text><Text className="mt-1 text-muted">{merchant.category}</Text><View className="mt-3 flex-row gap-4"><View className="flex-row items-center gap-1"><Star size={15} fill="#F59E0B" color="#F59E0B" /><Text className="text-sm font-bold text-ink dark:text-white">{merchant.rating}</Text></View><View className="flex-row items-center gap-1"><Clock3 size={15} color="#FF5B26" /><Text className="text-sm text-muted">{merchant.eta}</Text></View></View></View><Text className="mb-3 mt-8 text-xl font-black text-ink dark:text-white">Escolhe o teu pedido</Text>{products.filter((product) => product.merchantId === merchant.id).map((product) => <ProductCard key={product.id} product={product} onPress={() => router.push(`/product/${product.id}`)} onAdd={() => add(product)} />)}</ScrollView></View>; }
