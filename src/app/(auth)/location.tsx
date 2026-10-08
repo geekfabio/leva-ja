@@ -14,11 +14,11 @@ export default function LocationScreen() {
   }
 
   return (
-    <AuthScaffold title="Onde vais receber?" description="A tua localização ajuda-nos a mostrar serviços disponíveis e calcular a entrega." showBack={false}>
+    <AuthScaffold title="Em que zona estás?" description="A tua localização ajuda-nos a mostrar serviços disponíveis perto de ti." showBack={false}>
       <View className="items-center rounded-3xl bg-white px-6 py-9 dark:bg-slate-900">
-        <View className="mb-6 h-24 w-24 items-center justify-center rounded-[32px] bg-brand-soft"><MapPin size={42} color="#FF5B26" /></View>
+        <View className="mb-6 h-24 w-24 items-center justify-center rounded-[32px] bg-brand-soft"><MapPin size={42} color="#16A34A" /></View>
         <Text className="text-center text-xl font-black text-ink dark:text-white">A tua área define o que está disponível.</Text>
-        <Text className="mt-3 text-center text-sm leading-6 text-muted">Usamos a localização apenas para preparar a tua experiência de entrega.</Text>
+        <Text className="mt-3 text-center text-sm leading-6 text-muted">Usamos a localização apenas para mostrar assistência na tua área.</Text>
       </View>
       <View className="mt-6 gap-3"><AppButton label={locating ? 'A localizar...' : 'Usar a minha localização'} icon={<LocateFixed size={18} color="white" />} onPress={requestLocation} /><AppButton label="Introduzir morada manualmente" variant="ghost" onPress={() => router.push('/(auth)/address')} /></View>
     </AuthScaffold>
