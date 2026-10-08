@@ -1,4 +1,4 @@
-export type OrderStatus = 'preparing' | 'on_the_way' | 'delivered';
+export type OrderStatus = 'matching' | 'on_the_way' | 'completed';
 
 export type Order = {
   id: string;
@@ -9,4 +9,7 @@ export type Order = {
   status: OrderStatus;
   image: string;
   address: string;
+  vehicle: string;
+  provider?: string;
+  plate?: string;
 };
