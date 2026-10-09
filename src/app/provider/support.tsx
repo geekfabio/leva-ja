@@ -1,0 +1,5 @@
+import { Pressable, ScrollView, Text, View } from 'react-native';
+import { router } from 'expo-router';
+import { MessageCircle, ShieldAlert } from 'lucide-react-native';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
+export default function ProviderSupport() { return <View className="flex-1 bg-surface px-5 dark:bg-slate-950"><ScreenHeader title="Ajuda e incidentes" subtitle="Suporte ao prestador" /><ScrollView><Pressable onPress={() => router.push('/order/chat')} className="mb-3 flex-row gap-3 rounded-2xl bg-white p-5 dark:bg-slate-900"><MessageCircle size={23} color="#16A34A" /><View><Text className="font-black text-ink dark:text-white">Falar com suporte</Text><Text className="mt-1 text-sm text-muted">Chat local com anexos mockados</Text></View></Pressable><Pressable className="flex-row gap-3 rounded-2xl bg-red-50 p-5"><ShieldAlert size={23} color="#DC2626" /><View><Text className="font-black text-red-700">Reportar incidente</Text><Text className="mt-1 text-sm text-red-700">Regista um problema durante o serviço.</Text></View></Pressable></ScrollView></View>; }
