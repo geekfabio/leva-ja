@@ -4,6 +4,7 @@ export const activeOrder: Order = {
   id: 'LJ-2601', merchant: 'Reboque urgente', category: 'Reboque de viatura', amount: 18500, etaMinutes: 18,
   status: 'on_the_way',
   address: 'Rua da Missão, Ingombota', vehicle: 'Toyota Corolla · 2015', provider: 'João Manuel', plate: 'LD-42-18-AF',
+  destination: 'Oficina Auto Centro, Maianga', paymentMethod: 'Referência Multicaixa', paymentStatus: 'confirmed', incidentNote: 'Motor desligou durante a condução.', severity: 'medium',
   image: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=900&q=80',
 };
 

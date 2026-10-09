@@ -2,7 +2,7 @@ import { Pressable, Text, View } from 'react-native';
 import { CarFront, Clock3, MapPin } from 'lucide-react-native';
 import type { Order } from '@/types/order';
 
-const statusLabel = { matching: 'A procurar reboque', on_the_way: 'A caminho', completed: 'Concluído' };
+const statusLabel: Record<Order['status'], string> = { draft: 'Rascunho', matching: 'A procurar', accepted: 'Aceite', on_the_way: 'A caminho', arrived: 'Chegou', service_started: 'Serviço iniciado', completed: 'Concluído', cancelled: 'Cancelado', disputed: 'Em disputa' };
 
 export function OrderCard({ order, onPress }: { order: Order; onPress?: () => void }) {
   return (

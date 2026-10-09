@@ -1,0 +1,12 @@
+import { useState } from 'react';
+import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { router } from 'expo-router';
+import { Camera, ShieldAlert, TriangleAlert } from 'lucide-react-native';
+import { AppButton } from '@/components/ui/AppButton';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
+
+const levels = [['low', 'Baixa'], ['medium', 'Média'], ['high', 'Alta']] as const;
+export default function IncidentScreen() {
+  const [level, setLevel] = useState('medium');
+  return <View className="flex-1 bg-surface px-5 dark:bg-slate-950"><ScreenHeader title="Conta-nos o que aconteceu" subtitle="Passo 2 de 5" /><ScrollView contentContainerClassName="pb-28"><View className="rounded-3xl bg-amber-50 p-4"><View className="flex-row gap-3"><TriangleAlert size={21} color="#D97706" /><Text className="flex-1 text-sm leading-5 text-amber-900">Se estiveres numa zona de risco, afasta-te da via e usa o botão SOS.</Text></View></View><Text className="mb-3 mt-6 font-black text-ink dark:text-white">Gravidade</Text><View className="flex-row gap-2">{levels.map(([id, label]) => <Pressable key={id} onPress={() => setLevel(id)} className={`flex-1 rounded-2xl py-4 ${level === id ? 'bg-brand' : 'bg-white dark:bg-slate-900'}`}><Text className={`text-center font-black ${level === id ? 'text-white' : 'text-ink dark:text-white'}`}>{label}</Text></Pressable>)}</View><TextInput multiline placeholder="Ex.: o motor desligou e não volta a ligar" placeholderTextColor="#94A3B8" className="mt-5 min-h-28 rounded-3xl bg-white p-4 text-base text-ink dark:bg-slate-900 dark:text-white" /><Pressable className="mt-4 flex-row items-center justify-center gap-2 rounded-2xl border border-dashed border-brand bg-brand-soft py-4"><Camera size={20} color="#16A34A" /><Text className="font-black text-brand">Adicionar fotos (mock)</Text></Pressable><Pressable onPress={() => router.push('/order/sos')} className="mt-5 flex-row items-center gap-3 rounded-2xl bg-ink p-4"><ShieldAlert size={22} color="#86EFAC" /><View><Text className="font-black text-white">Precisas de ajuda urgente?</Text><Text className="mt-1 text-xs text-slate-300">Abre um alerta SOS sem efectuar chamada.</Text></View></Pressable></ScrollView><View className="absolute bottom-0 left-0 right-0 border-t border-slate-100 bg-surface px-5 pb-7 pt-4 dark:border-slate-800 dark:bg-slate-950"><AppButton label="Continuar" onPress={() => router.push('/request/vehicle')} /></View></View>;
+}

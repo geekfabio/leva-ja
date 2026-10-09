@@ -2,6 +2,7 @@ node_modules/
 .expo
 dst/
 web-build/
+work/
 *.log
 .env
 .env.*
