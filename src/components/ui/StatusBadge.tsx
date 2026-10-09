@@ -1,0 +1,3 @@
+import { Text, View } from 'react-native';
+const colors: Record<string, string> = { aprovado: 'bg-brand-soft text-brand', confirmado: 'bg-brand-soft text-brand', concluído: 'bg-brand-soft text-brand', pendente: 'bg-amber-100 text-amber-700', falhou: 'bg-red-100 text-red-700', bloqueado: 'bg-red-100 text-red-700', reembolsado: 'bg-blue-100 text-blue-700', aberto: 'bg-red-100 text-red-700', 'em análise': 'bg-amber-100 text-amber-700' };
+export function StatusBadge({ status }: { status: string }) { const key = status.toLowerCase(); return <View className={`self-start rounded-full px-3 py-1 ${colors[key]?.split(' ')[0] ?? 'bg-slate-100'}`}><Text className={`text-[10px] font-black ${colors[key]?.split(' ')[1] ?? 'text-slate-600'}`}>{status.toUpperCase()}</Text></View>; }
