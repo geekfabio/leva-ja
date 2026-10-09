@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { activeOrder, nearbyOrders } from '@/mocks/orders';
+import type { DemoScenario } from '@/mocks/demo';
 import type { Order } from '@/types/order';
 
 type OrderState = {
@@ -8,6 +9,7 @@ type OrderState = {
   selectOrder: (orderId: string) => void;
   updateStatus: (orderId: string, status: Order['status']) => void;
   cancelOrder: (orderId: string) => void;
+  loadScenario: (scenario: DemoScenario) => void;
 };
 
 export const useOrderStore = create<OrderState>((set) => ({
@@ -24,4 +26,5 @@ export const useOrderStore = create<OrderState>((set) => ({
     orders: state.orders.map((order) => order.id === orderId ? { ...order, status: 'cancelled' } : order),
     selectedOrder: state.selectedOrder.id === orderId ? { ...state.selectedOrder, status: 'cancelled' } : state.selectedOrder,
   })),
+  loadScenario: (scenario) => set({ orders: scenario.orders.map((order) => ({ ...order })), selectedOrder: { ...(scenario.orders.find((order) => order.id === scenario.orderId) ?? scenario.orders[0]) } }),
 }));
