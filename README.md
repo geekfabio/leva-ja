@@ -50,6 +50,17 @@ Todos os acessos são locais e não enviam SMS nem validam credenciais reais.
 
 O painel administrativo inclui dados paginados e pesquisáveis de pedidos, clientes, prestadores, pagamentos e alertas SOS. Todas as acções são demonstrações locais.
 
+## Seed para apresentação
+
+Abre a rota `/demo` para carregar cenários de demonstração sem editar dados manualmente. Cada cenário repõe uma cópia local dos pedidos e define o pedido activo para o fluxo correspondente:
+
+- Cliente com reboque a caminho;
+- Prestador com pedido novo ou já no local;
+- Falha de pagamento;
+- Pedido em disputa para operações e segurança.
+
+As mudanças de estado do prestador e do cliente usam a mesma store mockada, permitindo demonstrar o workflow ponta-a-ponta no mesmo runtime.
+
 ## Identidade visual
 
 - Logótipo/símbolo: `assets/brand/leva-ja-mark.png`
