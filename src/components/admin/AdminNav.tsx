@@ -1,0 +1,4 @@
+import { Pressable, ScrollView, Text, View } from 'react-native';
+import { router } from 'expo-router';
+const links = [['Dashboard', '/admin'], ['Pedidos', '/admin/section/orders'], ['Clientes', '/admin/section/customers'], ['Prestadores', '/admin/section/providers'], ['Pagamentos', '/admin/section/payments'], ['SOS', '/admin/section/safety'], ['Configurações', '/admin/section/settings']];
+export function AdminNav({ active }: { active: string }) { return <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-5"><View className="flex-row gap-2">{links.map(([label, path]) => <Pressable key={label} onPress={() => router.push(path as never)} className={`rounded-full px-4 py-2.5 ${active === label ? 'bg-brand' : 'bg-white dark:bg-slate-900'}`}><Text className={`text-xs font-black ${active === label ? 'text-white' : 'text-ink dark:text-white'}`}>{label}</Text></Pressable>)}</View></ScrollView>; }

@@ -12,6 +12,8 @@ Aplicação mobile de assistência automóvel e reboque em Luanda. Esta fase é 
 6. Procura de prestador verificado
 7. Acompanhamento do reboque, suporte e avaliação
 8. Histórico de assistências e perfil
+9. Área do prestador com operação e ganhos mockados
+10. Painel administrativo com pesquisa, filtros, paginação e totalizadores mockados
 
 ## Stack
 
@@ -35,6 +37,18 @@ npx expo start --web
 - Não há chamadas de API reais, pagamentos ou geolocalização real.
 - Valores, viaturas, localização, condutores e estados são mocks.
 - A navegação e as telas representam o fluxo do cliente para validação UI/UX.
+
+## Acessos de demonstração
+
+Todos os acessos são locais e não enviam SMS nem validam credenciais reais.
+
+| Área | Rota | Dados mockados |
+| --- | --- | --- |
+| Cliente | `/(auth)/phone` | `+244 912 345 678` · OTP `123456` |
+| Prestador | `/provider/login` | `+244 923 456 789` · OTP `123456` |
+| Administração | `/admin/login` | `admin@levaja.ao` · OTP `123456` |
+
+O painel administrativo inclui dados paginados e pesquisáveis de pedidos, clientes, prestadores, pagamentos e alertas SOS. Todas as acções são demonstrações locais.
 
 ## Identidade visual
 

@@ -1,0 +1,5 @@
+import { Text, View } from 'react-native';
+import { router } from 'expo-router';
+import { LockKeyhole, ShieldCheck } from 'lucide-react-native';
+import { AppButton } from '@/components/ui/AppButton';
+export default function AdminLogin() { return <View className="flex-1 justify-between bg-ink px-6 pb-12 pt-20"><View><View className="h-20 w-20 items-center justify-center rounded-[28px] bg-brand"><LockKeyhole size={38} color="#fff" /></View><Text className="mt-9 text-4xl font-black text-white">Leva Já{`\n`}Operações</Text><Text className="mt-4 text-base leading-7 text-slate-300">Painel administrativo para a gestão diária da plataforma.</Text><View className="mt-9 rounded-3xl bg-white/10 p-5"><ShieldCheck size={22} color="#86EFAC" /><Text className="mt-3 font-black text-white">Acesso de demonstração</Text><Text className="mt-1 text-sm text-slate-300">admin@levaja.ao{`\n`}OTP mock: 123456</Text></View></View><AppButton label="Entrar no painel" onPress={() => router.replace('/admin' as never)} /></View>; }

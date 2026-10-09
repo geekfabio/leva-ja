@@ -1,0 +1,5 @@
+import { Text, View } from 'react-native';
+import { router } from 'expo-router';
+import { ShieldAlert } from 'lucide-react-native';
+import { AppButton } from '@/components/ui/AppButton';
+export default function SosScreen() { return <View className="flex-1 justify-between bg-red-700 px-6 pb-12 pt-20"><View><View className="h-20 w-20 items-center justify-center rounded-[28px] bg-white/15"><ShieldAlert size={42} color="#fff" /></View><Text className="mt-8 text-4xl font-black text-white">SOS e segurança</Text><Text className="mt-4 text-base leading-7 text-red-100">Se houver perigo imediato, afasta-te da via e contacta os serviços de emergência. O alerta Leva Já será apenas simulado.</Text><View className="mt-8 rounded-3xl bg-white/15 p-5"><Text className="font-black text-white">Contactos rápidos</Text><Text className="mt-3 text-red-100">Polícia · 113{`\n`}Bombeiros · 115{`\n`}Suporte Leva Já · +244 9•• ••• •••</Text></View></View><View className="gap-3"><AppButton label="Enviar alerta SOS (mock)" onPress={() => router.back()} /><AppButton label="Estou em segurança" variant="ghost" onPress={() => router.back()} /></View></View>; }

@@ -1,0 +1,8 @@
+import { Pressable, ScrollView, Text, View } from 'react-native';
+import { router as expoRouter } from 'expo-router';
+import { MapPin, Navigation } from 'lucide-react-native';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { MockMap } from '@/components/provider/MockMap';
+import { useOrderStore } from '@/stores/useOrderStore';
+const router = { push: (path: string) => expoRouter.push(path as never) };
+export default function ProviderRequests() { const orders = useOrderStore((state) => state.orders.filter((order) => !['completed', 'cancelled'].includes(order.status))); return <View className="flex-1 bg-surface px-5 dark:bg-slate-950"><ScreenHeader title="Pedidos próximos" subtitle="Luanda · actualização simulada" /><ScrollView contentContainerClassName="pb-8"><MockMap label="Pedidos disponíveis na tua zona" detail="1 pedido prioritário · 2,1 km" />{orders.map((order) => <Pressable key={order.id} onPress={() => router.push(`/provider/request/${order.id}`)} className="mt-4 rounded-3xl bg-white p-5 dark:bg-slate-900"><View className="flex-row items-start justify-between"><View><Text className="text-lg font-black text-ink dark:text-white">{order.category}</Text><Text className="mt-1 text-sm text-muted">{order.vehicle}</Text></View><Text className="font-black text-brand">{order.amount.toLocaleString('pt-PT')} Kz</Text></View><View className="mt-4 flex-row gap-4"><View className="flex-row items-center gap-1"><MapPin size={15} color="#16A34A" /><Text className="text-xs text-muted">{order.address}</Text></View><View className="flex-row items-center gap-1"><Navigation size={15} color="#16A34A" /><Text className="text-xs text-muted">2,1 km</Text></View></View></Pressable>)}</ScrollView></View>; }
