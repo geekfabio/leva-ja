@@ -8,6 +8,15 @@ export const activeOrder: Order = {
   image: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=900&q=80',
 };
 
+export const activeTransportOrder: Order = {
+  id: 'LJ-3001', merchant: 'Carga média', category: 'Transporte', amount: 14000, etaMinutes: 16,
+  status: 'on_the_way', serviceType: 'transport',
+  address: 'Mercado do Kinaxixi, Ingombota', vehicle: 'Carrinha de carga · 1,5 ton', provider: 'Ngola Transportes', plate: 'LD-56-TR',
+  destination: 'Avenida Pedro de Castro Van-Dúnem, Maianga', paymentMethod: 'Referência Multicaixa', paymentStatus: 'confirmed',
+  incidentNote: '6 caixas de material de loja, sem necessidade de ajudante.',
+  image: 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?auto=format&fit=crop&w=900&q=80',
+};
+
 export const nearbyOrders: Order[] = [
   activeOrder,
   {
@@ -20,4 +29,5 @@ export const nearbyOrders: Order[] = [
     etaMinutes: 22, status: 'completed', address: 'Maianga, Luanda', vehicle: 'Kia Sportage · 2018', provider: 'João Manuel', plate: 'LD-10-96-CC',
     image: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=900&q=80',
   },
+  activeTransportOrder,
 ];

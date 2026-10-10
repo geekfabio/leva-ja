@@ -4,17 +4,17 @@ import { router } from 'expo-router';
 import { AppButton } from '@/components/ui/AppButton';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { ServiceIcon } from '@/components/ui/ServiceIcon';
-import { assistanceServices } from '@/mocks/services';
+import { transportServices } from '@/mocks/services';
 
-export default function ServiceScreen() {
-  const [selected, setSelected] = useState('tow');
+export default function TransportServiceScreen() {
+  const [selected, setSelected] = useState('cargo_medium');
   return (
     <View className="flex-1 bg-surface px-5 dark:bg-slate-950">
-      <ScreenHeader title="O que aconteceu?" subtitle="Passo 1 de 5" />
+      <ScreenHeader title="O que vais transportar?" subtitle="Passo 1 de 4" />
       <ScrollView contentContainerClassName="pb-28">
-        <Text className="mb-6 text-base leading-6 text-muted">Escolhe o tipo de assistência para encontrarmos o profissional certo.</Text>
+        <Text className="mb-6 text-base leading-6 text-muted">Escolhe o tipo de carga para sugerirmos a viatura certa.</Text>
         <View className="gap-3">
-          {assistanceServices.map(({ id, title, description, emoji, tone }) => {
+          {transportServices.map(({ id, title, description, emoji, tone }) => {
             const active = id === selected;
             return (
               <Pressable
@@ -36,7 +36,7 @@ export default function ServiceScreen() {
         </View>
       </ScrollView>
       <View className="absolute bottom-0 left-0 right-0 border-t border-slate-100 bg-surface px-5 pb-7 pt-4 dark:border-slate-800 dark:bg-slate-950">
-        <AppButton label="Continuar" onPress={() => router.push('/request/incident' as never)} />
+        <AppButton label="Continuar" onPress={() => router.push('/transport/cargo' as never)} />
       </View>
     </View>
   );

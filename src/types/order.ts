@@ -1,5 +1,6 @@
 export type OrderStatus = 'draft' | 'matching' | 'accepted' | 'on_the_way' | 'arrived' | 'service_started' | 'completed' | 'cancelled' | 'disputed';
 export type PaymentStatus = 'pending' | 'confirmed' | 'failed' | 'refunded';
+export type ServiceType = 'assistance' | 'transport';
 
 export type Order = {
   id: string;
@@ -18,4 +19,5 @@ export type Order = {
   paymentStatus?: PaymentStatus;
   incidentNote?: string;
   severity?: 'low' | 'medium' | 'high';
+  serviceType?: ServiceType;
 };

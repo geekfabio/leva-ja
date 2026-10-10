@@ -1,13 +1,15 @@
 import { Pressable, Text, View } from 'react-native';
-import { CarFront, Clock3, MapPin } from 'lucide-react-native';
+import { Clock3, MapPin } from 'lucide-react-native';
+import { ServiceIcon } from '@/components/ui/ServiceIcon';
 import type { Order } from '@/types/order';
 
 const statusLabel: Record<Order['status'], string> = { draft: 'Rascunho', matching: 'A procurar', accepted: 'Aceite', on_the_way: 'A caminho', arrived: 'Chegou', service_started: 'Serviço iniciado', completed: 'Concluído', cancelled: 'Cancelado', disputed: 'Em disputa' };
 
 export function OrderCard({ order, onPress }: { order: Order; onPress?: () => void }) {
+  const isTransport = order.serviceType === 'transport';
   return (
     <Pressable onPress={onPress} className="mb-3 flex-row overflow-hidden rounded-2xl bg-white dark:bg-slate-800" style={{ elevation: 1 }}>
-      <View className="h-28 w-24 items-center justify-center bg-brand-soft"><CarFront size={32} color="#16A34A" /></View>
+      <View className="h-28 w-24 items-center justify-center bg-brand-soft"><ServiceIcon emoji={isTransport ? '🚚' : '🚛'} tone={isTransport ? ['#16A34A', '#102018'] : ['#22C55E', '#15803D']} size={48} /></View>
       <View className="flex-1 justify-between p-3">
         <View>
           <View className="flex-row items-center justify-between gap-2">
