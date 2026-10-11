@@ -1,9 +1,77 @@
-import { useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
-import { router } from 'expo-router';
-import { BatteryCharging, CarFront, CircleAlert, Fuel, Wrench } from 'lucide-react-native';
-import { AppButton } from '@/components/ui/AppButton';
-import { ScreenHeader } from '@/components/ui/ScreenHeader';
-
-const options = [{ id: 'tow', title: 'Reboque de viatura', description: 'Levar a viatura para uma oficina ou outro local.', icon: CarFront }, { id: 'battery', title: 'Bateria descarregada', description: 'Ajuda para dar carga ou substituir a bateria.', icon: BatteryCharging }, { id: 'tire', title: 'Pneu furado', description: 'Troca de pneu ou assistência no local.', icon: Wrench }, { id: 'fuel', title: 'Falta de combustível', description: 'Entrega de combustível onde estás.', icon: Fuel }, { id: 'other', title: 'Outro problema', description: 'Explica-nos o que aconteceu.', icon: CircleAlert }];
-export default function ServiceScreen() { const [selected, setSelected] = useState('tow'); return <View className="flex-1 bg-surface px-5 dark:bg-slate-950"><ScreenHeader title="O que aconteceu?" subtitle="Passo 1 de 5" /><ScrollView contentContainerClassName="pb-28"><Text className="mb-6 text-base leading-6 text-muted">Escolhe o tipo de assistência para encontrarmos o profissional certo.</Text><View className="gap-3">{options.map(({ id, title, description, icon: Icon }) => { const active = id === selected; return <Pressable key={id} accessibilityRole="radio" accessibilityState={{ selected: active }} onPress={() => setSelected(id)} className={`flex-row items-center gap-4 rounded-3xl border p-4 ${active ? 'border-brand bg-brand-soft' : 'border-transparent bg-white dark:bg-slate-900'}`}><View className={`h-12 w-12 items-center justify-center rounded-2xl ${active ? 'bg-brand' : 'bg-slate-100 dark:bg-slate-800'}`}><Icon size={23} color={active ? '#FFFFFF' : '#16A34A'} /></View><View className="flex-1"><Text className="font-black text-ink dark:text-white">{title}</Text><Text className="mt-1 text-xs leading-5 text-muted">{description}</Text></View><View className={`h-5 w-5 rounded-full border-2 ${active ? 'border-brand bg-brand' : 'border-slate-300'}`} /></Pressable>; })}</View></ScrollView><View className="absolute bottom-0 left-0 right-0 border-t border-slate-100 bg-surface px-5 pb-7 pt-4 dark:border-slate-800 dark:bg-slate-950"><AppButton label="Continuar" onPress={() => router.push('/request/incident' as never)} /></View></View>; }
+import { useEffect } from "react";
+import { Text, View, Pressable } from "react-native";
+import { router, useLocalSearchParams } from "expo-router";
+import { Check } from "lucide-react-native";
+import { AppButton } from "@/components/ui/AppButton";
+import { ScreenLayout } from "@/components/ui/ScreenLayout";
+import { VehicleArt } from "@/components/transport/VehicleArt";
+import { useRequestDraft } from "@/stores/useRequestDraft";
+import { services } from "@/domain/catalog";
+export default function ServiceScreen() {
+  const { service } = useLocalSearchParams<{ service?: string }>();
+  const selected = useRequestDraft((state) => state.service);
+  const choose = useRequestDraft((state) => state.chooseService);
+  useEffect(() => {
+    const match = services.find((item) => item.id === service);
+    if (match) choose(match.id);
+  }, [service, choose]);
+  return (
+    <ScreenLayout
+      title="O que vamos transportar?"
+      subtitle="Passo 1 de 6"
+      action={
+        <AppButton
+          label="Continuar"
+          onPress={() => router.push("/request/incident" as never)}
+        />
+      }
+    >
+      <Text className="text-base leading-6 text-muted">
+        Da mudança de casa ao apoio na estrada. Escolhe o serviço de que
+        precisas.
+      </Text>
+      {["Transporte e mudanças", "Assistência automóvel"].map(
+        (group, index) => (
+          <View key={group}>
+            <Text className="mb-3 text-lg font-bold text-ink dark:text-white">
+              {group}
+            </Text>
+            <View accessibilityRole="radiogroup" className="gap-3">
+              {services
+                .filter((item) =>
+                  index === 0 ? item.transport : !item.transport,
+                )
+                .map((item) => (
+                  <Pressable
+                    accessibilityRole="radio"
+                    accessibilityLabel={item.name}
+                    accessibilityState={{ checked: item.id === selected }}
+                    key={item.id}
+                    onPress={() => choose(item.id)}
+                    className={`flex-row items-center rounded-3xl border pr-4 ${selected === item.id ? "border-brand bg-brand-soft dark:bg-green-950" : "border-line bg-white dark:border-slate-800 dark:bg-slate-900"}`}
+                  >
+                    <VehicleArt vehicle={item.vehicle} size={100} />
+                    <View className="flex-1 py-4">
+                      <Text className="text-base font-bold text-ink dark:text-white">
+                        {item.name}
+                      </Text>
+                      <Text className="mt-1 text-sm leading-5 text-muted">
+                        {item.description}
+                      </Text>
+                    </View>
+                    <View
+                      className={`ml-2 h-6 w-6 items-center justify-center rounded-full border ${selected === item.id ? "border-brand bg-brand" : "border-line"}`}
+                    >
+                      {selected === item.id ? (
+                        <Check size={15} color="white" />
+                      ) : null}
+                    </View>
+                  </Pressable>
+                ))}
+            </View>
+          </View>
+        ),
+      )}
+    </ScreenLayout>
+  );
+}

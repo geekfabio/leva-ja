@@ -1,5 +1,32 @@
-import { Text, View } from 'react-native';
-import { router } from 'expo-router';
-import { CircleCheckBig, CarFront } from 'lucide-react-native';
-import { AppButton } from '@/components/ui/AppButton';
-export default function ConfirmedScreen() { return <View className="flex-1 justify-between bg-ink px-6 pb-12 pt-20"><View><View className="mb-8 h-20 w-20 items-center justify-center rounded-[28px] bg-brand"><CircleCheckBig size={44} color="#FFFFFF" /></View><Text className="text-4xl font-black leading-tight text-white">Pedido confirmado!</Text><Text className="mt-4 max-w-sm text-base leading-7 text-slate-300">Estamos a procurar um reboque disponível para ti.</Text><View className="mt-10 rounded-3xl bg-white/10 p-5"><View className="flex-row items-center gap-3"><CarFront size={22} color="#86EFAC" /><View><Text className="font-black text-white">Pedido #LJ-2601</Text><Text className="mt-1 text-sm text-slate-300">Tempo estimado: 18–25 min</Text></View></View></View></View><View className="gap-3"><AppButton label="Acompanhar pedido" onPress={() => router.replace('/order/LJ-2601')} /><AppButton label="Voltar ao início" variant="ghost" onPress={() => router.replace('/(tabs)')} /></View></View>; }
+import { router } from "expo-router";
+import { ScreenLayout } from "@/components/ui/ScreenLayout";
+import { AppButton } from "@/components/ui/AppButton";
+import { ServiceSummary } from "@/components/orders/ServiceSummary";
+import { useOrderStore } from "@/stores/useOrderStore";
+export default function ConfirmedScreen() {
+  const order = useOrderStore((state) => state.selectedOrder);
+  return (
+    <ScreenLayout
+      title="O teu pedido está criado"
+      subtitle={order.id}
+      action={
+        <AppButton
+          label="Acompanhar pedido"
+          onPress={() => router.replace(`/order/${order.id}`)}
+        />
+      }
+    >
+      <ServiceSummary
+        service={order.category}
+        vehicle={order.vehicleType || "tow"}
+        origin={order.address}
+        destination={order.destination}
+      />
+      <AppButton
+        label="Voltar ao início"
+        variant="ghost"
+        onPress={() => router.replace("/")}
+      />
+    </ScreenLayout>
+  );
+}

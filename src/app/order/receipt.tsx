@@ -1,7 +1,64 @@
-import { Pressable, ScrollView, Text, View } from 'react-native';
-import { router } from 'expo-router';
-import { Share2, TriangleAlert } from 'lucide-react-native';
-import { ScreenHeader } from '@/components/ui/ScreenHeader';
-import { AppButton } from '@/components/ui/AppButton';
-const lines = [['Preço base', '14.000 Kz'], ['Distância · 6,4 km', '3.200 Kz'], ['Taxa de serviço', '1.300 Kz']];
-export default function ReceiptScreen() { return <View className="flex-1 bg-surface px-5 dark:bg-slate-950"><ScreenHeader title="Recibo do serviço" subtitle="LJ-2601 · Pago por Multicaixa" /><ScrollView contentContainerClassName="pb-8"><View className="rounded-[30px] bg-white p-6 dark:bg-slate-900"><Text className="text-sm font-bold text-muted">TOTAL PAGO</Text><Text className="mt-2 text-4xl font-black text-ink dark:text-white">18.500 Kz</Text><View className="my-6 h-px bg-slate-100 dark:bg-slate-800" />{lines.map(([label, value]) => <View key={label} className="mb-4 flex-row justify-between"><Text className="text-muted">{label}</Text><Text className="font-bold text-ink dark:text-white">{value}</Text></View>)}<View className="mt-2 rounded-2xl bg-brand-soft p-4"><Text className="font-black text-brand">Pagamento confirmado</Text><Text className="mt-1 text-sm text-muted">Referência Multicaixa · 9••• 4•••</Text></View></View><Pressable className="mt-5 flex-row items-center justify-center gap-2 rounded-2xl bg-brand-soft py-4"><Share2 size={19} color="#16A34A" /><Text className="font-black text-brand">Partilhar recibo (mock)</Text></Pressable><Pressable onPress={() => router.push('/order/complaint')} className="mt-4 flex-row items-center justify-center gap-2 py-4"><TriangleAlert size={18} color="#D97706" /><Text className="font-bold text-amber-700">Reportar um problema</Text></Pressable></ScrollView><View className="px-1 pb-6"><AppButton label="Concluir" onPress={() => router.replace('/(tabs)/orders')} /></View></View>; }
+import { Share } from "react-native";
+import { router } from "expo-router";
+import { ScreenLayout } from "@/components/ui/ScreenLayout";
+import { AppButton } from "@/components/ui/AppButton";
+import { ServiceSummary } from "@/components/orders/ServiceSummary";
+import { PriceSummary } from "@/components/orders/PriceSummary";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { useOrderStore } from "@/stores/useOrderStore";
+import { money } from "@/domain/catalog";
+export default function ReceiptScreen() {
+  const order = useOrderStore((state) => state.selectedOrder);
+  return (
+    <ScreenLayout
+      title="Resumo do serviço"
+      subtitle={order.id}
+      action={
+        <AppButton
+          label="Ver os meus pedidos"
+          onPress={() => router.replace("/(tabs)/orders")}
+        />
+      }
+    >
+      <ServiceSummary
+        service={order.category}
+        vehicle={order.vehicleType || "tow"}
+        origin={order.address}
+        destination={order.destination}
+      />
+      <PriceSummary
+        amount={order.amount}
+        pricing={order.pricing}
+        label={
+          order.paymentStatus === "confirmed"
+            ? "Pagamento confirmado (demo)"
+            : "Valor do serviço · pagamento pendente"
+        }
+      />
+      <StatusBadge
+        status={
+          {
+            confirmed: "Confirmado",
+            failed: "Falhou",
+            refunded: "Reembolsado",
+            pending: "Pendente",
+          }[order.paymentStatus || "pending"]
+        }
+      />
+      <AppButton
+        label="Partilhar resumo"
+        variant="ghost"
+        onPress={() => {
+          void Share.share({
+            message: `Leva Já — demonstração\nPedido ${order.id}\n${order.category}\n${order.address} → ${order.destination || "Serviço no local"}\n${money(order.amount)} · ${order.paymentMethod || "Pagamento a confirmar"}\nEste resumo não é um recibo fiscal.`,
+          });
+        }}
+      />
+      <AppButton
+        label="Reportar um problema"
+        variant="ghost"
+        onPress={() => router.push("/order/complaint")}
+      />
+    </ScreenLayout>
+  );
+}

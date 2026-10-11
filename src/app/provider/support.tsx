@@ -1,5 +1,30 @@
-import { Pressable, ScrollView, Text, View } from 'react-native';
-import { router } from 'expo-router';
-import { MessageCircle, ShieldAlert } from 'lucide-react-native';
-import { ScreenHeader } from '@/components/ui/ScreenHeader';
-export default function ProviderSupport() { return <View className="flex-1 bg-surface px-5 dark:bg-slate-950"><ScreenHeader title="Ajuda e incidentes" subtitle="Suporte ao prestador" /><ScrollView><Pressable onPress={() => router.push('/order/chat')} className="mb-3 flex-row gap-3 rounded-2xl bg-white p-5 dark:bg-slate-900"><MessageCircle size={23} color="#16A34A" /><View><Text className="font-black text-ink dark:text-white">Falar com suporte</Text><Text className="mt-1 text-sm text-muted">Chat local com anexos mockados</Text></View></Pressable><Pressable className="flex-row gap-3 rounded-2xl bg-red-50 p-5"><ShieldAlert size={23} color="#DC2626" /><View><Text className="font-black text-red-700">Reportar incidente</Text><Text className="mt-1 text-sm text-red-700">Regista um problema durante o serviço.</Text></View></Pressable></ScrollView></View>; }
+import { router } from "expo-router";
+import { ScreenLayout } from "@/components/ui/ScreenLayout";
+import { ListRow } from "@/components/ui/ListRow";
+import { useOrderStore } from "@/stores/useOrderStore";
+export default function ProviderSupport() {
+  const order = useOrderStore((state) => state.selectedOrder);
+  return (
+    <ScreenLayout title="Apoio ao parceiro" subtitle="Ajuda em cada serviço">
+      <ListRow
+        title="Consultar o pedido actual"
+        description={order.category}
+        onPress={() => router.push(`/provider/request/${order.id}` as never)}
+      />
+      <ListRow
+        title="Reportar um incidente"
+        description="Registar uma ocorrência no pedido seleccionado."
+        onPress={() => router.push("/order/complaint")}
+      />
+      <ListRow
+        title="Dúvidas sobre transporte e cargas"
+        description="Viaturas, acesso e apoio à carga."
+        onPress={() => router.push("/support")}
+      />
+      <ListRow
+        title="Documentos e aprovação"
+        onPress={() => router.push("/provider/onboarding" as never)}
+      />
+    </ScreenLayout>
+  );
+}

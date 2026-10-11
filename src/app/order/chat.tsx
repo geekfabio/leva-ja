@@ -1,6 +1,51 @@
-import { useState } from 'react';
-import { Pressable, Text, TextInput, View } from 'react-native';
-import { Send } from 'lucide-react-native';
-import { ScreenHeader } from '@/components/ui/ScreenHeader';
-
-export default function ChatScreen() { const [messages, setMessages] = useState(['Olá Armando, já vou a caminho.', 'Partilha a localização, por favor.']); const [draft, setDraft] = useState(''); const send = (text = draft) => { if (!text.trim()) return; setMessages((current) => [...current, text]); setDraft(''); }; return <View className="flex-1 bg-surface px-5 dark:bg-slate-950"><ScreenHeader title="Chat com João" subtitle="Online · respostas simuladas" /><View className="flex-1 gap-3 pt-4">{messages.map((message, index) => <View key={`${message}-${index}`} className={`max-w-[82%] rounded-2xl p-4 ${index % 2 ? 'self-end bg-brand' : 'bg-white dark:bg-slate-900'}`}><Text className={index % 2 ? 'text-white' : 'text-ink dark:text-white'}>{message}</Text><Text className={`mt-1 text-xs ${index % 2 ? 'text-green-100' : 'text-muted'}`}>Lida agora</Text></View>)}</View><View className="mb-3 flex-row gap-2"><Pressable onPress={() => send('Estou no local')} className="rounded-full bg-brand-soft px-3 py-2"><Text className="text-xs font-bold text-brand">Estou no local</Text></Pressable><Pressable onPress={() => send('Partilha a localização')} className="rounded-full bg-brand-soft px-3 py-2"><Text className="text-xs font-bold text-brand">Partilha a localização</Text></Pressable></View><View className="mb-7 flex-row items-center gap-2 rounded-2xl bg-white p-2 dark:bg-slate-900"><TextInput value={draft} onChangeText={setDraft} placeholder="Escreve uma mensagem" placeholderTextColor="#94A3B8" className="flex-1 px-3 text-ink dark:text-white" /><Pressable onPress={() => send()} className="rounded-xl bg-brand p-3"><Send size={19} color="#fff" /></Pressable></View></View>; }
+import { useState } from "react";
+import { Text, View } from "react-native";
+import { ScreenLayout } from "@/components/ui/ScreenLayout";
+import { AppInput } from "@/components/ui/AppInput";
+import { AppButton } from "@/components/ui/AppButton";
+import { useOrderStore } from "@/stores/useOrderStore";
+export default function ChatScreen() {
+  const { selectedOrder: order, patchOrder } = useOrderStore();
+  const [draft, setDraft] = useState("");
+  const send = () => {
+    if (!draft.trim()) return;
+    patchOrder(order.id, {
+      messages: [...(order.messages || []), draft.trim()],
+    });
+    setDraft("");
+  };
+  return (
+    <ScreenLayout title="Mensagens do pedido" subtitle={order.id}>
+      <Text className="text-sm leading-5 text-muted">
+        Conversa local de demonstração. As mensagens não são enviadas ao
+        parceiro.
+      </Text>
+      <View className="rounded-2xl bg-white p-4 dark:bg-slate-900">
+        <Text className="text-base text-ink dark:text-white">
+          Podes deixar aqui detalhes sobre a recolha, a carga ou o acesso ao
+          local.
+        </Text>
+      </View>
+      {(order.messages || []).map((message, index) => (
+        <View key={index} className="self-end rounded-2xl bg-brand p-4">
+          <Text className="text-base text-white">{message}</Text>
+          <Text className="mt-2 text-xs text-green-100">
+            Guardada nesta sessão
+          </Text>
+        </View>
+      ))}
+      <AppInput
+        label="Mensagem"
+        value={draft}
+        onChangeText={setDraft}
+        placeholder="Escreve uma mensagem"
+        multiline
+      />
+      <AppButton
+        label="Guardar mensagem"
+        disabled={!draft.trim()}
+        onPress={send}
+      />
+    </ScreenLayout>
+  );
+}

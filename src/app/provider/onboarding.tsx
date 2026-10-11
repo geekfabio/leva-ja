@@ -1,7 +1,61 @@
-import { useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
-import { BadgeCheck, Clock3, XCircle } from 'lucide-react-native';
-import { ScreenHeader } from '@/components/ui/ScreenHeader';
-import { StatusBadge } from '@/components/ui/StatusBadge';
-import { ProofRow } from '@/components/ui/ProofRow';
-export default function ProviderOnboarding() { const [state, setState] = useState('Pendente'); const Icon = state === 'Aprovado' ? BadgeCheck : state === 'Bloqueado' ? XCircle : Clock3; return <View className="flex-1 bg-surface px-5 dark:bg-slate-950"><ScreenHeader title="Aprovação da conta" subtitle="Documentos e viatura" /><ScrollView><View className="rounded-3xl bg-ink p-5"><Icon size={30} color="#86EFAC" /><Text className="mt-4 text-xl font-black text-white">Estado: {state}</Text><Text className="mt-2 text-sm text-slate-300">Altera o cenário para validar todos os estados mockados.</Text></View><View className="mt-5 flex-row gap-2">{['Pendente', 'Aprovado', 'Bloqueado'].map((item) => <Pressable key={item} onPress={() => setState(item)} className={`flex-1 rounded-xl py-3 ${state === item ? 'bg-brand' : 'bg-white dark:bg-slate-900'}`}><Text className={`text-center text-xs font-black ${state === item ? 'text-white' : 'text-ink dark:text-white'}`}>{item}</Text></Pressable>)}</View><View className="mt-5"><StatusBadge status={state} /></View><View className="mt-4"><ProofRow title="Carta de condução" subtitle="Válida até 2031" complete /><ProofRow title="Seguro da viatura" subtitle="Em validação" /><ProofRow title="Registo do reboque" subtitle="Em validação" /></View></ScrollView></View>; }
+import { useState } from "react";
+import { Text, View } from "react-native";
+import { router } from "expo-router";
+import { ScreenLayout } from "@/components/ui/ScreenLayout";
+import { AppButton } from "@/components/ui/AppButton";
+import { SelectionCard } from "@/components/ui/SelectionCard";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { ProofRow } from "@/components/ui/ProofRow";
+import { VehicleArt } from "@/components/transport/VehicleArt";
+export default function ProviderOnboarding() {
+  const [state, setState] = useState("Pendente");
+  return (
+    <ScreenLayout
+      title="Vamos preparar a tua conta"
+      subtitle="Documentos e aprovação"
+      action={
+        <AppButton
+          label="Continuar para entrar"
+          disabled={state !== "Aprovado"}
+          onPress={() => router.push("/(auth)/phone?role=provider" as never)}
+        />
+      }
+    >
+      <View className="items-center rounded-3xl bg-brand-soft p-4">
+        <VehicleArt vehicle="box" size={170} />
+        <Text className="text-xl font-bold text-ink">
+          Leva mais oportunidades contigo.
+        </Text>
+      </View>
+      <StatusBadge status={state} />
+      <ProofRow
+        title="Carta de condução"
+        subtitle="Documento de exemplo"
+        complete
+      />
+      <ProofRow
+        title="Seguro da viatura"
+        subtitle="Em validação na demonstração"
+      />
+      <ProofRow
+        title="Registo da viatura e capacidade de carga"
+        subtitle="Em validação na demonstração"
+      />
+      <Text className="text-sm leading-6 text-muted">
+        Nesta demonstração podes alternar o estado da aprovação. Nenhum
+        documento é enviado ou validado.
+      </Text>
+      <View accessibilityRole="radiogroup" className="gap-3">
+        {["Pendente", "Aprovado", "Bloqueado"].map((item, i) => (
+          <SelectionCard
+            key={item}
+            title={item}
+            icon={<Text className="font-bold text-brand">{i + 1}</Text>}
+            selected={state === item}
+            onPress={() => setState(item)}
+          />
+        ))}
+      </View>
+    </ScreenLayout>
+  );
+}

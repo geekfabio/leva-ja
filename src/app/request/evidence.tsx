@@ -1,7 +1,47 @@
-import { ScrollView, Text, View } from 'react-native';
-import { router } from 'expo-router';
-import { Camera } from 'lucide-react-native';
-import { ScreenHeader } from '@/components/ui/ScreenHeader';
-import { AppButton } from '@/components/ui/AppButton';
-import { ProofRow } from '@/components/ui/ProofRow';
-export default function EvidenceScreen() { return <View className="flex-1 bg-surface px-5 dark:bg-slate-950"><ScreenHeader title="Fotos e evidências" subtitle="Anexos do incidente" /><ScrollView contentContainerClassName="pb-28"><View className="mb-5 rounded-3xl bg-ink p-5"><Camera size={28} color="#86EFAC" /><Text className="mt-4 text-xl font-black text-white">Ajuda-nos a preparar o serviço.</Text><Text className="mt-2 text-sm leading-6 text-slate-300">As imagens são simuladas e ficam associadas ao pedido.</Text></View><ProofRow title="Foto geral da viatura" subtitle="JPG · enviada agora" complete /><ProofRow title="Detalhe do problema" subtitle="Adiciona uma imagem do local ou avaria" /><ProofRow title="Documento adicional" subtitle="Opcional" /></ScrollView><View className="absolute bottom-0 left-0 right-0 px-5 pb-7"><AppButton label="Continuar" onPress={() => router.back()} /></View></View>; }
+import { Text, View } from "react-native";
+import { router } from "expo-router";
+import { AppButton } from "@/components/ui/AppButton";
+import { ScreenLayout } from "@/components/ui/ScreenLayout";
+import { SelectionCard } from "@/components/ui/SelectionCard";
+import { useRequestDraft } from "@/stores/useRequestDraft";
+import { Camera } from "lucide-react-native";
+export default function EvidenceScreen() {
+  const { evidence, update } = useRequestDraft();
+  const options = [
+    "Vista geral",
+    "Detalhe da carga ou problema",
+    "Acesso ao local",
+  ];
+  return (
+    <ScreenLayout
+      title="Fotos de referência"
+      subtitle="Anexos de demonstração"
+      action={
+        <AppButton label="Guardar e voltar" onPress={() => router.back()} />
+      }
+    >
+      <Text className="text-base leading-6 text-muted">
+        Selecciona os exemplos a associar ao pedido. Nesta demonstração não
+        acedemos à câmara nem enviamos ficheiros.
+      </Text>
+      <View className="gap-3">
+        {options.map((label) => (
+          <SelectionCard
+            role="checkbox"
+            key={label}
+            title={label}
+            icon={<Camera size={23} color="#087F4F" />}
+            selected={evidence.includes(label)}
+            onPress={() =>
+              update({
+                evidence: evidence.includes(label)
+                  ? evidence.filter((item) => item !== label)
+                  : [...evidence, label],
+              })
+            }
+          />
+        ))}
+      </View>
+    </ScreenLayout>
+  );
+}

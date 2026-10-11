@@ -1,20 +1,73 @@
-import { Pressable, Text } from 'react-native';
-import { ReactNode } from 'react';
+import { ActivityIndicator, Pressable, Text } from "react-native";
+import { ReactNode, useState } from "react";
+import palette from "@/theme/palette.json";
 
-type Props = { label: string; onPress?: () => void; icon?: ReactNode; variant?: 'primary' | 'ghost'; disabled?: boolean };
+type Props = {
+  label: string;
+  onPress?: () => void;
+  icon?: ReactNode;
+  variant?: "primary" | "ghost" | "danger";
+  disabled?: boolean;
+  loading?: boolean;
+};
 
-export function AppButton({ label, onPress, icon, variant = 'primary', disabled = false }: Props) {
-  const primary = variant === 'primary';
+export function AppButton({
+  label,
+  onPress,
+  icon,
+  variant = "primary",
+  disabled = false,
+  loading = false,
+}: Props) {
+  const [focused, setFocused] = useState(false);
+  const blocked = disabled || loading;
+  const color =
+    variant === "danger"
+      ? "#FFFFFF"
+      : variant === "primary"
+        ? palette.ink
+        : palette.greenDark;
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ disabled: blocked, busy: loading }}
       onPress={onPress}
-      disabled={disabled}
-      className={`min-h-14 flex-row items-center justify-center gap-2 rounded-2xl px-5 ${primary ? 'bg-brand' : 'bg-brand-soft'} ${disabled ? 'opacity-45' : ''}`}
-      style={({ pressed }) => ({ opacity: pressed || disabled ? 0.85 : 1 })}
+      disabled={blocked}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
+      style={({ pressed }) => ({
+        minHeight: 56,
+        borderRadius: 16,
+        paddingHorizontal: 20,
+        paddingVertical: 16,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 10,
+        backgroundColor:
+          variant === "primary"
+            ? palette.green
+            : variant === "danger"
+              ? "#B42318"
+              : palette.greenSoft,
+        borderWidth: 2,
+        borderColor: focused ? palette.ink : "transparent",
+        opacity: blocked ? 0.45 : pressed ? 0.78 : 1,
+      })}
     >
-      {icon}
-      <Text className={`font-semibold ${primary ? 'text-white' : 'text-brand'}`}>{label}</Text>
+      {loading ? <ActivityIndicator color={color} /> : icon}
+      <Text
+        style={{
+          color,
+          fontSize: 16,
+          fontWeight: "700",
+          textAlign: "center",
+          flexShrink: 1,
+        }}
+      >
+        {label}
+      </Text>
     </Pressable>
   );
 }

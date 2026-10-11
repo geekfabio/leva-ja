@@ -1,7 +1,60 @@
-import { Pressable, ScrollView, Text, View } from 'react-native';
-import { router } from 'expo-router';
-import { Crosshair, MapPin, Navigation } from 'lucide-react-native';
-import { AppButton } from '@/components/ui/AppButton';
-import { ScreenHeader } from '@/components/ui/ScreenHeader';
-
-export default function LocationScreen() { return <View className="flex-1 bg-surface px-5 dark:bg-slate-950"><ScreenHeader title="Onde estás?" subtitle="Passo 3 de 4" /><ScrollView contentContainerClassName="pb-28"><View className="relative h-64 overflow-hidden rounded-[30px] bg-green-100 p-5"><View className="absolute -left-8 top-16 h-3 w-80 rotate-[18deg] rounded-full bg-white/80" /><View className="absolute -right-14 top-36 h-3 w-72 rotate-[-30deg] rounded-full bg-white/80" /><View className="absolute left-[43%] top-[42%] h-16 w-16 items-center justify-center rounded-full bg-brand/20"><View className="h-8 w-8 items-center justify-center rounded-full bg-brand"><MapPin size={17} color="#fff" /></View></View><View className="absolute bottom-5 left-5 rounded-2xl bg-white px-4 py-3"><Text className="text-xs font-bold text-muted">A TUA LOCALIZAÇÃO</Text><Text className="mt-1 font-black text-ink">Rua da Missão, Ingombota</Text></View></View><Pressable className="mt-4 flex-row items-center gap-3 rounded-2xl bg-white p-4 dark:bg-slate-900"><View className="rounded-xl bg-brand-soft p-2"><Crosshair size={20} color="#16A34A" /></View><View className="flex-1"><Text className="font-black text-ink dark:text-white">Usar localização actual</Text><Text className="mt-1 text-sm text-muted">Precisão aproximada de 10 metros</Text></View></Pressable><View className="mt-6 rounded-3xl bg-white p-5 dark:bg-slate-900"><View className="flex-row items-center gap-3"><Navigation size={21} color="#16A34A" /><View><Text className="font-black text-ink dark:text-white">Destino do reboque</Text><Text className="mt-1 text-sm text-muted">Ainda não definido</Text></View></View><Pressable className="mt-4 rounded-xl bg-brand-soft py-3"><Text className="text-center font-black text-brand">Adicionar destino (opcional)</Text></Pressable></View></ScrollView><View className="absolute bottom-0 left-0 right-0 border-t border-slate-100 bg-surface px-5 pb-7 pt-4 dark:border-slate-800 dark:bg-slate-950"><AppButton label="Confirmar localização" onPress={() => router.push('/request/estimate')} /></View></View>; }
+import { Text, View } from "react-native";
+import { router } from "expo-router";
+import { AppButton } from "@/components/ui/AppButton";
+import { AppInput } from "@/components/ui/AppInput";
+import { ScreenLayout } from "@/components/ui/ScreenLayout";
+import { MockMap } from "@/components/provider/MockMap";
+import { useRequestDraft } from "@/stores/useRequestDraft";
+import { getService } from "@/domain/catalog";
+export default function LocationScreen() {
+  const draft = useRequestDraft();
+  const cargo = getService(draft.service).transport;
+  const needsDestination = cargo || draft.service === "tow";
+  const valid =
+    draft.address.trim().length >= 5 &&
+    (!cargo || draft.destination.trim().length >= 5);
+  return (
+    <ScreenLayout
+      title={cargo ? "De onde para onde?" : "Onde precisas de apoio?"}
+      subtitle="Passo 4 de 6"
+      action={
+        <AppButton
+          label="Rever pedido"
+          disabled={!valid}
+          onPress={() => router.push("/request/estimate")}
+        />
+      }
+    >
+      <MockMap
+        label="Local de recolha"
+        detail={draft.address || "Introduz a morada"}
+      />
+      <AppInput
+        label={cargo ? "Morada de recolha" : "Local da assistência"}
+        value={draft.address}
+        onChangeText={(address) => draft.update({ address })}
+        placeholder="Rua, bairro e ponto de referência"
+      />
+      {needsDestination ? (
+        <View className="gap-3">
+          <AppInput
+            label={
+              cargo ? "Morada de entrega" : "Destino do reboque (opcional)"
+            }
+            value={draft.destination}
+            onChangeText={(destination) => draft.update({ destination })}
+            placeholder="Morada completa do destino"
+          />
+          <AppButton
+            label="Escolher um local sugerido"
+            variant="ghost"
+            onPress={() => router.push("/request/destination" as never)}
+          />
+        </View>
+      ) : null}
+      <Text className="text-sm leading-5 text-muted">
+        Mapa ilustrativo. Confirma as moradas antes de continuar.
+      </Text>
+    </ScreenLayout>
+  );
+}

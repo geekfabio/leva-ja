@@ -1,10 +1,55 @@
-import { useState } from 'react';
-import { Text, View } from 'react-native';
-import { router } from 'expo-router';
-import { CarFront, MapPinned, ShieldCheck } from 'lucide-react-native';
-import { MotiView } from 'moti';
-import { AppButton } from '@/components/ui/AppButton';
-import { BrandMark } from '@/components/ui/BrandMark';
-import { ProgressDots } from '@/components/ui/ProgressDots';
-const slides = [{ icon: CarFront, eyebrow: 'PEDE', title: 'Ajuda para a tua viatura em poucos passos.', text: 'Pede reboque, bateria, pneu ou combustível onde estiveres.' }, { icon: MapPinned, eyebrow: 'ACOMPANHA', title: 'Vê sempre onde está a assistência.', text: 'Recebe actualizações claras desde a confirmação até à chegada.' }, { icon: ShieldCheck, eyebrow: 'SEGURANÇA', title: 'Assistência com profissionais verificados.', text: 'Contacto simples, informação clara e apoio quando precisas.' }];
-export default function OnboardingScreen() { const [current, setCurrent] = useState(0); const item = slides[current]; const Icon = item.icon; const isLast = current === slides.length - 1; function advance() { if (isLast) router.replace('/(auth)/phone'); else setCurrent((value) => value + 1); } return <View className="flex-1 bg-ink px-6 pb-12 pt-16"><View className="flex-row items-center justify-between"><BrandMark inverse /><Text className="text-sm font-semibold text-slate-300">{current + 1} / {slides.length}</Text></View><View className="flex-1 justify-center"><MotiView key={current} from={{ opacity: 0, translateX: 24 }} animate={{ opacity: 1, translateX: 0 }} transition={{ type: 'timing', duration: 420 }}><View className="mb-10 h-28 w-28 items-center justify-center rounded-[36px] bg-brand shadow-xl"><Icon size={50} color="#FFFFFF" strokeWidth={2.1} /></View><Text className="text-sm font-black tracking-[2px] text-green-200">{item.eyebrow}</Text><Text className="mt-3 text-4xl font-black leading-tight tracking-tight text-white">{item.title}</Text><Text className="mt-4 max-w-sm text-base leading-7 text-slate-300">{item.text}</Text></MotiView></View><View className="gap-6"><ProgressDots total={slides.length} current={current} /><AppButton label={isLast ? 'Criar a minha conta' : 'Continuar'} onPress={advance} /></View></View>; }
+import { useState } from "react";
+import { Text, View } from "react-native";
+import { router } from "expo-router";
+import { AuthScaffold } from "@/components/ui/AuthScaffold";
+import { AppButton } from "@/components/ui/AppButton";
+import { ProgressDots } from "@/components/ui/ProgressDots";
+import { VehicleArt } from "@/components/transport/VehicleArt";
+import type { VehicleId } from "@/domain/catalog";
+const slides: { title: string; description: string; vehicle: VehicleId }[] = [
+  {
+    title: "Pequena carga. Grande ajuda.",
+    description:
+      "Escolhe uma pickup ou carrinha para levar caixas, compras e pequenos móveis.",
+    vehicle: "pickup",
+  },
+  {
+    title: "A tua próxima casa começa aqui.",
+    description:
+      "Planeia a mudança, indica os volumes e pede apoio para carregar e descarregar.",
+    vehicle: "box",
+  },
+  {
+    title: "Também estamos na estrada contigo.",
+    description: "Pede reboque ou apoio para bateria, pneus e combustível.",
+    vehicle: "tow",
+  },
+];
+export default function OnboardingScreen() {
+  const [index, setIndex] = useState(0);
+  const slide = slides[index];
+  return (
+    <AuthScaffold
+      title={slide.title}
+      description={slide.description}
+      footer={
+        <AppButton
+          label={index === 2 ? "Começar" : "Continuar"}
+          onPress={() =>
+            index === 2 ? router.replace("/(auth)/phone") : setIndex(index + 1)
+          }
+        />
+      }
+    >
+      <View className="items-center rounded-3xl bg-brand-soft py-5">
+        <VehicleArt vehicle={slide.vehicle} size={240} />
+      </View>
+      <View className="mt-6">
+        <ProgressDots total={3} current={index} />
+      </View>
+      <Text className="mt-6 text-center text-sm text-muted">
+        Transportes, mudanças e assistência em Luanda.
+      </Text>
+    </AuthScaffold>
+  );
+}

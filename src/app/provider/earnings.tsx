@@ -1,5 +1,61 @@
-import { ScrollView, Text, View } from 'react-native';
-import { Banknote, TrendingUp } from 'lucide-react-native';
-import { ScreenHeader } from '@/components/ui/ScreenHeader';
-import { ProviderMetric } from '@/components/provider/ProviderMetric';
-export default function EarningsScreen() { return <View className="flex-1 bg-surface px-5 dark:bg-slate-950"><ScreenHeader title="Ganhos e histórico" subtitle="Resumo simulado" /><ScrollView contentContainerClassName="pb-8"><View className="flex-row gap-3"><ProviderMetric label="Saldo disponível" value="128.500 Kz" icon={<Banknote size={19} color="#16A34A" />} /><ProviderMetric label="Esta semana" value="+18%" icon={<TrendingUp size={19} color="#16A34A" />} /></View><Text className="mb-3 mt-7 text-lg font-black text-ink dark:text-white">Esta semana</Text>{[['Hoje', '3 serviços', '42.500 Kz'], ['Ontem', '2 serviços', '31.000 Kz'], ['Terça-feira', '4 serviços', '57.500 Kz']].map(([day, services, amount]) => <View key={day} className="mb-3 flex-row items-center rounded-2xl bg-white p-4 dark:bg-slate-900"><View className="h-11 w-11 items-center justify-center rounded-xl bg-brand-soft"><Banknote size={20} color="#16A34A" /></View><View className="ml-3 flex-1"><Text className="font-black text-ink dark:text-white">{day}</Text><Text className="mt-1 text-sm text-muted">{services}</Text></View><Text className="font-black text-brand">{amount}</Text></View>)}</ScrollView></View>; }
+import { Text, View } from "react-native";
+import { router } from "expo-router";
+import { ScreenLayout } from "@/components/ui/ScreenLayout";
+import { AppCard } from "@/components/ui/AppCard";
+import { ListRow } from "@/components/ui/ListRow";
+import { StateMessage } from "@/components/ui/StateMessage";
+import { useOrderStore } from "@/stores/useOrderStore";
+import { money } from "@/domain/catalog";
+export default function EarningsScreen() {
+  const { orders, selectOrder } = useOrderStore();
+  const completed = orders.filter((order) => order.status === "completed");
+  const confirmed = completed
+    .filter((order) => order.paymentStatus === "confirmed")
+    .reduce((sum, order) => sum + order.amount, 0);
+  const total = completed.reduce((sum, order) => sum + order.amount, 0);
+  return (
+    <ScreenLayout
+      title="Ganhos e serviços"
+      subtitle="Resumo dos pedidos de demonstração"
+    >
+      <View className="rounded-3xl bg-ink p-6">
+        <Text className="text-sm text-slate-300">
+          Valor dos serviços concluídos
+        </Text>
+        <Text className="mt-3 text-4xl font-bold text-white">
+          {money(total)}
+        </Text>
+        <Text className="mt-3 text-sm text-slate-300">
+          {completed.length} serviços · sem dedução de comissões
+        </Text>
+      </View>
+      <AppCard>
+        <Text className="font-bold text-ink dark:text-white">
+          Pagamentos confirmados: {money(confirmed)}
+        </Text>
+        <Text className="mt-2 text-sm leading-5 text-muted">
+          Os restantes pagamentos ainda não estão confirmados. Estes valores não
+          representam saldo disponível para levantamento.
+        </Text>
+      </AppCard>
+      {completed.length ? (
+        completed.map((order) => (
+          <ListRow
+            key={order.id}
+            title={order.category}
+            description={`${order.id} · ${money(order.amount)}`}
+            onPress={() => {
+              selectOrder(order.id);
+              router.push(`/provider/request/${order.id}` as never);
+            }}
+          />
+        ))
+      ) : (
+        <StateMessage
+          title="Ainda não há serviços concluídos"
+          description="Os teus ganhos aparecem aqui quando terminares um serviço."
+        />
+      )}
+    </ScreenLayout>
+  );
+}

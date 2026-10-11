@@ -1,12 +1,139 @@
-import { useState } from 'react';
-import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
-import { router } from 'expo-router';
-import { Camera, ShieldAlert, TriangleAlert } from 'lucide-react-native';
-import { AppButton } from '@/components/ui/AppButton';
-import { ScreenHeader } from '@/components/ui/ScreenHeader';
-
-const levels = [['low', 'Baixa'], ['medium', 'Média'], ['high', 'Alta']] as const;
+import { Text, View, Switch } from "react-native";
+import { router } from "expo-router";
+import { AppButton } from "@/components/ui/AppButton";
+import { AppInput } from "@/components/ui/AppInput";
+import { AppCard } from "@/components/ui/AppCard";
+import { ScreenLayout } from "@/components/ui/ScreenLayout";
+import { SelectionCard } from "@/components/ui/SelectionCard";
+import { useRequestDraft, cargoDetailsValid } from "@/stores/useRequestDraft";
+import { getService } from "@/domain/catalog";
 export default function IncidentScreen() {
-  const [level, setLevel] = useState('medium');
-  return <View className="flex-1 bg-surface px-5 dark:bg-slate-950"><ScreenHeader title="Conta-nos o que aconteceu" subtitle="Passo 2 de 5" /><ScrollView contentContainerClassName="pb-28"><View className="rounded-3xl bg-amber-50 p-4"><View className="flex-row gap-3"><TriangleAlert size={21} color="#D97706" /><Text className="flex-1 text-sm leading-5 text-amber-900">Se estiveres numa zona de risco, afasta-te da via e usa o botão SOS.</Text></View></View><Text className="mb-3 mt-6 font-black text-ink dark:text-white">Gravidade</Text><View className="flex-row gap-2">{levels.map(([id, label]) => <Pressable key={id} onPress={() => setLevel(id)} className={`flex-1 rounded-2xl py-4 ${level === id ? 'bg-brand' : 'bg-white dark:bg-slate-900'}`}><Text className={`text-center font-black ${level === id ? 'text-white' : 'text-ink dark:text-white'}`}>{label}</Text></Pressable>)}</View><TextInput multiline placeholder="Ex.: o motor desligou e não volta a ligar" placeholderTextColor="#94A3B8" className="mt-5 min-h-28 rounded-3xl bg-white p-4 text-base text-ink dark:bg-slate-900 dark:text-white" /><Pressable className="mt-4 flex-row items-center justify-center gap-2 rounded-2xl border border-dashed border-brand bg-brand-soft py-4"><Camera size={20} color="#16A34A" /><Text className="font-black text-brand">Adicionar fotos (mock)</Text></Pressable><Pressable onPress={() => router.push('/order/sos')} className="mt-5 flex-row items-center gap-3 rounded-2xl bg-ink p-4"><ShieldAlert size={22} color="#86EFAC" /><View><Text className="font-black text-white">Precisas de ajuda urgente?</Text><Text className="mt-1 text-xs text-slate-300">Abre um alerta SOS sem efectuar chamada.</Text></View></Pressable></ScrollView><View className="absolute bottom-0 left-0 right-0 border-t border-slate-100 bg-surface px-5 pb-7 pt-4 dark:border-slate-800 dark:bg-slate-950"><AppButton label="Continuar" onPress={() => router.push('/request/vehicle')} /></View></View>;
+  const draft = useRequestDraft();
+  const cargo = getService(draft.service).transport;
+  return (
+    <ScreenLayout
+      title={cargo ? "Conta-nos sobre a carga" : "Conta-nos o que aconteceu"}
+      subtitle="Passo 2 de 6"
+      action={
+        <AppButton
+          label="Escolher transporte"
+          disabled={!cargoDetailsValid(draft)}
+          onPress={() => router.push("/request/vehicle")}
+        />
+      }
+    >
+      {cargo ? (
+        <>
+          <AppInput
+            label={
+              draft.service === "moving"
+                ? "O que vais levar na mudança?"
+                : "O que queres transportar?"
+            }
+            value={draft.cargoDescription}
+            onChangeText={(cargoDescription) =>
+              draft.update({ cargoDescription })
+            }
+            placeholder="Ex.: sofá, frigorífico e 12 caixas"
+            multiline
+            hint="Descreve os volumes e os objectos frágeis."
+          />
+          <AppInput
+            label="Peso total aproximado (kg)"
+            keyboardType="decimal-pad"
+            value={draft.weightKg}
+            onChangeText={(weightKg) => draft.update({ weightKg })}
+            placeholder="Ex.: 250"
+            hint="Uma estimativa ajuda o parceiro a confirmar a viatura adequada."
+          />
+          <AppInput
+            label="Dimensões do maior volume"
+            value={draft.dimensions}
+            onChangeText={(dimensions) => draft.update({ dimensions })}
+            placeholder="Ex.: 2 m × 90 cm × 80 cm"
+          />
+          <AppCard>
+            <View className="flex-row items-center gap-3">
+              <View className="flex-1">
+                <Text className="font-bold text-ink dark:text-white">
+                  Ajuda para carregar e descarregar
+                </Text>
+                <Text className="mt-2 text-sm leading-5 text-muted">
+                  Pede apoio ao parceiro. Incluído na estimativa de
+                  demonstração.
+                </Text>
+              </View>
+              <Switch
+                accessibilityLabel="Ajuda para carregar e descarregar"
+                value={draft.helpers}
+                onValueChange={(helpers) => draft.update({ helpers })}
+                trackColor={{ true: "#34D186" }}
+              />
+            </View>
+          </AppCard>
+          <AppInput
+            label="Acesso no local de recolha (opcional)"
+            value={draft.pickupAccess}
+            onChangeText={(pickupAccess) => draft.update({ pickupAccess })}
+            placeholder="Ex.: 3.º andar, sem elevador"
+          />
+          <AppInput
+            label="Acesso no destino (opcional)"
+            value={draft.deliveryAccess}
+            onChangeText={(deliveryAccess) => draft.update({ deliveryAccess })}
+            placeholder="Ex.: rés-do-chão, estacionamento à porta"
+          />
+        </>
+      ) : (
+        <>
+          <AppInput
+            label="Viatura a assistir"
+            value={draft.customerVehicle}
+            onChangeText={(customerVehicle) =>
+              draft.update({ customerVehicle })
+            }
+            placeholder="Marca, modelo e matrícula"
+          />
+          <Text className="font-semibold text-ink dark:text-white">
+            Gravidade
+          </Text>
+          <View className="gap-2">
+            {(["low", "medium", "high"] as const).map((level, index) => (
+              <SelectionCard
+                key={level}
+                title={["Baixa", "Média", "Alta"][index]}
+                icon={<Text className="font-bold text-brand">{index + 1}</Text>}
+                selected={draft.severity === level}
+                onPress={() => draft.update({ severity: level })}
+              />
+            ))}
+          </View>
+          <Text className="rounded-2xl bg-amber-50 p-4 text-sm leading-5 text-amber-900">
+            Se estiveres numa zona de risco, afasta-te da via e procura um local
+            seguro.
+          </Text>
+        </>
+      )}
+      <AppInput
+        label="Informações adicionais (opcional)"
+        value={draft.notes}
+        onChangeText={(notes) => draft.update({ notes })}
+        placeholder={
+          cargo
+            ? "Horário preferido, cuidados especiais…"
+            : "Descreve o problema…"
+        }
+        multiline
+      />
+      <AppButton
+        label={
+          draft.evidence.length
+            ? `Fotos de exemplo: ${draft.evidence.length}`
+            : "Adicionar fotos de exemplo"
+        }
+        variant="ghost"
+        onPress={() => router.push("/request/evidence" as never)}
+      />
+    </ScreenLayout>
+  );
 }

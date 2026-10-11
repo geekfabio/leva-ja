@@ -1,10 +1,178 @@
-import { Pressable, ScrollView, Text, View } from 'react-native';
-import { router as expoRouter } from 'expo-router';
-import { useState } from 'react';
-import { Banknote, ClipboardList, Star, ToggleLeft, ToggleRight, Truck } from 'lucide-react-native';
-import { ProviderMetric } from '@/components/provider/ProviderMetric';
-import { ProviderStatusPill } from '@/components/provider/ProviderStatusPill';
-import { useOrderStore } from '@/stores/useOrderStore';
-const router = { push: (path: string) => expoRouter.push(path as never) };
-export default function ProviderHome() { const [online, setOnline] = useState(true); const order = useOrderStore((state) => state.selectedOrder); return <ScrollView className="flex-1 bg-surface dark:bg-slate-950" contentContainerClassName="px-5 pb-10 pt-16"><View className="flex-row items-start justify-between"><View><Text className="text-sm text-muted">Bom dia, João</Text><Text className="mt-1 text-3xl font-black text-ink dark:text-white">O teu painel</Text></View><Pressable onPress={() => setOnline(!online)} className={`flex-row items-center gap-2 rounded-2xl px-3 py-3 ${online ? 'bg-brand-soft' : 'bg-slate-200'}`}>{online ? <ToggleRight size={24} color="#16A34A" /> : <ToggleLeft size={24} color="#64748B" />}<Text className={`font-black ${online ? 'text-brand' : 'text-slate-600'}`}>{online ? 'Online' : 'Offline'}</Text></Pressable></View><View className="mt-7 flex-row gap-3"><ProviderMetric label="Ganhos hoje" value="42.500 Kz" icon={<Banknote size={19} color="#16A34A" />} /><ProviderMetric label="Avaliação" value="4,9" icon={<Star size={19} color="#16A34A" />} /><ProviderMetric label="Serviços" value="3" icon={<ClipboardList size={19} color="#16A34A" />} /></View><Text className="mb-3 mt-8 text-lg font-black text-ink dark:text-white">Pedido em curso</Text><Pressable onPress={() => router.push(`/provider/request/${order.id}`)} className="rounded-3xl bg-ink p-5"><View className="flex-row items-center justify-between"><ProviderStatusPill status={order.status} /><Truck size={28} color="#86EFAC" /></View><Text className="mt-4 text-xl font-black text-white">{order.category}</Text><Text className="mt-2 text-sm text-slate-300">{order.address} · {order.amount.toLocaleString('pt-PT')} Kz</Text><Text className="mt-4 font-bold text-green-200">Abrir serviço →</Text></Pressable><View className="mt-7 flex-row gap-3"><Quick label="Pedidos próximos" onPress={() => router.push('/provider/requests')} /><Quick label="Ganhos" onPress={() => router.push('/provider/earnings')} /><Quick label="Perfil" onPress={() => router.push('/provider/profile')} /></View></ScrollView>; }
-function Quick({ label, onPress }: { label: string; onPress: () => void }) { return <Pressable onPress={onPress} className="flex-1 rounded-2xl bg-white p-3 dark:bg-slate-900"><Text className="text-center text-xs font-black text-brand">{label}</Text></Pressable>; }
+import { Pressable, ScrollView, Switch, Text, View } from "react-native";
+import { router } from "expo-router";
+import { money } from "@/domain/catalog";
+import { VehicleArt } from "@/components/transport/VehicleArt";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  Banknote,
+  ChevronRight,
+  ClipboardList,
+  Headphones,
+  Star,
+  Truck,
+} from "lucide-react-native";
+import { ProviderMetric } from "@/components/provider/ProviderMetric";
+import { ProviderStatusPill } from "@/components/provider/ProviderStatusPill";
+import { AppButton } from "@/components/ui/AppButton";
+import { AppCard } from "@/components/ui/AppCard";
+import { useOrderStore } from "@/stores/useOrderStore";
+
+export default function ProviderHome() {
+  const { online, setOnline, orders } = useOrderStore();
+  const order = orders.find((item) =>
+    ["accepted", "on_the_way", "arrived", "service_started"].includes(
+      item.status,
+    ),
+  );
+  const completed = orders.filter((item) => item.status === "completed");
+  const total = completed.reduce((sum, item) => sum + item.amount, 0);
+  const insets = useSafeAreaInsets();
+  const active = [
+    "accepted",
+    "on_the_way",
+    "arrived",
+    "service_started",
+  ].includes(order?.status || "");
+  return (
+    <ScrollView
+      className="flex-1 bg-surface dark:bg-slate-950"
+      contentContainerStyle={{
+        paddingTop: Math.max(insets.top, 24),
+        paddingHorizontal: 20,
+        paddingBottom: 28,
+      }}
+    >
+      <View className="mb-6 flex-row items-center justify-between">
+        <View>
+          <Text className="text-sm text-muted">ÁREA DO PARCEIRO</Text>
+          <Text className="mt-1 text-2xl font-bold text-ink dark:text-white">
+            Bom dia, João.
+          </Text>
+        </View>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Suporte ao parceiro"
+          onPress={() => router.push("/provider/support" as never)}
+          className="h-12 w-12 items-center justify-center rounded-full border border-line bg-white"
+        >
+          <Headphones size={22} color="#132A21" />
+        </Pressable>
+      </View>
+      <AppCard>
+        <View className="flex-row items-center gap-3">
+          <View
+            className={`h-3 w-3 rounded-full ${online ? "bg-brand" : "bg-slate-400"}`}
+          />
+          <View className="flex-1">
+            <Text className="text-lg font-bold text-ink dark:text-white">
+              {online ? "Estás online" : "Estás offline"}
+            </Text>
+            <Text
+              accessibilityLiveRegion="polite"
+              className="mt-1 text-sm leading-5 text-muted"
+            >
+              {online
+                ? "Pronto para receber novos pedidos."
+                : "Liga a disponibilidade para ver novos pedidos."}
+            </Text>
+          </View>
+          <Switch
+            accessibilityLabel="Disponibilidade para novos pedidos"
+            value={online}
+            onValueChange={setOnline}
+            trackColor={{ false: "#CBD5E1", true: "#34D186" }}
+            thumbColor="#FFFFFF"
+          />
+        </View>
+      </AppCard>
+      <View className="mt-5 rounded-3xl bg-ink p-6">
+        <View className="flex-row items-center gap-2">
+          <Banknote size={20} color="#34D186" />
+          <Text className="text-sm text-slate-300">
+            Serviços concluídos · demonstração
+          </Text>
+        </View>
+        <Text className="mt-4 text-4xl font-bold tracking-tight text-white">
+          {money(total)}
+        </Text>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => router.push("/provider/earnings" as never)}
+          className="mt-4 min-h-12 flex-row items-center justify-between"
+        >
+          <Text className="font-semibold text-green-200">Consultar ganhos</Text>
+          <ChevronRight size={20} color="#34D186" />
+        </Pressable>
+      </View>
+      <View className="mt-4 flex-row flex-wrap gap-3">
+        <ProviderMetric
+          label="Avaliação média"
+          value="4,9 / 5"
+          icon={<Star size={20} color="#087F4F" />}
+        />
+        <ProviderMetric
+          label="Serviços concluídos"
+          value={String(completed.length)}
+          icon={<ClipboardList size={20} color="#087F4F" />}
+        />
+      </View>
+      <Text
+        accessibilityRole="header"
+        className="mb-4 mt-7 text-xl font-bold text-ink dark:text-white"
+      >
+        {active ? "Serviço em curso" : "O teu próximo serviço"}
+      </Text>
+      {active && order ? (
+        <AppCard>
+          <View className="flex-row items-center justify-between">
+            <ProviderStatusPill status={order.status} />
+            <VehicleArt vehicle={order.vehicleType || "tow"} size={80} />
+          </View>
+          <Text className="mt-4 text-xl font-bold text-ink dark:text-white">
+            {order.category}
+          </Text>
+          <Text className="mt-2 text-sm leading-5 text-muted">
+            {order.address}
+          </Text>
+          <Text className="mt-3 text-xl font-bold text-ink dark:text-white">
+            {order.amount.toLocaleString("pt-PT")} Kz
+          </Text>
+          <View className="mt-5">
+            <AppButton
+              label="Continuar serviço"
+              onPress={() =>
+                router.push(`/provider/request/${order.id}` as never)
+              }
+            />
+          </View>
+        </AppCard>
+      ) : (
+        <AppCard>
+          <VehicleArt vehicle="box" size={110} />
+          <Text className="mt-3 text-lg font-bold text-ink dark:text-white">
+            {online
+              ? "Vamos encontrar o próximo pedido?"
+              : "Faz uma pausa. Voltamos quando quiseres."}
+          </Text>
+          <Text className="mt-2 text-sm leading-5 text-muted">
+            Os detalhes e o valor ficam disponíveis antes de aceitares.
+          </Text>
+        </AppCard>
+      )}
+      <View className="mt-5">
+        <AppButton
+          label={online ? "Ver pedidos próximos" : "Ficar online"}
+          variant="ghost"
+          onPress={() =>
+            online
+              ? router.push("/provider/requests" as never)
+              : setOnline(true)
+          }
+        />
+      </View>
+      <Text className="mt-5 text-center text-xs text-muted">
+        Dados e disponibilidade de demonstração.
+      </Text>
+    </ScrollView>
+  );
+}

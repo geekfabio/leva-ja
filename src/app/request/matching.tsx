@@ -1,7 +1,67 @@
-import { Text, View } from 'react-native';
-import { router } from 'expo-router';
-import { Radar, ShieldCheck } from 'lucide-react-native';
-import { MotiView } from 'moti';
-import { AppButton } from '@/components/ui/AppButton';
-
-export default function MatchingScreen() { return <View className="flex-1 justify-between bg-ink px-6 pb-12 pt-20"><View><MotiView from={{ scale: .85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'timing', duration: 500 }} className="h-24 w-24 items-center justify-center rounded-[32px] bg-brand"><Radar size={46} color="#fff" /></MotiView><Text className="mt-10 text-4xl font-black leading-tight text-white">A procurar{`\n`}um reboque perto.</Text><Text className="mt-4 max-w-sm text-base leading-7 text-slate-300">Estamos a contactar prestadores verificados na tua zona.</Text><View className="mt-10 rounded-3xl bg-white/10 p-5"><View className="flex-row items-center gap-3"><ShieldCheck size={23} color="#86EFAC" /><View><Text className="font-black text-white">Pedido #LJ-2601</Text><Text className="mt-1 text-sm text-slate-300">Receberás uma actualização já a seguir.</Text></View></View></View></View><View className="gap-3"><AppButton label="Ver reboque encontrado" onPress={() => router.replace('/order/LJ-2601')} /><AppButton label="Cancelar pedido" variant="ghost" onPress={() => router.replace('/(tabs)')} /></View></View>; }
+import { Text, View } from "react-native";
+import { router, useLocalSearchParams } from "expo-router";
+import { ScreenLayout } from "@/components/ui/ScreenLayout";
+import { AppButton } from "@/components/ui/AppButton";
+import { StateMessage } from "@/components/ui/StateMessage";
+import { VehicleArt } from "@/components/transport/VehicleArt";
+import { useOrderStore } from "@/stores/useOrderStore";
+export default function MatchingScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const { orders, selectedOrder, online, updateStatus, cancelOrder } =
+    useOrderStore();
+  const order = id ? orders.find((item) => item.id === id) : selectedOrder;
+  if (!order)
+    return (
+      <ScreenLayout title="Pedido indisponível">
+        <StateMessage
+          title="Não encontrámos este pedido"
+          description="Volta ao início para criar um transporte."
+          action="Voltar ao início"
+          onPress={() => router.replace("/")}
+        />
+      </ScreenLayout>
+    );
+  return (
+    <ScreenLayout title="À procura do parceiro certo" subtitle={order.id}>
+      <View className="items-center rounded-3xl bg-brand-soft p-6">
+        <VehicleArt vehicle={order.vehicleType || "tow"} size={200} />
+        <Text className="text-2xl font-bold text-ink">{order.category}</Text>
+        <Text className="mt-3 text-center text-base leading-6 text-muted">
+          O teu pedido está criado. Acompanha a atribuição do parceiro ou abre a
+          área do parceiro para o aceitar.
+        </Text>
+      </View>
+      <Text className="text-sm text-muted">
+        Demonstração local: não são contactados prestadores reais.
+      </Text>
+      <AppButton
+        label="Acompanhar pedido"
+        onPress={() => router.replace(`/order/${order.id}`)}
+      />
+      <AppButton
+        label="Abrir pedido como parceiro"
+        variant="ghost"
+        onPress={() => router.push(`/provider/request/${order.id}` as never)}
+      />
+      {order.status === "matching" ? (
+        <AppButton
+          label="Simular parceiro encontrado"
+          variant="ghost"
+          disabled={!online}
+          onPress={() => {
+            updateStatus(order.id, "accepted");
+            router.replace(`/order/${order.id}`);
+          }}
+        />
+      ) : null}
+      <AppButton
+        label="Cancelar pedido"
+        variant="danger"
+        onPress={() => {
+          cancelOrder(order.id);
+          router.replace("/(tabs)/orders");
+        }}
+      />
+    </ScreenLayout>
+  );
+}

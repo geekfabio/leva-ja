@@ -1,17 +1,163 @@
-import { Pressable, ScrollView, Text, View } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
-import { CarFront, Check, FileText, MapPin, MessageCircle, Phone, ShieldAlert, X } from 'lucide-react-native';
-import { ScreenHeader } from '@/components/ui/ScreenHeader';
-import { AppButton } from '@/components/ui/AppButton';
-import { useOrderStore } from '@/stores/useOrderStore';
-import type { OrderStatus } from '@/types/order';
-
-const timeline: { label: string; status: OrderStatus }[] = [{ label: 'Pedido confirmado', status: 'matching' }, { label: 'Prestador aceite', status: 'accepted' }, { label: 'A caminho', status: 'on_the_way' }, { label: 'Chegou ao local', status: 'arrived' }, { label: 'Serviço iniciado', status: 'service_started' }, { label: 'Serviço concluído', status: 'completed' }];
-const rank: Record<OrderStatus, number> = { draft: -1, matching: 0, accepted: 1, on_the_way: 2, arrived: 3, service_started: 4, completed: 5, cancelled: -1, disputed: 5 };
+import { useEffect } from "react";
+import { Text, View } from "react-native";
+import { router, useLocalSearchParams } from "expo-router";
+import { ScreenLayout } from "@/components/ui/ScreenLayout";
+import { AppButton } from "@/components/ui/AppButton";
+import { AppCard } from "@/components/ui/AppCard";
+import { StateMessage } from "@/components/ui/StateMessage";
+import { ServiceSummary } from "@/components/orders/ServiceSummary";
+import { ServiceTimeline } from "@/components/orders/ServiceTimeline";
+import { ContactActions } from "@/components/orders/ContactActions";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { useOrderStore } from "@/stores/useOrderStore";
+import { getService, money } from "@/domain/catalog";
 export default function OrderDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { orders, selectedOrder, updateStatus } = useOrderStore();
-  const order = orders.find((item) => item.id === id) ?? selectedOrder;
-  const complete = order.status === 'completed'; const cancelled = order.status === 'cancelled'; const step = timeline[Math.min(Math.max(rank[order.status] + 1, 0), timeline.length - 1)];
-  return <View className="flex-1 bg-surface px-5 dark:bg-slate-950"><ScreenHeader title={complete ? 'Assistência concluída' : 'Acompanhar assistência'} subtitle={`Pedido ${order.id}`} /><ScrollView contentContainerClassName="pb-10"><View className="mb-5 h-56 overflow-hidden rounded-[30px] bg-green-100 p-5"><View className="absolute -left-10 top-24 h-3 w-96 rotate-[-14deg] rounded-full bg-white/80" /><View className="absolute right-8 top-9 h-11 w-11 items-center justify-center rounded-full bg-ink"><CarFront size={23} color="#fff" /></View><View className="absolute left-8 top-11 h-9 w-9 items-center justify-center rounded-full bg-brand"><MapPin size={19} color="#fff" /></View><View className="absolute bottom-5 left-5 right-5 rounded-2xl bg-white p-4"><Text className="text-xs font-black text-brand">GPS SIMULADO · ACTUALIZA EM TEMPO REAL</Text><Text className="mt-1 font-black text-ink">{complete ? 'Viatura entregue no destino' : `${order.provider} · ${order.etaMinutes} min`}</Text></View></View>{cancelled ? <View className="mb-5 rounded-3xl bg-red-50 p-5"><Text className="font-black text-red-700">Pedido cancelado</Text><Text className="mt-1 text-sm text-red-700">Não será atribuído qualquer prestador.</Text></View> : <><View className="mb-5 rounded-3xl bg-white p-5 dark:bg-slate-900"><View className="flex-row items-center gap-3"><View className="h-12 w-12 items-center justify-center rounded-2xl bg-brand"><Text className="font-black text-white">JM</Text></View><View className="flex-1"><Text className="font-black text-ink dark:text-white">{order.provider}</Text><Text className="mt-1 text-sm text-muted">Condutor verificado · Reboque {order.plate}</Text></View></View><View className="mt-4 flex-row gap-2"><Pressable onPress={() => router.push('/order/chat')} className="flex-1 flex-row items-center justify-center gap-2 rounded-xl bg-brand-soft py-3"><MessageCircle size={18} color="#16A34A" /><Text className="font-black text-brand">Mensagem</Text></Pressable><Pressable onPress={() => router.push('/order/call')} className="flex-1 flex-row items-center justify-center gap-2 rounded-xl bg-brand-soft py-3"><Phone size={18} color="#16A34A" /><Text className="font-black text-brand">Chamar</Text></Pressable></View></View><View className="rounded-3xl bg-white p-5 dark:bg-slate-900"><Text className="mb-4 text-lg font-black text-ink dark:text-white">Estado do serviço</Text>{timeline.map((item, index) => { const done = rank[order.status] >= index; return <View key={item.label} className="flex-row gap-3"><View className="items-center"><View className={`h-7 w-7 items-center justify-center rounded-full ${done ? 'bg-brand' : 'bg-slate-200'}`}>{done && <Check size={15} color="#fff" />}</View>{index < timeline.length - 1 && <View className={`h-7 w-0.5 ${done ? 'bg-brand' : 'bg-slate-200'}`} />}</View><Text className={`pt-1 font-bold ${done ? 'text-ink dark:text-white' : 'text-muted'}`}>{item.label}{index === rank[order.status] && !complete ? ' · agora' : ''}</Text></View>; })}</View>{complete ? <View className="mt-5 gap-3"><AppButton label="Ver recibo e preço final" icon={<FileText size={18} color="#fff" />} onPress={() => router.push('/order/receipt')} /><AppButton label="Avaliar assistência" variant="ghost" onPress={() => router.push('/order/rate')} /></View> : <View className="mt-5 gap-3"><AppButton label={`Simular: ${step.label}`} onPress={() => updateStatus(order.id, step.status)} /><Pressable onPress={() => router.push('/order/cancel')} className="flex-row items-center justify-center gap-2 py-3"><X size={17} color="#DC2626" /><Text className="font-bold text-red-600">Cancelar pedido</Text></Pressable></View>}</>}</ScrollView><Pressable onPress={() => router.push('/order/sos')} className="absolute bottom-5 right-5 h-14 w-14 items-center justify-center rounded-full bg-red-600 shadow-lg"><ShieldAlert size={25} color="#fff" /></Pressable></View>;
+  const { orders, selectOrder, patchOrder } = useOrderStore();
+  const order = orders.find((item) => item.id === id);
+  useEffect(() => {
+    if (id) selectOrder(id);
+  }, [id, selectOrder]);
+  if (!order)
+    return (
+      <ScreenLayout title="Pedido">
+        <StateMessage
+          title="Pedido não encontrado"
+          description="Consulta os teus pedidos para continuar."
+          action="Ver pedidos"
+          onPress={() => router.replace("/(tabs)/orders")}
+        />
+      </ScreenLayout>
+    );
+  const cargo = getService(order.serviceId || "tow").transport;
+  const complete = order.status === "completed",
+    cancelled = order.status === "cancelled",
+    disputed = order.status === "disputed";
+  return (
+    <ScreenLayout
+      title={
+        complete
+          ? "Serviço concluído"
+          : cancelled
+            ? "Pedido cancelado"
+            : "Acompanhar pedido"
+      }
+      subtitle={order.id}
+    >
+      <ServiceSummary
+        service={order.category}
+        vehicle={order.vehicleType || "tow"}
+        origin={order.address}
+        destination={order.destination}
+        description={
+          order.cargoDescription
+            ? `${order.cargoDescription} · ${order.weightKg} kg · ${order.dimensions}`
+            : order.vehicle
+        }
+      />
+      {cancelled || disputed ? (
+        <StateMessage
+          title={cancelled ? "Este pedido foi cancelado" : "Pedido em análise"}
+          description={
+            cancelled
+              ? "Podes criar um novo pedido quando precisares."
+              : "A equipa de apoio está a analisar a ocorrência."
+          }
+          action={cancelled ? "Voltar ao início" : "Consultar reclamação"}
+          onPress={() =>
+            router.push(cancelled ? "/" : ("/order/complaint-status" as never))
+          }
+        />
+      ) : (
+        <>
+          <AppCard>
+            <Text className="mb-5 text-lg font-bold text-ink dark:text-white">
+              Cada etapa, à tua vista
+            </Text>
+            <ServiceTimeline status={order.status} transport={cargo} />
+          </AppCard>
+          <AppCard>
+            <Text className="text-lg font-bold text-ink dark:text-white">
+              {order.provider || "À procura de parceiro"}
+            </Text>
+            <Text className="mb-4 mt-2 text-sm leading-6 text-muted">
+              {order.provider
+                ? `${order.plate || "Viatura a confirmar"} · ${cargo ? "Transporte de cargas" : "Assistência automóvel"}`
+                : "Os contactos ficam disponíveis quando o pedido for aceite."}
+            </Text>
+            {order.provider ? <ContactActions /> : null}
+          </AppCard>
+        </>
+      )}
+      {order.proposedAmount && !complete && !cancelled && !disputed ? (
+        <AppCard>
+          <Text className="text-lg font-bold text-ink dark:text-white">
+            Proposta do parceiro: {money(order.proposedAmount)}
+          </Text>
+          <Text className="my-3 text-sm text-muted">{order.proposalNote}</Text>
+          <AppButton
+            label="Aceitar valor na demonstração"
+            onPress={() =>
+              patchOrder(order.id, {
+                amount: order.proposedAmount,
+                proposedAmount: undefined,
+                pricing: undefined,
+              })
+            }
+          />
+        </AppCard>
+      ) : null}
+      <Text className="text-xl font-bold text-ink dark:text-white">
+        Valor do serviço · {money(order.amount)}
+      </Text>
+      <AppButton
+        label="Ver pagamento"
+        variant="ghost"
+        onPress={() => router.push("/request/payment-result" as never)}
+      />
+      <StatusBadge
+        status={
+          {
+            confirmed: "Confirmado",
+            failed: "Falhou",
+            refunded: "Reembolsado",
+            pending: "Pendente",
+          }[order.paymentStatus || "pending"]
+        }
+      />
+      {complete ? (
+        <>
+          <AppButton
+            label="Ver resumo e recibo"
+            onPress={() => router.push("/order/receipt")}
+          />
+          <AppButton
+            label="Avaliar serviço"
+            variant="ghost"
+            onPress={() => router.push("/order/rate")}
+          />
+        </>
+      ) : !cancelled && !disputed ? (
+        <>
+          <AppButton
+            label="Abrir execução do parceiro (demo)"
+            variant="ghost"
+            onPress={() =>
+              router.push(`/provider/request/${order.id}` as never)
+            }
+          />
+          <AppButton
+            label="Cancelar pedido"
+            variant="danger"
+            onPress={() => router.push("/order/cancel")}
+          />
+        </>
+      ) : null}
+      <AppButton
+        label="Ajuda e segurança"
+        variant="ghost"
+        onPress={() => router.push("/order/sos")}
+      />
+    </ScreenLayout>
+  );
 }

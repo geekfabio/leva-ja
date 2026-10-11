@@ -1,6 +1,50 @@
-import { Pressable, ScrollView, Text, View } from 'react-native';
-import { router } from 'expo-router';
-import { CircleHelp, MessageCircle, PhoneCall, ShieldAlert, TriangleAlert } from 'lucide-react-native';
-import { ScreenHeader } from '@/components/ui/ScreenHeader';
-const topics = [{ label: 'O reboque está atrasado', icon: TriangleAlert }, { label: 'Estou numa situação de risco', icon: ShieldAlert }, { label: 'Falar com o suporte', icon: MessageCircle }];
-export default function SupportScreen() { return <View className="flex-1 bg-surface px-5 dark:bg-slate-950"><ScreenHeader title="Como podemos ajudar?" subtitle="Pedido #LJ-2601" /><ScrollView contentContainerClassName="pb-8"><View className="mb-7 rounded-3xl bg-ink p-6"><CircleHelp size={30} color="#86EFAC" /><Text className="mt-5 text-2xl font-black text-white">Estamos aqui para ti.</Text><Text className="mt-2 text-sm leading-6 text-slate-300">Se não estiveres em segurança, afasta-te da via e contacta-nos imediatamente.</Text></View>{topics.map(({ label, icon: Icon }) => <Pressable key={label} className="mb-3 flex-row items-center gap-4 rounded-2xl bg-white p-4 dark:bg-slate-900"><View className="rounded-xl bg-brand-soft p-3"><Icon size={21} color="#16A34A" /></View><Text className="flex-1 font-black text-ink dark:text-white">{label}</Text></Pressable>)}<Pressable onPress={() => router.back()} className="mt-3 flex-row items-center justify-center gap-2 rounded-2xl bg-brand-soft py-4"><PhoneCall size={18} color="#16A34A" /><Text className="font-black text-brand">Ligar para o suporte</Text></Pressable></ScrollView></View>; }
+import { Text } from "react-native";
+import { router } from "expo-router";
+import { ScreenLayout } from "@/components/ui/ScreenLayout";
+import { AppCard } from "@/components/ui/AppCard";
+import { ListRow } from "@/components/ui/ListRow";
+const topics = [
+  [
+    "Qual viatura devo escolher?",
+    "Pickup para pequenos volumes, carrinha para carga protegida, camião fechado para mudanças e camião de carga pesada para mercadorias volumosas. Indica peso e dimensões para o parceiro confirmar a capacidade.",
+  ],
+  [
+    "O parceiro ajuda a carregar?",
+    "Podes pedir apoio à carga e descarga nos detalhes do pedido. Indica também andares, elevadores e dificuldades de acesso.",
+  ],
+  [
+    "Como funciona o reboque?",
+    "Escolhe reboque, descreve a viatura e o problema e confirma o local. Podes indicar o destino ou combiná-lo com o parceiro.",
+  ],
+  [
+    "Já foi feito algum pagamento?",
+    "Nesta demonstração não são cobrados pagamentos. O estado do pagamento é apresentado no resumo de cada pedido.",
+  ],
+];
+export default function SupportScreen() {
+  return (
+    <ScreenLayout
+      title="Como podemos ajudar?"
+      subtitle="Transporte, mudanças e assistência"
+    >
+      {topics.map(([title, body]) => (
+        <AppCard key={title}>
+          <Text className="text-lg font-bold text-ink dark:text-white">
+            {title}
+          </Text>
+          <Text className="mt-3 text-sm leading-6 text-muted">{body}</Text>
+        </AppCard>
+      ))}
+      <ListRow
+        title="Preciso de ajuda com um pedido"
+        description="Escolhe o pedido e consulta os contactos."
+        onPress={() => router.push("/(tabs)/orders")}
+      />
+      <ListRow
+        title="Ajuda e segurança"
+        description="Consultar o fluxo SOS de demonstração."
+        onPress={() => router.push("/order/sos")}
+      />
+    </ScreenLayout>
+  );
+}

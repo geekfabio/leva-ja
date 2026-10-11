@@ -1,5 +1,56 @@
-import { Text, View } from 'react-native';
-import { router } from 'expo-router';
-import { BadgeCheck, MessageCircleMore, Truck } from 'lucide-react-native';
-import { AppButton } from '@/components/ui/AppButton';
-export default function ProviderLogin() { return <View className="flex-1 justify-between bg-ink px-6 pb-12 pt-20"><View><View className="h-20 w-20 items-center justify-center rounded-[28px] bg-brand"><Truck size={40} color="#fff" /></View><Text className="mt-9 text-4xl font-black text-white">Leva Já{`\n`}Prestador</Text><Text className="mt-4 text-base leading-7 text-slate-300">Entra de forma segura com o teu número de telemóvel e OTP.</Text><View className="mt-10 gap-3"><View className="flex-row gap-3 rounded-2xl bg-white/10 p-4"><BadgeCheck size={22} color="#86EFAC" /><Text className="flex-1 text-sm text-white">Documentos e viatura aprovados</Text></View><View className="flex-row gap-3 rounded-2xl bg-white/10 p-4"><MessageCircleMore size={22} color="#86EFAC" /><Text className="flex-1 text-sm text-white">Demo: +244 923 456 789 · OTP 123456</Text></View></View></View><AppButton label="Entrar com número e OTP" onPress={() => router.push('/(auth)/phone?role=provider' as never)} /></View>; }
+import { VehicleArt } from "@/components/transport/VehicleArt";
+import { Text, View } from "react-native";
+import { router } from "expo-router";
+import { BadgeCheck, Banknote, Truck } from "lucide-react-native";
+import { AuthScaffold } from "@/components/ui/AuthScaffold";
+import { AppButton } from "@/components/ui/AppButton";
+import { AppCard } from "@/components/ui/AppCard";
+
+export default function ProviderLogin() {
+  return (
+    <AuthScaffold
+      title="Mais oportunidades. Ao teu ritmo."
+      description="A tua área de parceiro Leva Já. Gere pedidos, acompanha os serviços e consulta os teus ganhos."
+    >
+      <View className="mb-6 rounded-3xl bg-ink p-6">
+        <View className="mb-6 h-24 w-28 items-center justify-center rounded-2xl bg-brand-bright">
+          <VehicleArt vehicle="heavy" size={100} />
+        </View>
+        <Text className="text-2xl font-bold text-white">
+          Cada serviço conta.
+        </Text>
+        <Text className="mt-2 text-base leading-6 text-slate-300">
+          Transporta cargas, faz mudanças e presta apoio na estrada.
+        </Text>
+      </View>
+      <AppCard>
+        <View className="flex-row items-center gap-3">
+          <BadgeCheck size={22} color="#087F4F" />
+          <Text className="flex-1 text-sm text-ink dark:text-white">
+            Pedidos com os detalhes de que precisas
+          </Text>
+        </View>
+        <View className="mt-4 flex-row items-center gap-3">
+          <Banknote size={22} color="#087F4F" />
+          <Text className="flex-1 text-sm text-ink dark:text-white">
+            Serviços e ganhos num só lugar
+          </Text>
+        </View>
+      </AppCard>
+      <View className="mt-6 gap-3">
+        <AppButton
+          label="Entrar como parceiro"
+          onPress={() => router.push("/(auth)/phone?role=provider" as never)}
+        />
+        <AppButton
+          label="Quero ser parceiro"
+          variant="ghost"
+          onPress={() => router.push("/provider/onboarding" as never)}
+        />
+      </View>
+      <Text className="mt-5 text-center text-xs leading-5 text-muted">
+        Demonstração: +244 923 456 789 · código 123456
+      </Text>
+    </AuthScaffold>
+  );
+}

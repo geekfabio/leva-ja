@@ -1,7 +1,55 @@
-import { useState } from 'react';
-import { Text, View } from 'react-native';
-import { router } from 'expo-router';
-import { CircleCheck, Clock3, XCircle } from 'lucide-react-native';
-import { AppButton } from '@/components/ui/AppButton';
-import { StatusBadge } from '@/components/ui/StatusBadge';
-export default function PaymentResult() { const [state, setState] = useState<'Confirmado' | 'Pendente' | 'Falhou' | 'Reembolsado'>('Confirmado'); const Icon = state === 'Confirmado' ? CircleCheck : state === 'Falhou' ? XCircle : Clock3; return <View className="flex-1 justify-between bg-surface px-6 pb-10 pt-20 dark:bg-slate-950"><View><View className="h-20 w-20 items-center justify-center rounded-[28px] bg-brand-soft"><Icon size={40} color={state === 'Falhou' ? '#DC2626' : '#16A34A'} /></View><Text className="mt-8 text-3xl font-black text-ink dark:text-white">Pagamento {state.toLowerCase()}</Text><Text className="mt-3 text-base leading-6 text-muted">Pedido LJ-2601 · 18.500 Kz · Referência Multicaixa</Text><View className="mt-7 rounded-3xl bg-white p-5 dark:bg-slate-900"><StatusBadge status={state} /><Text className="mt-4 font-black text-ink dark:text-white">Código de referência</Text><Text className="mt-2 text-2xl font-black text-brand">9321 4567 8901</Text></View></View><View className="gap-3"><AppButton label="Alternar estado mock" onPress={() => setState(state === 'Confirmado' ? 'Pendente' : state === 'Pendente' ? 'Falhou' : state === 'Falhou' ? 'Reembolsado' : 'Confirmado')} /><AppButton label="Acompanhar pedido" variant="ghost" onPress={() => router.replace('/order/LJ-2601')} /></View></View>; }
+import { Text, View } from "react-native";
+import { router } from "expo-router";
+import { ScreenLayout } from "@/components/ui/ScreenLayout";
+import { AppButton } from "@/components/ui/AppButton";
+import { SelectionCard } from "@/components/ui/SelectionCard";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { PriceSummary } from "@/components/orders/PriceSummary";
+import { useOrderStore } from "@/stores/useOrderStore";
+import { PaymentStatus } from "@/types/order";
+const states: [PaymentStatus, string][] = [
+  ["pending", "Pendente"],
+  ["confirmed", "Confirmado"],
+  ["failed", "Falhou"],
+  ["refunded", "Reembolsado"],
+];
+export default function PaymentResult() {
+  const { selectedOrder: order, patchOrder } = useOrderStore();
+  return (
+    <ScreenLayout
+      title="Pagamento do pedido"
+      subtitle={order.id}
+      action={
+        <AppButton
+          label="Voltar ao pedido"
+          onPress={() => router.replace(`/order/${order.id}`)}
+        />
+      }
+    >
+      <PriceSummary
+        amount={order.amount}
+        pricing={order.pricing}
+        label={order.paymentMethod || "Forma de pagamento a confirmar"}
+      />
+      <StatusBadge
+        status={
+          states.find(([id]) => id === order.paymentStatus)?.[1] || "Pendente"
+        }
+      />
+      <Text className="text-base leading-6 text-muted">
+        Simula um estado de pagamento. Nenhuma transacção real será realizada.
+      </Text>
+      <View accessibilityRole="radiogroup" className="gap-3">
+        {states.map(([id, name], index) => (
+          <SelectionCard
+            key={id}
+            title={name}
+            icon={<Text className="font-bold text-brand">{index + 1}</Text>}
+            selected={id === (order.paymentStatus || "pending")}
+            onPress={() => patchOrder(order.id, { paymentStatus: id })}
+          />
+        ))}
+      </View>
+    </ScreenLayout>
+  );
+}
