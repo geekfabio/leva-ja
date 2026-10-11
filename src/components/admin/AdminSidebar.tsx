@@ -4,6 +4,7 @@ import {
   BarChart3,
   Bell,
   CarFront,
+  FileBarChart2,
   FileCheck2,
   Map,
   Settings,
@@ -18,7 +19,8 @@ const entries = [
   [FileCheck2, "Prestadores", "/admin/section/providers"],
   [WalletCards, "Financeiro", "/admin/section/payments"],
   [Bell, "Segurança", "/admin/section/safety"],
-  [Settings, "Configurações", "/admin/section/settings"],
+  [FileBarChart2, "Relatórios", "/admin/reports"],
+  [Settings, "Configurações", "/admin/settings"],
 ];
 export function AdminSidebar({ active }: { active: string }) {
   return (

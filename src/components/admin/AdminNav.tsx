@@ -7,7 +7,8 @@ const links = [
   ["Prestadores", "/admin/section/providers"],
   ["Pagamentos", "/admin/section/payments"],
   ["SOS", "/admin/section/safety"],
-  ["Configurações", "/admin/section/settings"],
+  ["Relatórios", "/admin/reports"],
+  ["Configurações", "/admin/settings"],
 ];
 export function AdminNav({ active }: { active: string }) {
   return (

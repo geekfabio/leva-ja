@@ -1,0 +1,38 @@
+import { useState } from 'react';
+import { Pressable, ScrollView, Text, View } from 'react-native';
+import { router } from 'expo-router';
+import { Banknote, Check, CreditCard, Ticket } from 'lucide-react-native';
+import { AppButton } from '@/components/ui/AppButton';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
+
+const methods = [
+  { id: 'multicaixa', label: 'Referência Multicaixa', icon: CreditCard, hint: 'Referência gerada no fim do pedido' },
+  { id: 'cash', label: 'Numerário', icon: Banknote, hint: 'Pagar ao transportador' },
+  { id: 'voucher', label: 'Voucher', icon: Ticket, hint: 'Aplicar saldo promocional' },
+];
+
+export default function TransportPaymentScreen() {
+  const [method, setMethod] = useState('multicaixa');
+  return (
+    <View className="flex-1 bg-surface px-5 dark:bg-slate-950">
+      <ScreenHeader title="Como queres pagar?" subtitle="Pagamento 100% simulado" />
+      <ScrollView contentContainerClassName="pb-28">
+        {methods.map(({ id, label, icon: Icon, hint }) => (
+          <Pressable key={id} onPress={() => setMethod(id)} className={`mb-3 flex-row items-center gap-3 rounded-3xl border p-4 ${id === method ? 'border-brand bg-brand-soft' : 'border-transparent bg-white dark:bg-slate-900'}`}>
+            <View className="rounded-2xl bg-white p-3 dark:bg-slate-800"><Icon size={22} color="#16A34A" /></View>
+            <View className="flex-1"><Text className="font-black text-ink dark:text-white">{label}</Text><Text className="mt-1 text-xs text-muted">{hint}</Text></View>
+            {id === method ? <View className="h-6 w-6 items-center justify-center rounded-full bg-brand"><Check size={14} color="#fff" /></View> : null}
+          </Pressable>
+        ))}
+        <View className="mt-5 rounded-3xl bg-ink p-5">
+          <Text className="text-sm text-green-200">TOTAL ESTIMADO</Text>
+          <Text className="mt-2 text-3xl font-black text-white">14.000 Kz</Text>
+          <Text className="mt-3 text-sm text-slate-300">Poderás acompanhar o estado e obter recibo após o transporte.</Text>
+        </View>
+      </ScrollView>
+      <View className="absolute bottom-0 left-0 right-0 border-t border-slate-100 bg-surface px-5 pb-7 pt-4 dark:border-slate-800 dark:bg-slate-950">
+        <AppButton label="Confirmar e procurar transportador" onPress={() => router.replace('/transport/matching' as never)} />
+      </View>
+    </View>
+  );
+}

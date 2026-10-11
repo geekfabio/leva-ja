@@ -1,6 +1,5 @@
-import { AppInput } from "@/components/ui/AppInput";
 import { useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import {
   Check,
@@ -14,6 +13,9 @@ import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ProofRow } from "@/components/ui/ProofRow";
 import { AppButton } from "@/components/ui/AppButton";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { toast } from "@/lib/toast";
+
 const config: Record<
   string,
   { title: string; subtitle: string; status: string; icon: typeof UserRound }
@@ -49,6 +51,7 @@ const config: Record<
     icon: ShieldAlert,
   },
 };
+
 export default function AdminDetail() {
   const { type = "order", id } = useLocalSearchParams<{
     type: string;
@@ -56,10 +59,73 @@ export default function AdminDetail() {
   }>();
   const item = config[type] ?? config.order;
   const [status, setStatus] = useState(item.status);
+  const [note, setNote] = useState("");
+  const [blockOpen, setBlockOpen] = useState(false);
+  const [refundOpen, setRefundOpen] = useState(false);
+  const [correctionOpen, setCorrectionOpen] = useState(false);
   const Icon = item.icon;
+
+  function toggleBlock() {
+    if (status === "Bloqueado") {
+      setStatus("Activo");
+      toast.success({
+        title: "Cliente desbloqueado",
+        message: `${item.subtitle.split(" · ")[0]} voltou a ter acesso à plataforma (mock).`,
+      });
+      return;
+    }
+    setBlockOpen(true);
+  }
+
+  function confirmBlock() {
+    setBlockOpen(false);
+    setStatus("Bloqueado");
+    toast.success({
+      title: "Cliente bloqueado",
+      message: "O acesso foi suspenso e o cliente foi notificado (mock).",
+    });
+  }
+
+  function confirmRefund() {
+    setRefundOpen(false);
+    setStatus("Reembolsado");
+    toast.success({
+      title: "Reembolso emitido",
+      message:
+        "O valor será devolvido ao método de pagamento original em 48h (mock).",
+    });
+  }
+
+  function approveProvider() {
+    setStatus("Aprovado");
+    toast.success({
+      title: "Prestador aprovado",
+      message: "João Manuel já pode receber pedidos na plataforma (mock).",
+    });
+  }
+
+  function confirmCorrection() {
+    setCorrectionOpen(false);
+    setStatus("Em análise");
+    toast.info({
+      title: "Correcção solicitada",
+      message: "O prestador foi notificado sobre os documentos pendentes (mock).",
+    });
+  }
+
+  function resolveAlert() {
+    setStatus("Resolvido");
+    toast.success({
+      title: "Alerta resolvido",
+      message: note
+        ? "Nota do responsável registada no histórico (mock)."
+        : "Alerta marcado como resolvido (mock).",
+    });
+  }
+
   return (
     <View className="flex-1 bg-surface px-5 dark:bg-slate-950">
-      <ScreenHeader title={item.title} subtitle={`${item.subtitle} · ${id}`} />
+      <ScreenHeader title={item.title} subtitle={item.subtitle} />
       <ScrollView contentContainerClassName="pb-28">
         <View className="rounded-3xl bg-ink p-5">
           <Icon size={28} color="#86EFAC" />
@@ -116,7 +182,16 @@ export default function AdminDetail() {
                 </Text>
               </View>
             ))}
-            <Pressable className="mt-5 rounded-xl bg-brand-soft p-4">
+            <Pressable
+              onPress={() =>
+                toast.info({
+                  title: "Chat aberto",
+                  message:
+                    "Conversa com o prestador e o cliente iniciada (mock).",
+                })
+              }
+              className="mt-5 rounded-xl bg-brand-soft p-4"
+            >
               <Text className="text-center font-bold text-brand">
                 Abrir chat e suporte
               </Text>
@@ -132,12 +207,12 @@ export default function AdminDetail() {
               Toyota Corolla · 2015 · 8 pedidos · avaliação média 4,8
             </Text>
             <Pressable
-              onPress={() =>
-                setStatus(status === "Bloqueado" ? "Activo" : "Bloqueado")
-              }
-              className="mt-5 rounded-xl bg-red-50 py-3"
+              onPress={toggleBlock}
+              className={`mt-5 rounded-xl py-3 ${status === "Bloqueado" ? "bg-brand-soft" : "bg-red-50"}`}
             >
-              <Text className="text-center font-bold text-red-600">
+              <Text
+                className={`text-center font-bold ${status === "Bloqueado" ? "text-brand" : "text-red-600"}`}
+              >
                 {status === "Bloqueado"
                   ? "Desbloquear cliente"
                   : "Bloquear cliente (mock)"}
@@ -154,7 +229,7 @@ export default function AdminDetail() {
               18.500 Kz · Referência Multicaixa · Recibo REC-2601
             </Text>
             <Pressable
-              onPress={() => setStatus("Reembolsado")}
+              onPress={() => setRefundOpen(true)}
               className="mt-5 rounded-xl bg-brand-soft py-3"
             >
               <Text className="text-center font-bold text-brand">
@@ -168,14 +243,16 @@ export default function AdminDetail() {
             <Text className="font-bold text-ink dark:text-white">
               Gestão do alerta
             </Text>
-            <AppInput
+            <TextInput
+              value={note}
+              onChangeText={setNote}
               placeholder="Nota do responsável"
               placeholderTextColor="#94A3B8"
               className="mt-4 min-h-24 rounded-xl bg-slate-100 p-3 text-ink dark:bg-slate-800 dark:text-white"
               multiline
             />
             <Pressable
-              onPress={() => setStatus("Resolvido")}
+              onPress={resolveAlert}
               className="mt-4 rounded-xl bg-brand py-3"
             >
               <Text className="text-center font-bold text-white">
@@ -188,17 +265,43 @@ export default function AdminDetail() {
       {type === "provider" && (
         <View className="absolute bottom-0 left-0 right-0 flex-row gap-2 bg-surface px-5 pb-7 pt-3 dark:bg-slate-950">
           <View className="flex-1">
-            <AppButton label="Aprovar" onPress={() => setStatus("Aprovado")} />
+            <AppButton label="Aprovar" onPress={approveProvider} />
           </View>
           <View className="flex-1">
             <AppButton
               label="Pedir correcção"
               variant="ghost"
-              onPress={() => setStatus("Em análise")}
+              onPress={() => setCorrectionOpen(true)}
             />
           </View>
         </View>
       )}
+      <ConfirmModal
+        visible={blockOpen}
+        tone="danger"
+        title="Bloquear este cliente?"
+        description="O cliente deixa de poder pedir assistências até ser desbloqueado manualmente."
+        confirmLabel="Bloquear"
+        onConfirm={confirmBlock}
+        onCancel={() => setBlockOpen(false)}
+      />
+      <ConfirmModal
+        visible={refundOpen}
+        tone="danger"
+        title="Emitir reembolso de 18.500 Kz?"
+        description="O valor é devolvido ao método de pagamento original e o pedido fica marcado como reembolsado."
+        confirmLabel="Emitir reembolso"
+        onConfirm={confirmRefund}
+        onCancel={() => setRefundOpen(false)}
+      />
+      <ConfirmModal
+        visible={correctionOpen}
+        title="Pedir correcção ao prestador?"
+        description="João Manuel recebe uma notificação a pedir o reenvio dos documentos em falta ou incorrectos."
+        confirmLabel="Pedir correcção"
+        onConfirm={confirmCorrection}
+        onCancel={() => setCorrectionOpen(false)}
+      />
     </View>
   );
 }

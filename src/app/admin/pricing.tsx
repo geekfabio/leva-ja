@@ -1,42 +1,63 @@
 import { AppInput } from "@/components/ui/AppInput";
 import { useState } from "react";
-import {
-  Pressable,
-  ScrollView,
-  Switch,
-  Text,
-  useWindowDimensions,
-  View,
-} from "react-native";
+import { Pressable, Switch, Text, View } from "react-native";
 import { Check, MapPinned, Save, Truck, Wrench } from "lucide-react-native";
-import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import { AdminShell } from "@/components/admin/AdminShell";
 import { OperationsChart } from "@/components/admin/OperationsChart";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { VehicleArt } from "@/components/transport/VehicleArt";
+import { toast } from "@/lib/toast";
+import { vehicles, type VehicleId } from "@/domain/catalog";
 const services = [
   ["Reboque de viaturas", "8 000 + 450/km", Truck],
   ["Assistência na estrada", "5 000 + 350/km", Wrench],
   ["Reboque de motas", "6 000 + 400/km", Truck],
 ];
+const transportTiers: { vehicleId: VehicleId; price: string; capacity: string }[] = [
+  { vehicleId: "pickup", price: "2 500 + 300/km", capacity: "Até 25 kg" },
+  { vehicleId: "van", price: "6 000 + 500/km", capacity: "Até 500 kg" },
+  {
+    vehicleId: "box",
+    price: "14 000 + 800/km + 1 200/ajudante",
+    capacity: "Até 2 ton",
+  },
+];
 export default function PricingScreen() {
-  const { width } = useWindowDimensions();
   const [base, setBase] = useState("8 000");
   const [perKm, setPerKm] = useState("450");
-  const [saved, setSaved] = useState(false);
   const [active, setActive] = useState([true, true, true]);
+  const [transportActive, setTransportActive] = useState([true, true, false]);
+  const [publishOpen, setPublishOpen] = useState(false);
+  function saveDraft() {
+    toast.success({
+      title: "Rascunho guardado",
+      message: "As alterações da Zona Centro foram guardadas (mock).",
+    });
+  }
+  function publish() {
+    setPublishOpen(false);
+    toast.success({
+      title: "Preços publicados",
+      message:
+        "A nova tabela da Zona Centro já está activa para clientes e prestadores (mock).",
+    });
+  }
+  function saveTransportPricing() {
+    toast.success({
+      title: "Preços de transporte guardados",
+      message: "As tarifas por classe de viatura foram actualizadas (mock).",
+    });
+  }
   return (
-    <View className="flex-1 flex-row bg-[#F7F8F6] dark:bg-slate-950">
-      <AdminSidebar active="Mapa operacional" />
-      <ScrollView
-        className="flex-1"
-        contentContainerClassName={`${width >= 1024 ? "px-9" : "px-5"} pb-10 pt-10`}
-      >
-        <Text className="text-3xl font-bold text-ink dark:text-white">
-          Preços e cobertura
-        </Text>
-        <Text className="mt-1 text-sm text-muted">
-          Define zonas, tarifas e regras de atendimento em Luanda.
-        </Text>
-        <View className="mt-7 flex-row flex-wrap gap-5">
-          <View className="min-w-[500px] flex-[3] rounded-3xl bg-white p-5 dark:bg-slate-900">
+    <AdminShell active="Mapa operacional">
+      <Text className="text-3xl font-bold text-ink dark:text-white">
+        Preços e cobertura
+      </Text>
+      <Text className="mt-1 text-sm text-muted">
+        Define zonas, tarifas e regras de atendimento em Luanda.
+      </Text>
+      <View className="mt-7 flex-row flex-wrap gap-5">
+        <View className="w-full rounded-3xl bg-white p-5 dark:bg-slate-900 lg:min-w-[500px] lg:flex-[3]">
             <View className="flex-row items-center justify-between">
               <View>
                 <Text className="text-lg font-bold text-ink dark:text-white">
@@ -143,31 +164,74 @@ export default function PricingScreen() {
             })}
             <View className="mt-6 flex-row gap-2">
               <Pressable
-                onPress={() => setSaved(true)}
+                onPress={saveDraft}
                 className="flex-1 flex-row items-center justify-center gap-2 rounded-xl bg-brand-soft py-3"
               >
                 <Save size={18} color="#087F4F" />
                 <Text className="font-bold text-brand">Guardar rascunho</Text>
               </Pressable>
               <Pressable
-                onPress={() => setSaved(true)}
+                onPress={() => setPublishOpen(true)}
                 className="flex-1 flex-row items-center justify-center gap-2 rounded-xl bg-brand py-3"
               >
                 <Check size={18} color="#fff" />
                 <Text className="font-bold text-white">Publicar</Text>
               </Pressable>
             </View>
-            {saved && (
-              <Text className="mt-3 text-center text-sm font-bold text-brand">
-                Preços actualizados (mock).
-              </Text>
-            )}
           </View>
         </View>
-        <View className="mt-5">
-          <OperationsChart />
-        </View>
-      </ScrollView>
-    </View>
+      <View className="mt-5 rounded-3xl bg-white p-5 dark:bg-slate-900">
+        <Text className="text-lg font-bold text-ink dark:text-white">
+          Transporte · preço por classe de viatura
+        </Text>
+        <Text className="mt-1 text-sm text-muted">
+          Tarifa base + por km, com ajudantes à parte quando aplicável.
+        </Text>
+        {transportTiers.map(({ vehicleId, price, capacity }, index) => (
+          <View key={vehicleId} className="mt-4 flex-row items-center">
+            <VehicleArt vehicle={vehicleId} size={48} />
+            <View className="ml-3 flex-1">
+              <Text className="font-bold text-ink dark:text-white">
+                {vehicles[vehicleId].name}
+              </Text>
+              <Text className="mt-1 text-xs text-muted">
+                {price} · {capacity}
+              </Text>
+            </View>
+            <Switch
+              value={transportActive[index]}
+              onValueChange={(value) =>
+                setTransportActive((items) =>
+                  items.map((item, position) =>
+                    position === index ? value : item,
+                  ),
+                )
+              }
+              trackColor={{ true: "#087F4F" }}
+            />
+          </View>
+        ))}
+        <Pressable
+          onPress={saveTransportPricing}
+          className="mt-5 flex-row items-center justify-center gap-2 rounded-xl bg-brand-soft py-3"
+        >
+          <Save size={18} color="#087F4F" />
+          <Text className="font-bold text-brand">
+            Guardar tarifas de transporte
+          </Text>
+        </Pressable>
+      </View>
+      <View className="mt-5">
+        <OperationsChart />
+      </View>
+      <ConfirmModal
+        visible={publishOpen}
+        title="Publicar nova tabela de preços?"
+        description="A Zona Centro passa a usar imediatamente a taxa base, taxa por km e multiplicadores definidos. Clientes e prestadores verão os novos valores nos próximos pedidos."
+        confirmLabel="Publicar agora"
+        onConfirm={publish}
+        onCancel={() => setPublishOpen(false)}
+      />
+    </AdminShell>
   );
 }

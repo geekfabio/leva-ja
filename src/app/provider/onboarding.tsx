@@ -6,9 +6,57 @@ import { AppButton } from "@/components/ui/AppButton";
 import { SelectionCard } from "@/components/ui/SelectionCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ProofRow } from "@/components/ui/ProofRow";
+import { ServiceIcon } from "@/components/ui/ServiceIcon";
 import { VehicleArt } from "@/components/transport/VehicleArt";
+
+const providerTypes = [
+  {
+    id: "assistance",
+    label: "Assistência",
+    emoji: "🚛",
+    tone: ["#22C55E", "#15803D"] as const,
+  },
+  {
+    id: "transport",
+    label: "Transportador",
+    emoji: "🚚",
+    tone: ["#16A34A", "#102018"] as const,
+  },
+] as const;
+
+const proofsByType: Record<
+  (typeof providerTypes)[number]["id"],
+  { title: string; subtitle: string; complete: boolean }[]
+> = {
+  assistance: [
+    { title: "Carta de condução", subtitle: "Válida até 2031", complete: true },
+    { title: "Seguro da viatura", subtitle: "Em validação", complete: false },
+    { title: "Registo do reboque", subtitle: "Em validação", complete: false },
+  ],
+  transport: [
+    { title: "Carta de condução", subtitle: "Válida até 2031", complete: true },
+    {
+      title: "Seguro da viatura de carga",
+      subtitle: "Em validação",
+      complete: false,
+    },
+    {
+      title: "Registo da viatura de carga",
+      subtitle: "Em validação",
+      complete: false,
+    },
+    {
+      title: "Comprovativo de capacidade de carga",
+      subtitle: "Peso/volume máximo suportado",
+      complete: false,
+    },
+  ],
+};
+
 export default function ProviderOnboarding() {
   const [state, setState] = useState("Pendente");
+  const [type, setType] =
+    useState<(typeof providerTypes)[number]["id"]>("assistance");
   return (
     <ScreenLayout
       title="Vamos preparar a tua conta"
@@ -27,20 +75,29 @@ export default function ProviderOnboarding() {
           Leva mais oportunidades contigo.
         </Text>
       </View>
+      <Text className="font-black text-ink dark:text-white">
+        Tipo de prestador
+      </Text>
+      <View className="flex-row gap-3">
+        {providerTypes.map(({ id, label, emoji, tone }) => (
+          <SelectionCard
+            key={id}
+            title={label}
+            icon={<ServiceIcon emoji={emoji} tone={tone} size={36} />}
+            selected={type === id}
+            onPress={() => setType(id)}
+          />
+        ))}
+      </View>
       <StatusBadge status={state} />
-      <ProofRow
-        title="Carta de condução"
-        subtitle="Documento de exemplo"
-        complete
-      />
-      <ProofRow
-        title="Seguro da viatura"
-        subtitle="Em validação na demonstração"
-      />
-      <ProofRow
-        title="Registo da viatura e capacidade de carga"
-        subtitle="Em validação na demonstração"
-      />
+      {proofsByType[type].map((proof) => (
+        <ProofRow
+          key={proof.title}
+          title={proof.title}
+          subtitle={proof.subtitle}
+          complete={proof.complete}
+        />
+      ))}
       <Text className="text-sm leading-6 text-muted">
         Nesta demonstração podes alternar o estado da aprovação. Nenhum
         documento é enviado ou validado.

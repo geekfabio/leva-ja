@@ -3,7 +3,9 @@ import "../../global.css";
 import { Stack, usePathname } from "expo-router";
 import { Platform, View, useColorScheme } from "react-native";
 import { StatusBar } from "expo-status-bar";
+import ToastMessage from "react-native-toast-message";
 import { AppProviders } from "@/providers/AppProviders";
+import { toastConfig } from "@/components/ui/AppToast";
 
 export default function RootLayout() {
   const path = usePathname();
@@ -34,6 +36,7 @@ export default function RootLayout() {
           </Stack>
         </View>
       </View>
+      <ToastMessage config={toastConfig} topOffset={56} />
     </AppProviders>
   );
 }

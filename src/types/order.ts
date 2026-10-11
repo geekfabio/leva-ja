@@ -10,6 +10,7 @@ export type OrderStatus =
   | "cancelled"
   | "disputed";
 export type PaymentStatus = "pending" | "confirmed" | "failed" | "refunded";
+export type ServiceType = "assistance" | "transport";
 
 export type Order = {
   rating?: number;
@@ -45,4 +46,5 @@ export type Order = {
   paymentStatus?: PaymentStatus;
   incidentNote?: string;
   severity?: "low" | "medium" | "high";
+  serviceType?: ServiceType;
 };

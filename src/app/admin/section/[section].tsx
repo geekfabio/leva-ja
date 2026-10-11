@@ -1,19 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
-import { useLocalSearchParams } from "expo-router";
-import {
-  Bell,
-  Check,
-  ChevronRight,
-  Download,
-  Filter,
-  MapPinned,
-  Plus,
-  ShieldAlert,
-  SlidersHorizontal,
-} from "lucide-react-native";
-import { AdminNav } from "@/components/admin/AdminNav";
+import { router, useLocalSearchParams } from "expo-router";
+import { ChevronRight, Download, Plus } from "lucide-react-native";
+import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminTableControls } from "@/components/admin/AdminTableControls";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { toast } from "@/lib/toast";
 import { adminRows } from "@/mocks/admin";
 
 const titles: Record<string, string> = {
@@ -22,7 +14,6 @@ const titles: Record<string, string> = {
   providers: "Prestadores",
   payments: "Pagamentos e recibos",
   safety: "Segurança e SOS",
-  settings: "Configurações",
 };
 const nav: Record<string, string> = {
   orders: "Pedidos",
@@ -30,13 +21,40 @@ const nav: Record<string, string> = {
   providers: "Prestadores",
   payments: "Pagamentos",
   safety: "SOS",
-  settings: "Configurações",
 };
+const sidebarActive: Record<string, string> = {
+  orders: "Serviços",
+  customers: "Clientes",
+  providers: "Prestadores",
+  payments: "Financeiro",
+  safety: "Segurança",
+};
+const detailType: Record<string, string> = {
+  orders: "order",
+  customers: "customer",
+  providers: "provider",
+  payments: "payment",
+  safety: "safety",
+};
+const createLabel: Record<string, string> = {
+  orders: "Novo pedido",
+  customers: "Novo cliente",
+  providers: "Novo prestador",
+  payments: "Novo registo",
+  safety: "Novo alerta",
+};
+
 export default function AdminSection() {
   const { section = "orders" } = useLocalSearchParams<{ section: string }>();
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
   const [filter, setFilter] = useState("Todos");
+  const [createOpen, setCreateOpen] = useState(false);
+
+  useEffect(() => {
+    if (section === "settings") router.replace("/admin/settings" as never);
+  }, [section]);
+
   const rows = adminRows[section] ?? [];
   const filtered = useMemo(
     () =>
@@ -52,27 +70,52 @@ export default function AdminSection() {
   const perPage = 6;
   const pages = Math.max(1, Math.ceil(filtered.length / perPage));
   const visible = filtered.slice((page - 1) * perPage, page * perPage);
-  if (section === "settings") return <SettingsPage />;
   const statuses = [
     "Todos",
     ...Array.from(new Set(rows.map((row) => row.status))),
   ];
+
+  if (section === "settings") return null;
+
+  function openDetail(id: string) {
+    router.push(
+      `/admin/detail/${detailType[section] ?? "order"}/${id}` as never,
+    );
+  }
+
+  function createItem() {
+    setCreateOpen(false);
+    toast.success({
+      title: `${createLabel[section] ?? "Novo registo"} criado`,
+      message: "Registo adicionado à lista (mock).",
+    });
+  }
+
+  function exportList() {
+    toast.success({
+      title: "Lista exportada",
+      message: `${filtered.length} registos de "${titles[section]}" exportados para CSV (mock).`,
+    });
+  }
+
   return (
-    <ScrollView
-      className="flex-1 bg-surface dark:bg-slate-950"
-      contentContainerClassName="px-5 pb-10 pt-16"
+    <AdminShell
+      active={sidebarActive[section] ?? "Serviços"}
+      navActive={nav[section] ?? "Pedidos"}
     >
       <Text className="text-sm text-muted">Operações · dados mockados</Text>
       <View className="flex-row items-center justify-between">
         <Text className="mt-1 text-3xl font-bold text-ink dark:text-white">
-          {titles[section]}
+          {titles[section] ?? titles.orders}
         </Text>
-        <Pressable className="rounded-2xl bg-brand p-3">
+        <Pressable
+          onPress={() => setCreateOpen(true)}
+          className="rounded-2xl bg-brand p-3"
+        >
           <Plus size={20} color="#fff" />
         </Pressable>
       </View>
-      <AdminNav active={nav[section] ?? "Pedidos"} />
-      <View className="mb-4 flex-row gap-2">
+      <View className="mb-4 mt-5 flex-row gap-2">
         <View className="flex-1 rounded-2xl bg-ink p-4">
           <Text className="text-xs font-bold text-green-200">TOTAL</Text>
           <Text className="mt-1 text-2xl font-bold text-white">
@@ -133,6 +176,7 @@ export default function AdminSection() {
       {visible.map((row) => (
         <Pressable
           key={row.id}
+          onPress={() => openDetail(row.id)}
           className="mb-3 rounded-2xl bg-white p-4 dark:bg-slate-900"
         >
           <View className="flex-row items-start">
@@ -162,79 +206,21 @@ export default function AdminSection() {
           Não encontrámos resultados.
         </Text>
       )}
-      <Pressable className="mt-3 flex-row items-center justify-center gap-2 rounded-2xl bg-brand-soft py-4">
+      <Pressable
+        onPress={exportList}
+        className="mt-3 flex-row items-center justify-center gap-2 rounded-2xl bg-brand-soft py-4"
+      >
         <Download size={19} color="#087F4F" />
         <Text className="font-bold text-brand">Exportar lista (mock)</Text>
       </Pressable>
-    </ScrollView>
-  );
-}
-function SettingsPage() {
-  const [enabled, setEnabled] = useState(true);
-  const settings = [
-    [
-      SlidersHorizontal,
-      "Serviços disponíveis",
-      "Reboque, bateria, pneu e combustível",
-    ],
-    [MapPinned, "Zonas e preços", "Luanda · preço base 14.000 Kz"],
-    [
-      Bell,
-      "Notificações e campanhas",
-      "Criar avisos para clientes e prestadores",
-    ],
-    [ShieldAlert, "Políticas de segurança", "Regras de cancelamento e SOS"],
-  ];
-  return (
-    <ScrollView
-      className="flex-1 bg-surface dark:bg-slate-950"
-      contentContainerClassName="px-5 pb-10 pt-16"
-    >
-      <Text className="text-sm text-muted">
-        Operações · configurações mockadas
-      </Text>
-      <Text className="mt-1 text-3xl font-bold text-ink dark:text-white">
-        Configurações
-      </Text>
-      <AdminNav active="Configurações" />
-      <View className="mb-4 flex-row items-center justify-between rounded-3xl bg-ink p-5">
-        <View>
-          <Text className="font-bold text-white">Aceitar novos pedidos</Text>
-          <Text className="mt-1 text-sm text-slate-300">
-            Controlo operacional geral
-          </Text>
-        </View>
-        <Pressable
-          onPress={() => setEnabled(!enabled)}
-          className={`rounded-full px-4 py-2 ${enabled ? "bg-brand" : "bg-slate-700"}`}
-        >
-          <Text className="font-bold text-white">
-            {enabled ? "Activo" : "Pausado"}
-          </Text>
-        </Pressable>
-      </View>
-      {settings.map(([Icon, title, detail]) => {
-        const ItemIcon = Icon as typeof Bell;
-        return (
-          <Pressable
-            key={title as string}
-            className="mb-3 flex-row items-center rounded-2xl bg-white p-4 dark:bg-slate-900"
-          >
-            <View className="rounded-xl bg-brand-soft p-3">
-              <ItemIcon size={20} color="#087F4F" />
-            </View>
-            <View className="ml-3 flex-1">
-              <Text className="font-bold text-ink dark:text-white">
-                {title as string}
-              </Text>
-              <Text className="mt-1 text-sm text-muted">
-                {detail as string}
-              </Text>
-            </View>
-            <Check size={19} color="#087F4F" />
-          </Pressable>
-        );
-      })}
-    </ScrollView>
+      <ConfirmModal
+        visible={createOpen}
+        title={createLabel[section] ?? "Novo registo"}
+        description="Esta acção cria um registo de demonstração nesta lista. Nenhum dado real é enviado."
+        confirmLabel="Criar"
+        onConfirm={createItem}
+        onCancel={() => setCreateOpen(false)}
+      />
+    </AdminShell>
   );
 }

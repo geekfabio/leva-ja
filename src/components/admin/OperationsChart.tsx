@@ -18,7 +18,7 @@ const points = (items: number[], max: number) =>
 export function OperationsChart() {
   return (
     <View className="rounded-3xl bg-white p-5 dark:bg-slate-900">
-      <View className="flex-row items-start justify-between">
+      <View className="flex-row flex-wrap items-start justify-between gap-y-2">
         <View>
           <Text className="text-lg font-bold text-ink dark:text-white">
             Receita e pedidos da semana
