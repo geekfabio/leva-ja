@@ -1,7 +1,57 @@
-import { useState } from 'react';
-import { Pressable, Text, TextInput, View } from 'react-native';
-import { router } from 'expo-router';
-import { AppButton } from '@/components/ui/AppButton';
-import { ScreenHeader } from '@/components/ui/ScreenHeader';
-const options = ['Preço diferente do combinado', 'Problema com o serviço', 'Comportamento do prestador'];
-export default function ComplaintScreen() { const [selected, setSelected] = useState(options[0]); return <View className="flex-1 bg-surface px-5 dark:bg-slate-950"><ScreenHeader title="Reportar um problema" subtitle="O suporte responderá neste pedido" /><View className="gap-3">{options.map((item) => <Pressable key={item} onPress={() => setSelected(item)} className={`rounded-2xl p-4 ${selected === item ? 'bg-brand-soft border border-brand' : 'bg-white dark:bg-slate-900'}`}><Text className="font-bold text-ink dark:text-white">{item}</Text></Pressable>)}<TextInput multiline placeholder="Adiciona detalhes (mock)" placeholderTextColor="#94A3B8" className="min-h-28 rounded-2xl bg-white p-4 text-ink dark:bg-slate-900 dark:text-white" /></View><View className="mt-auto pb-8"><AppButton label="Enviar para suporte" onPress={() => router.back()} /></View></View>; }
+import { useState } from "react";
+import { Text, View } from "react-native";
+import { router } from "expo-router";
+import { ScreenLayout } from "@/components/ui/ScreenLayout";
+import { AppButton } from "@/components/ui/AppButton";
+import { AppInput } from "@/components/ui/AppInput";
+import { SelectionCard } from "@/components/ui/SelectionCard";
+import { useOrderStore } from "@/stores/useOrderStore";
+const options = [
+  "Preço diferente do combinado",
+  "Problema com a carga ou o serviço",
+  "Comportamento do parceiro",
+];
+export default function ComplaintScreen() {
+  const [reason, setReason] = useState(options[0]);
+  const [note, setNote] = useState("");
+  const { selectedOrder: order, patchOrder } = useOrderStore();
+  return (
+    <ScreenLayout
+      title="Reportar um problema"
+      subtitle={order.id}
+      action={
+        <AppButton
+          label="Registar ocorrência (demo)"
+          disabled={note.trim().length < 5}
+          onPress={() => {
+            patchOrder(order.id, { complaint: { reason, note } });
+            router.replace("/order/complaint-status" as never);
+          }}
+        />
+      }
+    >
+      <View accessibilityRole="radiogroup" className="gap-3">
+        {options.map((option, i) => (
+          <SelectionCard
+            key={option}
+            title={option}
+            selected={reason === option}
+            onPress={() => setReason(option)}
+            icon={<Text className="font-bold text-brand">{i + 1}</Text>}
+          />
+        ))}
+      </View>
+      <AppInput
+        label="O que aconteceu?"
+        value={note}
+        onChangeText={setNote}
+        multiline
+        placeholder="Descreve o problema para ficar associado ao pedido."
+      />
+      <Text className="text-sm leading-6 text-muted">
+        Registo local de demonstração. Não é enviada uma mensagem a uma equipa
+        de suporte real.
+      </Text>
+    </ScreenLayout>
+  );
+}

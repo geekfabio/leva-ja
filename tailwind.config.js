@@ -1,17 +1,24 @@
 /** @type {import('tailwindcss').Config} */
+const palette = require("./src/theme/palette.json");
 module.exports = {
   content: ["./src/**/*.{js,jsx,ts,tsx}"],
   presets: [require("nativewind/preset")],
   theme: {
     extend: {
       colors: {
-        brand: { DEFAULT: "#16A34A", dark: "#15803D", soft: "#DCFCE7" },
-        ink: "#102018",
-        muted: "#64748B",
-        surface: "#F6F8F6"
+        brand: {
+          DEFAULT: palette.greenDark,
+          bright: palette.green,
+          dark: palette.greenDark,
+          soft: palette.greenSoft,
+        },
+        ink: palette.ink,
+        muted: palette.muted,
+        surface: palette.surface,
+        line: palette.border,
       },
-      borderRadius: { xl: "20px", '2xl': "28px" }
-    }
+      borderRadius: { xl: "12px", "2xl": "16px", "3xl": "24px" },
+    },
   },
-  plugins: []
+  plugins: [],
 };

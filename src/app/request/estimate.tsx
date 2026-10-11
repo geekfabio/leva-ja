@@ -1,7 +1,57 @@
-import { ScrollView, Text, View } from 'react-native';
-import { router } from 'expo-router';
-import { BadgeCheck, Clock3, MapPin } from 'lucide-react-native';
-import { AppButton } from '@/components/ui/AppButton';
-import { ScreenHeader } from '@/components/ui/ScreenHeader';
-import { ServiceIcon } from '@/components/ui/ServiceIcon';
-export default function EstimateScreen() { return <View className="flex-1 bg-surface px-5 dark:bg-slate-950"><ScreenHeader title="Estimativa da assistência" subtitle="Passo 5 de 5" /><ScrollView contentContainerClassName="pb-28"><View className="rounded-[30px] bg-ink p-6"><View className="flex-row items-center gap-3"><ServiceIcon emoji="🚛" tone={['#22C55E', '#15803D']} size={52} /><View><Text className="text-sm font-bold text-green-200">REBOQUE DE VIATURA</Text><Text className="mt-1 text-xl font-black text-white">Toyota Corolla · 2015</Text></View></View><View className="my-5 h-px bg-white/10" /><View className="flex-row items-center gap-2"><MapPin size={17} color="#86EFAC" /><Text className="text-sm text-slate-300">Rua da Missão → Oficina Auto Centro</Text></View></View><View className="mt-5 rounded-3xl bg-white p-5 dark:bg-slate-900"><View className="flex-row items-end justify-between"><View><Text className="text-sm text-muted">Preço estimado</Text><Text className="mt-2 text-3xl font-black text-ink dark:text-white">18.500 Kz</Text></View><View className="rounded-xl bg-brand-soft px-3 py-2"><Text className="text-xs font-black text-brand">6,4 KM</Text></View></View><View className="my-5 h-px bg-slate-100 dark:bg-slate-800" /><View className="mb-3 flex-row items-center gap-3"><Clock3 size={18} color="#16A34A" /><Text className="flex-1 text-sm text-muted">Chegada estimada em 18–25 min</Text></View><View className="flex-row items-center gap-3"><BadgeCheck size={18} color="#16A34A" /><Text className="flex-1 text-sm text-muted">O valor final é confirmado antes do serviço</Text></View></View></ScrollView><View className="absolute bottom-0 left-0 right-0 border-t border-slate-100 bg-surface px-5 pb-7 pt-4 dark:border-slate-800 dark:bg-slate-950"><AppButton label="Escolher pagamento" onPress={() => router.push('/request/payment' as never)} /></View></View>; }
+import { Text } from "react-native";
+import { router } from "expo-router";
+import { AppButton } from "@/components/ui/AppButton";
+import { ScreenLayout } from "@/components/ui/ScreenLayout";
+import { ListRow } from "@/components/ui/ListRow";
+import { ServiceSummary } from "@/components/orders/ServiceSummary";
+import { PriceSummary } from "@/components/orders/PriceSummary";
+import { useRequestDraft, requestValid } from "@/stores/useRequestDraft";
+import { getService, demoEstimate } from "@/domain/catalog";
+export default function EstimateScreen() {
+  const draft = useRequestDraft();
+  const service = getService(draft.service);
+  const price = demoEstimate(draft.vehicleType, draft.helpers);
+  return (
+    <ScreenLayout
+      title="Tudo pronto para seguir?"
+      subtitle="Passo 5 de 6"
+      action={
+        <AppButton
+          label="Escolher pagamento"
+          disabled={!requestValid(draft)}
+          onPress={() => router.push("/request/payment" as never)}
+        />
+      }
+    >
+      <ServiceSummary
+        service={service.name}
+        vehicle={draft.vehicleType}
+        origin={draft.address}
+        destination={draft.destination}
+        description={
+          service.transport
+            ? `${draft.cargoDescription} · ${draft.weightKg} kg · ${draft.dimensions}`
+            : draft.customerVehicle
+        }
+      />
+      <PriceSummary amount={price.total} pricing={price} />
+      <ListRow
+        title="Editar detalhes"
+        description="Carga, apoio e acesso ao local"
+        onPress={() => router.push("/request/incident" as never)}
+      />
+      <ListRow
+        title="Alterar viatura"
+        onPress={() => router.push("/request/vehicle")}
+      />
+      <ListRow
+        title="Corrigir moradas"
+        onPress={() => router.push("/request/location")}
+      />
+      <Text className="text-sm leading-6 text-muted">
+        O teu pedido inclui as escolhas acima. A procura e os preços são
+        simulados nesta demonstração.
+      </Text>
+    </ScreenLayout>
+  );
+}

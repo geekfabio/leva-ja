@@ -1,8 +1,80 @@
-import { useState } from 'react';
-import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
-import { router } from 'expo-router';
-import { Heart, MapPin, Search } from 'lucide-react-native';
-import { ScreenHeader } from '@/components/ui/ScreenHeader';
-import { AppButton } from '@/components/ui/AppButton';
-const results = [['Oficina Auto Centro', 'Maianga · 6,4 km · Aberta agora'], ['Auto Rápido Luanda', 'Mutamba · 5,1 km · Aberta agora'], ['Casa', 'Rua da Missão, Ingombota · Favorito']];
-export default function DestinationScreen() { const [selected, setSelected] = useState(0); return <View className="flex-1 bg-surface px-5 dark:bg-slate-950"><ScreenHeader title="Destino do reboque" subtitle="Pesquisa uma oficina ou morada" /><ScrollView contentContainerClassName="pb-28"><View className="flex-row items-center rounded-2xl bg-white px-4 dark:bg-slate-900"><Search size={19} color="#64748B" /><TextInput placeholder="Pesquisar oficina ou morada" placeholderTextColor="#94A3B8" className="flex-1 px-3 py-4 text-ink dark:text-white" /></View><Text className="mb-3 mt-6 text-lg font-black text-ink dark:text-white">Resultados próximos</Text>{results.map(([name, detail], index) => <Pressable key={name} onPress={() => setSelected(index)} className={`mb-3 flex-row items-center gap-3 rounded-2xl border p-4 ${selected === index ? 'border-brand bg-brand-soft' : 'border-transparent bg-white dark:bg-slate-900'}`}><View className="rounded-xl bg-white p-3 dark:bg-slate-800">{index === 2 ? <Heart size={20} color="#16A34A" /> : <MapPin size={20} color="#16A34A" />}</View><View className="flex-1"><Text className="font-black text-ink dark:text-white">{name}</Text><Text className="mt-1 text-sm text-muted">{detail}</Text></View></Pressable>)}</ScrollView><View className="absolute bottom-0 left-0 right-0 border-t border-slate-100 bg-surface px-5 pb-7 pt-4 dark:border-slate-800 dark:bg-slate-950"><AppButton label="Confirmar destino" onPress={() => router.back()} /></View></View>; }
+import { getService } from "@/domain/catalog";
+import { useState } from "react";
+import { ScrollView, Text, View } from "react-native";
+import { router } from "expo-router";
+import { MapPin } from "lucide-react-native";
+import { ScreenHeader } from "@/components/ui/ScreenHeader";
+import { AppButton } from "@/components/ui/AppButton";
+import { AppInput } from "@/components/ui/AppInput";
+import { SelectionCard } from "@/components/ui/SelectionCard";
+import { BottomAction } from "@/components/ui/BottomAction";
+import { useRequestDraft } from "@/stores/useRequestDraft";
+const results = [
+  ["Armazém de Viana", "Zona industrial, Viana"],
+  ["Casa em Talatona", "Rua 12, Talatona"],
+  ["Oficina Auto Centro", "Maianga · 6,4 km"],
+  ["Auto Rápido Luanda", "Mutamba · 5,1 km"],
+  ["Casa", "Rua da Missão, Ingombota · Favorito"],
+];
+export default function DestinationScreen() {
+  const service = useRequestDraft((state) => state.service);
+  const cargo = getService(service).transport;
+  const destination = useRequestDraft((state) => state.destination);
+  const update = useRequestDraft((state) => state.update);
+  const [selected, setSelected] = useState(destination || results[0][0]);
+  const [query, setQuery] = useState("");
+  const filtered = results.filter(([name, detail]) =>
+    `${name} ${detail}`.toLocaleLowerCase().includes(query.toLocaleLowerCase()),
+  );
+  return (
+    <View className="flex-1 bg-surface px-5 dark:bg-slate-950">
+      <ScreenHeader
+        title={cargo ? "Destino da carga" : "Destino do reboque"}
+        subtitle="Escolhe um local de entrega"
+      />
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        contentContainerClassName="pb-36"
+      >
+        <AppInput
+          label="Pesquisar destino"
+          placeholder="Local ou morada"
+          value={query}
+          onChangeText={setQuery}
+        />
+        <Text className="mb-4 mt-6 text-lg font-bold text-ink dark:text-white">
+          Locais sugeridos
+        </Text>
+        <View accessibilityRole="radiogroup" className="gap-3">
+          {filtered.map(([name, detail]) => (
+            <SelectionCard
+              key={name}
+              title={name}
+              description={detail}
+              icon={<MapPin size={22} color="#087F4F" />}
+              selected={selected === name}
+              onPress={() => setSelected(name)}
+            />
+          ))}
+        </View>
+        {!filtered.length ? (
+          <Text className="mt-5 text-sm text-muted">
+            Não encontrámos esse local. Tenta outra pesquisa.
+          </Text>
+        ) : null}
+        <Text className="mt-5 text-sm text-muted">
+          Destino seleccionado: {selected}
+        </Text>
+      </ScrollView>
+      <BottomAction>
+        <AppButton
+          label="Confirmar destino"
+          onPress={() => {
+            update({ destination: selected });
+            router.back();
+          }}
+        />
+      </BottomAction>
+    </View>
+  );
+}

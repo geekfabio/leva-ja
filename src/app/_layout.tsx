@@ -1,21 +1,41 @@
-import 'react-native-gesture-handler';
-import '../../global.css';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import ToastMessage from 'react-native-toast-message';
-import { AppProviders } from '@/providers/AppProviders';
-import { toastConfig } from '@/components/ui/AppToast';
+import "react-native-gesture-handler";
+import "../../global.css";
+import { Stack, usePathname } from "expo-router";
+import { Platform, View, useColorScheme } from "react-native";
+import { StatusBar } from "expo-status-bar";
+import ToastMessage from "react-native-toast-message";
+import { AppProviders } from "@/providers/AppProviders";
+import { toastConfig } from "@/components/ui/AppToast";
 
 export default function RootLayout() {
+  const path = usePathname();
+  const dark = useColorScheme() === "dark";
   return (
     <AppProviders>
-      <StatusBar style="dark" />
-      <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="order/[id]" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="welcome" />
-      </Stack>
+      <StatusBar style={dark ? "light" : "dark"} />
+      <View style={{ flex: 1, backgroundColor: dark ? "#0F172A" : "#EDF2EF" }}>
+        <View
+          style={{
+            flex: 1,
+            width: "100%",
+            alignSelf: "center",
+            maxWidth:
+              Platform.OS === "web" && !path.startsWith("/admin")
+                ? 680
+                : undefined,
+          }}
+        >
+          <Stack screenOptions={{ headerShown: false, animation: "fade" }}>
+            <Stack.Screen name="(auth)" />
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen
+              name="order/[id]"
+              options={{ presentation: "modal" }}
+            />
+            <Stack.Screen name="welcome" />
+          </Stack>
+        </View>
+      </View>
       <ToastMessage config={toastConfig} topOffset={56} />
     </AppProviders>
   );

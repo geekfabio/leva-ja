@@ -1,5 +1,41 @@
-import { Pressable, ScrollView, Text, View } from 'react-native';
-import { router } from 'expo-router';
-import { Bell, ChevronRight, CreditCard, MapPinned, Settings, ShieldCheck, UserRound } from 'lucide-react-native';
-const entries = [{ label: 'As minhas viaturas', icon: UserRound, route: '/account/vehicles' }, { label: 'Moradas guardadas', icon: MapPinned, route: '/account/addresses' }, { label: 'Métodos de pagamento', icon: CreditCard, route: '/account/payments' }, { label: 'Notificações', icon: Bell, route: '/account/notifications' }, { label: 'Definições', icon: Settings, route: '/account/settings' }];
-export default function ProfileScreen() { return <ScrollView className="flex-1 bg-surface dark:bg-slate-950" contentContainerClassName="px-5 pb-8 pt-16"><View className="mb-8 flex-row items-center gap-4"><View className="h-16 w-16 items-center justify-center rounded-[22px] bg-brand"><UserRound size={28} color="#FFFFFF" /></View><View><Text className="text-2xl font-black text-ink dark:text-white">Armando Trindade</Text><Text className="mt-1 text-muted">Cliente Leva Já</Text></View></View><Pressable onPress={() => router.push('/(tabs)/orders')} className="mb-7 rounded-3xl bg-ink p-5"><View className="flex-row items-center gap-2"><ShieldCheck size={17} color="#86EFAC" /><Text className="text-sm font-bold text-green-200">A TUA SEGURANÇA</Text></View><Text className="mt-2 text-xl font-black text-white">Os teus pedidos ficam sempre registados.</Text><Text className="mt-4 font-bold text-green-200">Ver assistências →</Text></Pressable>{entries.map(({ label, icon: Icon, route }) => <Pressable key={label} onPress={() => router.push(route as never)} className="mb-3 flex-row items-center rounded-2xl bg-white p-4 dark:bg-slate-900"><Icon size={21} color="#16A34A" /><Text className="ml-3 flex-1 font-bold text-ink dark:text-white">{label}</Text><ChevronRight size={19} color="#94A3B8" /></Pressable>)}</ScrollView>; }
+import { router } from "expo-router";
+import { Text, View } from "react-native";
+import { ScreenLayout } from "@/components/ui/ScreenLayout";
+import { ListRow } from "@/components/ui/ListRow";
+import { AppButton } from "@/components/ui/AppButton";
+const entries = [
+  ["Os meus pedidos", "Transportes, mudanças e assistência", "/(tabs)/orders"],
+  ["Moradas guardadas", "Locais de recolha e entrega", "/account/addresses"],
+  ["Viaturas para assistência", "Dados dos teus veículos", "/account/vehicles"],
+  ["Métodos de pagamento", "As tuas opções de pagamento", "/account/payments"],
+  ["Ajuda e suporte", "Dúvidas sobre cargas e serviços", "/support"],
+  ["Definições", "Preferências da conta", "/account/settings"],
+];
+export default function ProfileScreen() {
+  return (
+    <ScreenLayout title="O teu perfil" subtitle="Cliente Leva Já">
+      <View className="rounded-3xl bg-ink p-6">
+        <View className="mb-4 h-16 w-16 items-center justify-center rounded-full bg-brand-bright">
+          <Text className="text-xl font-bold text-ink">AT</Text>
+        </View>
+        <Text className="text-2xl font-bold text-white">Armando Trindade</Text>
+        <Text className="mt-2 text-sm text-slate-300">
+          A tua conta, os teus caminhos.
+        </Text>
+      </View>
+      {entries.map(([title, description, path]) => (
+        <ListRow
+          key={title}
+          title={title}
+          description={description}
+          onPress={() => router.push(path as never)}
+        />
+      ))}
+      <AppButton
+        label="Voltar à entrada"
+        variant="ghost"
+        onPress={() => router.replace("/welcome")}
+      />
+    </ScreenLayout>
+  );
+}

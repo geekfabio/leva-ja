@@ -1,5 +1,36 @@
-import { Text, View } from 'react-native';
-import { router } from 'expo-router';
-import { PhoneCall } from 'lucide-react-native';
-import { AppButton } from '@/components/ui/AppButton';
-export default function CallScreen() { return <View className="flex-1 justify-between bg-ink px-6 pb-12 pt-24"><View><View className="h-20 w-20 items-center justify-center rounded-[28px] bg-brand"><PhoneCall size={38} color="#fff" /></View><Text className="mt-9 text-3xl font-black text-white">Ligar a João Manuel?</Text><Text className="mt-3 text-base leading-6 text-slate-300">+244 9•• ••• •42{`\n`}O número permanece protegido nesta fase.</Text></View><View className="gap-3"><AppButton label="Confirmar chamada (mock)" onPress={() => router.back()} /><AppButton label="Agora não" variant="ghost" onPress={() => router.back()} /></View></View>; }
+import { useState } from "react";
+import { Text } from "react-native";
+import { router } from "expo-router";
+import { ScreenLayout } from "@/components/ui/ScreenLayout";
+import { AppButton } from "@/components/ui/AppButton";
+import { StateMessage } from "@/components/ui/StateMessage";
+import { useOrderStore } from "@/stores/useOrderStore";
+export default function CallScreen() {
+  const order = useOrderStore((state) => state.selectedOrder);
+  const [simulated, setSimulated] = useState(false);
+  return (
+    <ScreenLayout
+      title="Contacto do parceiro"
+      subtitle={order.id}
+      action={
+        <AppButton label="Voltar ao pedido" onPress={() => router.back()} />
+      }
+    >
+      <StateMessage
+        title={order.provider || "Parceiro ainda não atribuído"}
+        description={
+          simulated
+            ? "Demonstração concluída. Nenhuma chamada foi efectuada."
+            : "O contacto telefónico é apenas demonstrativo. Nenhum número real é marcado."
+        }
+      />
+      <Text className="text-base text-muted">{order.category}</Text>
+      <AppButton
+        label="Simular chamada"
+        disabled={!order.provider || simulated}
+        variant="ghost"
+        onPress={() => setSimulated(true)}
+      />
+    </ScreenLayout>
+  );
+}

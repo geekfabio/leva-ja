@@ -1,7 +1,60 @@
-import { Image, SafeAreaView, Text, View } from 'react-native';
-import { router } from 'expo-router';
-import { ArrowRight, ShieldCheck } from 'lucide-react-native';
-import { MotiView } from 'moti';
-import { AppButton } from '@/components/ui/AppButton';
-import { BrandMark } from '@/components/ui/BrandMark';
-export default function WelcomeScreen() { return <SafeAreaView className="flex-1 bg-surface dark:bg-slate-950"><View className="flex-1 justify-between px-6 pb-6 pt-4"><BrandMark /><View><MotiView from={{ opacity: 0, translateY: 18, scale: .97 }} animate={{ opacity: 1, translateY: 0, scale: 1 }} transition={{ type: 'timing', duration: 600 }} className="mb-8 overflow-hidden rounded-3xl bg-ink p-6"><View className="absolute -right-10 -top-9 h-36 w-36 rounded-full bg-brand/25" /><View className="mb-8 flex-row items-center justify-between"><View className="h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-brand"><Image source={require('../../assets/brand/leva-ja-mark.png')} className="h-14 w-14" resizeMode="contain" /></View><View className="rounded-full bg-white/10 px-3 py-2"><Text className="text-xs font-bold text-green-200">DISPONÍVEL EM LUANDA</Text></View></View><Text className="text-4xl font-black leading-tight tracking-tight text-white">Ajuda para{`\n`}a tua viatura.</Text><Text className="mt-3 max-w-xs text-base leading-6 text-slate-300">Reboque e assistência rápida, onde quer que estejas.</Text></MotiView><View className="rounded-2xl bg-white px-4 py-3 dark:bg-slate-900"><View className="flex-row items-center gap-3"><View className="rounded-xl bg-brand-soft p-2"><ShieldCheck size={18} color="#16A34A" /></View><Text className="flex-1 text-sm font-medium leading-5 text-ink dark:text-white">Acompanhamento claro desde o pedido até ao fim do serviço.</Text></View></View></View><View><AppButton label="Começar agora" icon={<ArrowRight size={18} color="white" />} onPress={() => router.replace('/')} /><Text className="mt-4 text-center text-xs leading-5 text-muted">Ao continuar, aceitas os termos de utilização e a política de privacidade.</Text></View></View></SafeAreaView>; }
+import { Text, View, ScrollView } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { router } from "expo-router";
+import { AppButton } from "@/components/ui/AppButton";
+import { BrandMark } from "@/components/ui/BrandMark";
+import { VehicleArt } from "@/components/transport/VehicleArt";
+export default function WelcomeScreen() {
+  return (
+    <SafeAreaView className="flex-1 bg-surface dark:bg-slate-950">
+      <ScrollView
+        contentContainerStyle={{
+          flexGrow: 1,
+          padding: 24,
+          maxWidth: 560,
+          width: "100%",
+          alignSelf: "center",
+        }}
+      >
+        <BrandMark />
+        <View className="my-7 flex-1 overflow-hidden rounded-3xl bg-brand-bright p-6">
+          <Text className="text-xs font-bold tracking-widest text-ink">
+            CARGAS · MUDANÇAS · ASSISTÊNCIA
+          </Text>
+          <Text className="mt-6 text-4xl font-bold tracking-tight text-ink">
+            Leva o que{"\n"}importa.
+          </Text>
+          <Text className="mt-4 text-base leading-6 text-ink">
+            Da pickup para pequenas cargas ao camião para a tua mudança. E apoio
+            quando a viatura precisa.
+          </Text>
+          <View className="items-center">
+            <VehicleArt vehicle="box" size={235} />
+          </View>
+          <Text className="text-sm font-semibold text-ink">
+            Em Luanda, a tua próxima viagem começa aqui.
+          </Text>
+        </View>
+        <View className="gap-3">
+          <AppButton
+            label="Começar"
+            onPress={() => router.push("/(auth)/phone")}
+          />
+          <AppButton
+            label="Sou parceiro"
+            variant="ghost"
+            onPress={() => router.push("/provider/login" as never)}
+          />
+          <AppButton
+            label="Experimentar demonstração"
+            variant="ghost"
+            onPress={() => router.push("/demo" as never)}
+          />
+          <Text className="text-center text-sm text-muted">
+            Dados fictícios · sem pagamentos reais
+          </Text>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}

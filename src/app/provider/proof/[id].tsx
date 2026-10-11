@@ -1,6 +1,61 @@
-import { ScrollView, Text, View } from 'react-native';
-import { router } from 'expo-router';
-import { AppButton } from '@/components/ui/AppButton';
-import { ScreenHeader } from '@/components/ui/ScreenHeader';
-import { ProofRow } from '@/components/ui/ProofRow';
-export default function ProviderProof() { return <View className="flex-1 bg-surface px-5 dark:bg-slate-950"><ScreenHeader title="Provas do serviço" subtitle="Fotos e assinatura mockadas" /><ScrollView contentContainerClassName="pb-28"><ProofRow title="Antes da recolha" subtitle="2 fotos adicionadas" complete /><ProofRow title="Viatura carregada" subtitle="Adicionar foto" /><ProofRow title="Entrega no destino" subtitle="Adicionar foto" /><ProofRow title="Assinatura do cliente" subtitle="Capturar confirmação" /></ScrollView><View className="absolute bottom-0 left-0 right-0 px-5 pb-7"><AppButton label="Guardar provas" onPress={() => router.back()} /></View></View>; }
+import { Text, View } from "react-native";
+import { Camera } from "lucide-react-native";
+import { router, useLocalSearchParams } from "expo-router";
+import { ScreenLayout } from "@/components/ui/ScreenLayout";
+import { AppButton } from "@/components/ui/AppButton";
+import { SelectionCard } from "@/components/ui/SelectionCard";
+import { StateMessage } from "@/components/ui/StateMessage";
+import { useOrderStore } from "@/stores/useOrderStore";
+const options = [
+  "Estado antes da recolha",
+  "Carga ou viatura preparada",
+  "Entrega no destino",
+  "Confirmação do cliente",
+];
+export default function ProviderProof() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const { orders, patchOrder } = useOrderStore();
+  const order = orders.find((item) => item.id === id);
+  if (!order)
+    return (
+      <ScreenLayout title="Comprovativos">
+        <StateMessage
+          title="Pedido não encontrado"
+          description="Abre um pedido para guardar comprovativos."
+        />
+      </ScreenLayout>
+    );
+  const proof = order.proof || [];
+  return (
+    <ScreenLayout
+      title="Comprovativos do serviço"
+      subtitle={order.id}
+      action={
+        <AppButton label="Guardar e voltar" onPress={() => router.back()} />
+      }
+    >
+      <Text className="text-base leading-6 text-muted">
+        Marca os registos de exemplo. Não são capturadas fotos ou assinaturas
+        reais.
+      </Text>
+      <View className="gap-3">
+        {options.map((label) => (
+          <SelectionCard
+            role="checkbox"
+            key={label}
+            title={label}
+            icon={<Camera size={22} color="#087F4F" />}
+            selected={proof.includes(label)}
+            onPress={() =>
+              patchOrder(order.id, {
+                proof: proof.includes(label)
+                  ? proof.filter((item) => item !== label)
+                  : [...proof, label],
+              })
+            }
+          />
+        ))}
+      </View>
+    </ScreenLayout>
+  );
+}

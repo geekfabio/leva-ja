@@ -1,7 +1,75 @@
-import { useState } from 'react';
-import { Text, TextInput, View } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
-import { CircleCheck } from 'lucide-react-native';
-import { AuthScaffold } from '@/components/ui/AuthScaffold';
-import { AppButton } from '@/components/ui/AppButton';
-export default function OtpScreen() { const { phone, role = 'customer' } = useLocalSearchParams<{ phone?: string; role?: string }>(); const [code, setCode] = useState('123456'); const provider = role === 'provider'; const valid = code === '123456'; const login = () => router.replace((provider ? '/provider' : '/(auth)/location') as never); return <AuthScaffold title="Confirma o teu número" description={`Código mock enviado para +244 ${phone || '9xx xxx xxx'}.`}><View className="rounded-3xl bg-white p-5 dark:bg-slate-900"><View className="mb-5 h-12 w-12 items-center justify-center rounded-2xl bg-green-100"><CircleCheck size={23} color="#16A34A" /></View><Text className="mb-3 text-sm font-bold text-ink dark:text-white">Código de confirmação</Text><TextInput value={code} onChangeText={(value) => setCode(value.replace(/\D/g, ''))} maxLength={6} autoFocus keyboardType="number-pad" textContentType="oneTimeCode" className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-center text-2xl font-black tracking-[10px] text-ink dark:border-slate-700 dark:bg-slate-800 dark:text-white" placeholder="123456" placeholderTextColor="#CBD5E1" /><Text className="mt-4 text-center text-sm text-muted">Usa <Text className="font-black text-brand">123456</Text> para entrar nesta demonstração.</Text></View><View className="mt-6"><AppButton label="Entrar" disabled={!valid} onPress={login} /></View></AuthScaffold>; }
+import { useState } from "react";
+import { Pressable, Text, View } from "react-native";
+import { router, useLocalSearchParams } from "expo-router";
+import { AuthScaffold } from "@/components/ui/AuthScaffold";
+import { AppButton } from "@/components/ui/AppButton";
+import { AppInput } from "@/components/ui/AppInput";
+import { AppCard } from "@/components/ui/AppCard";
+
+export default function OtpScreen() {
+  const { phone, role = "customer" } = useLocalSearchParams<{
+    phone?: string;
+    role?: string;
+  }>();
+  const [code, setCode] = useState("");
+  const [error, setError] = useState("");
+  const login = () => {
+    if (code !== "123456") {
+      setError("Código incorrecto. Nesta demonstração, usa 123456.");
+      return;
+    }
+    router.replace(
+      (role === "provider" ? "/provider" : "/(auth)/location") as never,
+    );
+  };
+  return (
+    <AuthScaffold
+      title="Confirma o teu número"
+      description={`Introduz o código de 6 dígitos para +244 ${phone || "912345678"}.`}
+    >
+      <AppCard>
+        <AppInput
+          label="Código de confirmação"
+          value={code}
+          onChangeText={(value) => {
+            setCode(value.replace(/\D/g, ""));
+            setError("");
+          }}
+          maxLength={6}
+          autoFocus
+          keyboardType="number-pad"
+          textContentType="oneTimeCode"
+          autoComplete="sms-otp"
+          placeholder="000000"
+          error={error}
+          hint="Código de demonstração: 123456. Nenhum SMS foi enviado."
+          style={{
+            fontSize: 28,
+            fontWeight: "700",
+            letterSpacing: 10,
+            textAlign: "center",
+          }}
+          onSubmitEditing={login}
+        />
+      </AppCard>
+      <View className="mt-6">
+        <AppButton
+          label="Confirmar e entrar"
+          disabled={code.length !== 6}
+          onPress={login}
+        />
+      </View>
+      <Pressable
+        accessibilityRole="button"
+        onPress={() =>
+          router.replace({ pathname: "/(auth)/phone", params: { role } })
+        }
+        className="mt-4 min-h-12 items-center justify-center"
+      >
+        <Text className="text-sm font-semibold text-brand">
+          Alterar número de telemóvel
+        </Text>
+      </Pressable>
+    </AuthScaffold>
+  );
+}

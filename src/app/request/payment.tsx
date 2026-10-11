@@ -1,9 +1,70 @@
-import { useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
-import { router } from 'expo-router';
-import { Banknote, Check, CreditCard, Ticket } from 'lucide-react-native';
-import { AppButton } from '@/components/ui/AppButton';
-import { ScreenHeader } from '@/components/ui/ScreenHeader';
-
-const methods = [{ id: 'multicaixa', label: 'Referência Multicaixa', icon: CreditCard, hint: 'Referência gerada no fim do pedido' }, { id: 'cash', label: 'Numerário', icon: Banknote, hint: 'Pagar ao prestador' }, { id: 'voucher', label: 'Voucher', icon: Ticket, hint: 'Aplicar saldo promocional' }];
-export default function RequestPaymentScreen() { const [method, setMethod] = useState('multicaixa'); return <View className="flex-1 bg-surface px-5 dark:bg-slate-950"><ScreenHeader title="Como queres pagar?" subtitle="Pagamento 100% simulado" /><ScrollView contentContainerClassName="pb-28">{methods.map(({ id, label, icon: Icon, hint }) => <Pressable key={id} onPress={() => setMethod(id)} className={`mb-3 flex-row items-center gap-3 rounded-3xl border p-4 ${id === method ? 'border-brand bg-brand-soft' : 'border-transparent bg-white dark:bg-slate-900'}`}><View className="rounded-2xl bg-white p-3 dark:bg-slate-800"><Icon size={22} color="#16A34A" /></View><View className="flex-1"><Text className="font-black text-ink dark:text-white">{label}</Text><Text className="mt-1 text-xs text-muted">{hint}</Text></View>{id === method ? <View className="h-6 w-6 items-center justify-center rounded-full bg-brand"><Check size={14} color="#fff" /></View> : null}</Pressable>)}<View className="mt-5 rounded-3xl bg-ink p-5"><Text className="text-sm text-green-200">TOTAL ESTIMADO</Text><Text className="mt-2 text-3xl font-black text-white">18.500 Kz</Text><Text className="mt-3 text-sm text-slate-300">Poderás acompanhar o estado e obter recibo após o serviço.</Text></View></ScrollView><View className="absolute bottom-0 left-0 right-0 border-t border-slate-100 bg-surface px-5 pb-7 pt-4 dark:border-slate-800 dark:bg-slate-950"><AppButton label="Confirmar e procurar reboque" onPress={() => router.replace('/request/matching')} /></View></View>; }
+import { useRef, useState } from "react";
+import { Text, View } from "react-native";
+import { router } from "expo-router";
+import { Banknote, CreditCard, Ticket } from "lucide-react-native";
+import { AppButton } from "@/components/ui/AppButton";
+import { ScreenLayout } from "@/components/ui/ScreenLayout";
+import { SelectionCard } from "@/components/ui/SelectionCard";
+import { PriceSummary } from "@/components/orders/PriceSummary";
+import { useRequestDraft, requestValid } from "@/stores/useRequestDraft";
+import { useOrderStore } from "@/stores/useOrderStore";
+import { demoEstimate } from "@/domain/catalog";
+const methods = [
+  { name: "Referência Multicaixa", icon: CreditCard },
+  { name: "Numerário", icon: Banknote },
+  { name: "Voucher", icon: Ticket },
+];
+export default function RequestPaymentScreen() {
+  const [method, setMethod] = useState(methods[0].name);
+  const [error, setError] = useState("");
+  const submitted = useRef(false);
+  const draft = useRequestDraft();
+  const create = useOrderStore((state) => state.createRequest);
+  const price = demoEstimate(draft.vehicleType, draft.helpers);
+  const confirm = () => {
+    if (submitted.current) return;
+    submitted.current = true;
+    const id = create(draft, method);
+    if (!id) {
+      submitted.current = false;
+      setError("Revê os detalhes da carga e as moradas antes de confirmar.");
+      return;
+    }
+    router.replace({ pathname: "/request/matching", params: { id } } as never);
+  };
+  return (
+    <ScreenLayout
+      title="Como queres pagar?"
+      subtitle="Passo 6 de 6"
+      action={
+        <AppButton
+          label="Confirmar pedido"
+          disabled={!requestValid(draft)}
+          onPress={confirm}
+        />
+      }
+    >
+      <View accessibilityRole="radiogroup" className="gap-3">
+        {methods.map(({ name, icon: Icon }) => (
+          <SelectionCard
+            key={name}
+            title={name}
+            icon={<Icon size={22} color="#087F4F" />}
+            selected={method === name}
+            onPress={() => setMethod(name)}
+          />
+        ))}
+      </View>
+      <PriceSummary amount={price.total} pricing={price} />
+      {error ? (
+        <Text accessibilityRole="alert" className="text-red-700">
+          {error}
+        </Text>
+      ) : null}
+      <Text className="text-sm leading-6 text-muted">
+        Nenhum pagamento será cobrado. O pedido ficará disponível na área do
+        parceiro para demonstrares o serviço.
+      </Text>
+    </ScreenLayout>
+  );
+}

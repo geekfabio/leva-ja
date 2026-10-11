@@ -1,3 +1,46 @@
-import { Text, View } from 'react-native';
-const colors: Record<string, string> = { aprovado: 'bg-brand-soft text-brand', confirmado: 'bg-brand-soft text-brand', concluído: 'bg-brand-soft text-brand', pendente: 'bg-amber-100 text-amber-700', falhou: 'bg-red-100 text-red-700', bloqueado: 'bg-red-100 text-red-700', reembolsado: 'bg-blue-100 text-blue-700', aberto: 'bg-red-100 text-red-700', 'em análise': 'bg-amber-100 text-amber-700' };
-export function StatusBadge({ status }: { status: string }) { const key = status.toLowerCase(); return <View className={`self-start rounded-full px-3 py-1 ${colors[key]?.split(' ')[0] ?? 'bg-slate-100'}`}><Text className={`text-[10px] font-black ${colors[key]?.split(' ')[1] ?? 'text-slate-600'}`}>{status.toUpperCase()}</Text></View>; }
+import { Text, View } from "react-native";
+const tones = {
+  success: { backgroundColor: "#E5F8EE", color: "#087F4F" },
+  warning: { backgroundColor: "#FFF3D6", color: "#855300" },
+  danger: { backgroundColor: "#FEE9E7", color: "#B42318" },
+  info: { backgroundColor: "#EAF1FF", color: "#2457A8" },
+  neutral: { backgroundColor: "#EEF1EF", color: "#53635A" },
+};
+const statuses: Record<string, keyof typeof tones> = {
+  aprovado: "success",
+  confirmado: "success",
+  concluído: "success",
+  aceite: "success",
+  activo: "success",
+  pendente: "warning",
+  "em análise": "warning",
+  "em disputa": "warning",
+  "a procurar": "warning",
+  disponível: "info",
+  falhou: "danger",
+  bloqueado: "danger",
+  aberto: "danger",
+  cancelado: "neutral",
+  reembolsado: "info",
+  "a caminho": "info",
+  "no local": "success",
+  "em serviço": "info",
+};
+export function StatusBadge({ status }: { status: string }) {
+  const tone = tones[statuses[status.toLowerCase()] || "neutral"];
+  return (
+    <View
+      style={{
+        backgroundColor: tone.backgroundColor,
+        borderRadius: 100,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        alignSelf: "flex-start",
+      }}
+    >
+      <Text style={{ color: tone.color, fontSize: 12, fontWeight: "700" }}>
+        {status}
+      </Text>
+    </View>
+  );
+}
