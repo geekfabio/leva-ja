@@ -1,18 +1,29 @@
 # Design QA
 
-## Reference
+## Fonte visual
 
-Selected Product Design concept: operations command center (desktop 1440×1024), generated on 9 October 2026.
+- Referência: screenshot da tela inicial do cliente fornecido na solicitação.
+- Alvo: viewport mobile equivalente a 393 × 852 CSS px (referência fornecida em densidade 2×).
+- Estado: cliente Armando com assistência activa de João Manuel.
 
-## Automated verification
+## Implementação
 
-- `npm run typecheck`: passed
-- `npx expo export --platform web`: passed
+- Tela: src/app/(tabs)/index.tsx.
+- Asset principal: assets/illustrations/roadside-assistance-hero.png.
+- npm run typecheck: passou.
+- npx expo export --platform web: passou.
 
-## Visual verification
+## Verificação visual
 
-Blocked: this session does not expose a browser surface for capturing and comparing the local Expo web build against the selected visual reference. The dashboard was implemented from the selected direction with desktop/tablet breakpoints, responsive wrapping, an operations chart, approval queue, and pricing controls.
+- Screenshot da implementação: não capturado.
+- Comparação full-view: bloqueada; o runtime desta sessão não expõe navegador disponível (agent.browsers.list() retornou vazio).
+- Comparação de regiões focadas: bloqueada pelo mesmo motivo.
+- Interações visuais: não testadas em navegador; os handlers de CTA apontam para as rotas existentes de assistência, notificações e pedidos.
+
+## Resultado
+
+Não há achados visuais classificados porque falta a evidência renderizada necessária para comparar fonte e implementação.
 
 ## Final result
 
-Blocked — requires browser-based visual comparison before design-fidelity sign-off.
+blocked
