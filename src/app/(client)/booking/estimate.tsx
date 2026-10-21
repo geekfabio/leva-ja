@@ -7,7 +7,7 @@ import { AppHeader, AppText, BrandLogo, Card, Divider, EmptyState, InfoNote, Map
 import { bookingSteps, serviceTitle } from "@/features/booking/catalog";
 import { estimatePrice, needsProposal, recommendVehicle } from "@/features/booking/pricing";
 import { draftIssues } from "@/features/booking/validation";
-import { roadDistanceKm } from "@/mocks/places";
+import { repositories } from "@/data";
 import { useBookingStore } from "@/stores/useBookingStore";
 import { useServiceStore } from "@/stores/useServiceStore";
 import { useSessionStore } from "@/stores/useSessionStore";
@@ -22,7 +22,7 @@ export default function EstimateStep() {
   const clientId = useSessionStore((s) => s.user.id);
   const detail = useRef<BottomSheetModal>(null);
   const issues = useMemo(() => draftIssues(draft), [draft]);
-  const distanceKm = draft.origin && draft.destination ? roadDistanceKm(draft.origin, draft.destination) : 0;
+  const distanceKm = draft.origin && draft.destination ? repositories().locations.distanceKm(draft.origin, draft.destination) : 0;
   const input = { kind: draft.kind, distanceKm, tow: draft.tow, cargo: draft.cargo, moving: draft.moving };
   const price = estimatePrice(input);
   const vehicle = recommendVehicle(input);
@@ -30,9 +30,8 @@ export default function EstimateStep() {
 
   const confirm = useMutation({
     mutationFn: async () => {
-      await new Promise((r) => setTimeout(r, 900));
-      const id = useServiceStore.getState().createFromDraft(draft, clientId);
-      if (!id) throw new Error("Pedido incompleto");
+      const id = await useServiceStore.getState().createFromDraft(draft, clientId);
+      if (!id) throw new Error(useServiceStore.getState().lastError ?? "Pedido incompleto");
       return id;
     },
     onSuccess: () => swap("/trip/matching"),

@@ -7,16 +7,15 @@ import { AppHeader, AppText, Avatar, Card, ContactActions, EmptyState, IconButto
 import { MapSheetLayout } from "@/components/service/MapSheetLayout";
 import { serviceTitle } from "@/features/booking/catalog";
 import { providerAction, statusLabel } from "@/features/service/stateMachine";
-import { avatarFor, findClient } from "@/mocks/people";
-import { cargoPhotos } from "@/mocks/photos";
-import { places } from "@/mocks/places";
-import { useProviderStore } from "@/stores/useProviderStore";
+import { repositories } from "@/data";
 import { useRequest, useServiceStore } from "@/stores/useServiceStore";
 import { unreadCount, useChatStore } from "@/stores/useChatStore";
 import { formatKz } from "@/utils/format";
 import { go, swap } from "@/features/navigation";
 import { toast } from "@/lib/toast";
 import { colors } from "@/theme/colors";
+import { clientOf } from "@/features/service/people";
+import { useMyProvider } from "@/features/provider/useProvider";
 
 const subtitleFor: Record<string, (to: string, from: string) => string> = {
   assigned: (_, from) => `A aguardar deslocação para ${from}`,
@@ -33,7 +32,8 @@ const subtitleFor: Record<string, (to: string, from: string) => string> = {
 export default function ActiveServiceScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const request = useRequest(id);
-  const vehicle = useProviderStore((s) => s.vehicle);
+  const me = useMyProvider();
+  const vehicle = me.vehicle;
   const unread = useChatStore((s) => unreadCount(id ? s.threads[id] : undefined, "provider"));
   const more = useRef<BottomSheetModal>(null);
   if (!request || request.status === "searching" || request.status === "cancelled")
@@ -42,24 +42,25 @@ export default function ActiveServiceScreen() {
         <EmptyState title={request?.status === "cancelled" ? "Serviço cancelado" : "Sem serviço activo"} description={request?.cancelReason ?? "Aceita um pedido para o gerires aqui."} actionLabel="Voltar ao painel" onAction={() => swap("/partner")} />
       </ScreenContainer>
     );
-  const client = findClient(request.clientId);
+  const client = clientOf(request);
   const action = providerAction[request.status];
   const step = ["assigned", "en_route", "arrived"].includes(request.status) ? 0 : request.status === "pickup_confirmed" ? 1 : request.status === "in_transit" ? 1 : 2;
   const going = ["assigned", "en_route"].includes(request.status);
-  const start = places.maculusso.coords;
+  const start = me.coords;
   const steps = going ? ["Pedido aceite", "A caminho", "No local"] : ["Recolha concluída", "Em transporte", "Confirmar entrega"];
   const stepIndex = going ? (request.status === "assigned" ? 0 : 1) : step === 0 ? 0 : step;
   const eta = going ? 8 : Math.round(request.durationMin / 2);
 
-  const run = () => {
+  const run = async () => {
     if (!action) return;
     if (action.to === "proof") return go(`/partner/proof/${request.id}`);
-    const ok = useServiceStore.getState().transition(request.id, action.to, action.to === "pickup_confirmed" ? "system" : "provider");
+    const ok = await useServiceStore.getState().transition(request.id, action.to, action.to === "pickup_confirmed" ? "system" : "provider");
     if (ok) toast.success(statusLabel[action.to]);
+    else toast.error({ title: "Não foi possível actualizar", message: useServiceStore.getState().lastError ?? undefined });
   };
-  const registerPhotos = () => {
-    useServiceStore.getState().addPickupPhotos(request.id, cargoPhotos);
-    toast.success({ title: "Fotos registadas", message: "O cliente vai rever e confirmar a recolha." });
+  const registerPhotos = async () => {
+    const photos = await repositories().media.pickupSet();
+    if (await useServiceStore.getState().addPickupPhotos(request.id, photos)) toast.success({ title: "Fotos registadas", message: "O cliente vai rever e confirmar a recolha." });
   };
 
   const footer = (() => {
@@ -122,7 +123,7 @@ export default function ActiveServiceScreen() {
         <StatusBadge label="Verificado" tone="success" icon="check" />
       </Card>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-        <Avatar name={client.name} initials={client.initials} photo={avatarFor[client.id]} size={56} />
+        <Avatar name={client.name} initials={client.initials} photo={client.avatar} size={56} />
         <View style={{ flex: 1 }}>
           <AppText variant="h3">{client.name}</AppText>
           <AppText variant="caption" color={colors.muted}>

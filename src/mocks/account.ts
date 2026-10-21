@@ -13,12 +13,6 @@ export const initialPaymentMethods: PaymentMethod[] = [
   { id: "pm-cash", kind: "cash", title: "Pagamento em numerário", detail: "Paga em dinheiro ao prestador.", isDefault: false },
 ];
 
-export const paymentKindCopy = {
-  bank_reference: { title: "Referência bancária", detail: "Paga via Multicaixa ou Internet Banking." },
-  card: { title: "Cartão", detail: "Visa, Mastercard ou cartão Multicaixa." },
-  cash: { title: "Pagamento em numerário", detail: "Paga em dinheiro ao prestador." },
-} as const;
-
 export const helpTopics: HelpTopic[] = [
   { id: "faq-1", category: "orders", question: "Como acompanho o meu pedido?", answer: "Depois de o prestador aceitar, o mapa mostra a posição dele e o tempo estimado. Também recebes notificações em cada etapa." },
   { id: "faq-2", category: "orders", question: "Posso cancelar um pedido?", answer: "Sim, enquanto a carga ou viatura não tiver sido recolhida. Depois da recolha, fala com o suporte." },

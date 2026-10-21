@@ -1,7 +1,7 @@
 import { View } from "react-native";
 import { Image } from "expo-image";
 import { BadgeCheck } from "lucide-react-native";
-import { avatars, type AvatarKey } from "@/mocks/assets";
+import { imageSource } from "@/theme/images";
 import { colors } from "@/theme/colors";
 import { AppText } from "./AppText";
 
@@ -16,7 +16,8 @@ export function Avatar({
 }: {
   name: string;
   initials: string;
-  photo?: AvatarKey;
+  /** URL ou chave de imagem local (campo `avatar` de cliente/prestador). */
+  photo?: string;
   size?: number;
   verified?: boolean;
   online?: boolean;
@@ -24,7 +25,7 @@ export function Avatar({
   return (
     <View accessible accessibilityLabel={`Fotografia de ${name}${verified ? ", verificado" : ""}`} style={{ width: size, height: size }}>
       {photo ? (
-        <Image source={avatars[photo]} style={{ width: size, height: size, borderRadius: size / 2 }} contentFit="cover" />
+        <Image source={imageSource(photo)} style={{ width: size, height: size, borderRadius: size / 2 }} contentFit="cover" />
       ) : (
         <View
           style={{

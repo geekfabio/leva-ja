@@ -24,8 +24,7 @@ import { NoActiveRequest } from "@/components/service/NoActiveRequest";
 import { SuccessBurst } from "@/components/service/SuccessBurst";
 import { serviceTitle } from "@/features/booking/catalog";
 import { describeLoad } from "@/features/booking/factory";
-import { findProvider } from "@/mocks/people";
-import { paymentKindCopy } from "@/mocks/account";
+import { paymentKindCopy } from "@/features/payment/copy";
 import { useRequest, useServiceStore } from "@/stores/useServiceStore";
 import { formatLongDateTime, formatShortDateTime, formatTime } from "@/utils/date";
 import { formatKz } from "@/utils/format";
@@ -50,7 +49,7 @@ export default function ReceiptScreen() {
   const [review, setReview] = useState("");
   const full = useRef<BottomSheetModal>(null);
   if (!request) return <NoActiveRequest />;
-  const provider = findProvider(request.providerId);
+  const provider = request?.provider;
   const pickupAt = request.timeline.find((e) => e.status === "pickup_confirmed" || e.status === "en_route")?.at ?? request.createdAt;
   const deliveredAt = request.timeline.find((e) => e.status === "delivered")?.at ?? request.createdAt;
   const day = (iso: string) => formatShortDateTime(iso).split(",")[0];
@@ -77,9 +76,9 @@ export default function ReceiptScreen() {
     );
 
   const canRate = request.status === "paid";
-  const submit = () => {
+  const submit = async () => {
     if (!rating) return toast.info("Escolhe de 1 a 5 estrelas");
-    useServiceStore.getState().rate(request.id, rating, review.trim() || undefined);
+    if (!(await useServiceStore.getState().rate(request.id, rating, review.trim() || undefined))) return toast.error({ title: "Avaliação não enviada", message: useServiceStore.getState().lastError ?? undefined });
     toast.success({ title: "Obrigado pela avaliação!", message: "A tua opinião ajuda-nos a melhorar." });
     swap("/home");
   };

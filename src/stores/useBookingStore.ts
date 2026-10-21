@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import type { CargoDetails, MovingDetails, Photo, Place, ServiceKind, TowDetails } from "@/types/domain";
-import { userLocation } from "@/mocks/places";
 
 export type BookingDraft = {
   kind: ServiceKind;
@@ -38,7 +37,8 @@ const emptyDraft = (kind: ServiceKind, variant?: "goods"): BookingDraft => ({
     disassembly: false,
     when: "now",
   },
-  origin: userLocation,
+  // Preenchida com a localização actual (LocationRepository) no passo do trajecto.
+  origin: null,
   destination: null,
   stops: [],
   photos: [],

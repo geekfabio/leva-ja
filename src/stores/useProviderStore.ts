@@ -1,75 +1,103 @@
 import { create } from "zustand";
-import type { ProviderDocument, ServiceKind, ServiceRequest, Transaction, Vehicle } from "@/types/domain";
-import { currentProvider } from "@/mocks/people";
-import { initialBalance, initialTransactions } from "@/mocks/finance";
-import { initialDocuments, initialServices, initialZones } from "@/mocks/provider";
-import { serviceTitle } from "@/features/booking/catalog";
+import type { Provider, ProviderDocument, ServiceKind, Transaction, Vehicle } from "@/types/domain";
+import { repositories, type PayoutAccount, type ProviderState } from "@/data";
 
-type ProviderState = {
+type ProviderStoreState = {
+  providerId: string | null;
+  loaded: boolean;
+  profile: Provider | null;
   online: boolean;
-  vehicle: Vehicle;
+  vehicle: Vehicle | null;
   zones: string[];
   services: ServiceKind[];
   documents: ProviderDocument[];
   balance: number;
   transactions: Transaction[];
-  setOnline: (online: boolean) => void;
-  updateVehicle: (values: Partial<Vehicle>) => void;
-  saveCoverage: (zones: string[], services: ServiceKind[]) => void;
-  /** Envia um documento novo: fica "em análise" e é validado pela simulação. */
-  submitDocument: (id: string) => void;
-  addEarning: (request: ServiceRequest) => void;
-  /** Cria um levantamento pendente que conclui sozinho (transferência simulada). */
-  withdraw: (amount: number) => string;
-  reset: () => void;
+  payout: PayoutAccount | null;
+  declined: string[];
+  lastError: string | null;
+  /** Carrega o estado do prestador e passa a receber as alterações em tempo real. */
+  hydrate: (providerId: string) => Promise<void>;
+  apply: (state: ProviderState) => void;
+  setOnline: (online: boolean) => Promise<boolean>;
+  updateVehicle: (values: Partial<Vehicle>) => Promise<boolean>;
+  saveCoverage: (zones: string[], services: ServiceKind[]) => Promise<boolean>;
+  submitDocument: (id: string) => Promise<boolean>;
+  decline: (requestId: string) => Promise<boolean>;
+  withdraw: (amount: number) => Promise<boolean>;
 };
 
-const initial = () => ({
-  online: true,
-  vehicle: currentProvider.vehicle,
-  zones: [...initialZones],
-  services: [...initialServices],
-  documents: initialDocuments.map((d) => ({ ...d })),
-  balance: initialBalance,
-  transactions: initialTransactions.map((t) => ({ ...t })),
-});
+let unsubscribe: (() => void) | undefined;
 
-export const useProviderStore = create<ProviderState>((set, get) => ({
-  ...initial(),
-  setOnline: (online) => set({ online }),
-  updateVehicle: (values) => set((s) => ({ vehicle: { ...s.vehicle, ...values } })),
-  saveCoverage: (zones, services) => set({ zones, services }),
-  submitDocument: (id) => {
-    set((s) => ({ documents: s.documents.map((d) => (d.id === id ? { ...d, state: "pending" } : d)) }));
-    setTimeout(() => {
-      const next = new Date();
-      next.setFullYear(next.getFullYear() + 2);
-      set((s) => ({
-        documents: s.documents.map((d) => (d.id === id ? { ...d, state: "verified", validUntil: next.toISOString() } : d)),
-      }));
-    }, 4000);
-  },
-  addEarning: (request) => {
-    if (get().transactions.some((t) => t.id === `tx-${request.id}`)) return;
-    const tx: Transaction = {
-      id: `tx-${request.id}`,
-      kind: "earning",
-      title: serviceTitle[request.kind],
-      amount: request.providerEarning,
-      at: new Date().toISOString(),
-      status: "completed",
-      serviceKind: request.kind,
-    };
-    set((s) => ({ transactions: [tx, ...s.transactions], balance: s.balance + tx.amount }));
-  },
-  withdraw: (amount) => {
-    const id = `tx-wd-${Date.now()}`;
-    const tx: Transaction = { id, kind: "withdrawal", title: "Levantamento para conta bancária", amount: -amount, at: new Date().toISOString(), status: "pending" };
-    set((s) => ({ transactions: [tx, ...s.transactions], balance: s.balance - amount }));
-    setTimeout(() => {
-      set((s) => ({ transactions: s.transactions.map((t) => (t.id === id ? { ...t, status: "completed" } : t)) }));
-    }, 3000);
-    return id;
-  },
-  reset: () => set(initial()),
-}));
+/** Cache da área do prestador sobre o ProviderRepository. */
+export const useProviderStore = create<ProviderStoreState>((set, get) => {
+  const repo = () => repositories().providers;
+  const id = () => get().providerId ?? "";
+  const run = async (action: () => Promise<unknown>) => {
+    try {
+      await action();
+      // O estado oficial chega pela subscrição; recarrega para não depender dela.
+      get().apply(await repo().getState(id()));
+      set({ lastError: null });
+      return true;
+    } catch (error) {
+      set({ lastError: error instanceof Error ? error.message : "Não foi possível concluir a acção." });
+      return false;
+    }
+  };
+
+  return {
+    providerId: null,
+    loaded: false,
+    profile: null,
+    online: false,
+    vehicle: null,
+    zones: [],
+    services: [],
+    documents: [],
+    balance: 0,
+    transactions: [],
+    payout: null,
+    declined: [],
+    lastError: null,
+
+    hydrate: async (providerId) => {
+      set({ providerId });
+      unsubscribe?.();
+      unsubscribe = repo().subscribe(providerId, get().apply);
+      try {
+        get().apply(await repo().getState(providerId));
+      } catch (error) {
+        set({ loaded: true, lastError: error instanceof Error ? error.message : "Erro ao carregar o prestador." });
+      }
+    },
+
+    apply: (state) =>
+      set({
+        loaded: true,
+        profile: state.profile,
+        vehicle: state.profile.vehicle,
+        online: state.online,
+        zones: state.coverage.zones,
+        services: state.coverage.services,
+        documents: state.documents,
+        balance: state.wallet.balance,
+        transactions: state.wallet.transactions,
+        payout: state.wallet.payout,
+        declined: state.declined,
+      }),
+
+    setOnline: (online) => {
+      set({ online });
+      return run(() => repo().setOnline(id(), online));
+    },
+    updateVehicle: (values) => run(() => repo().updateVehicle(id(), values)),
+    saveCoverage: (zones, services) => run(() => repo().saveCoverage(id(), { zones, services })),
+    submitDocument: (documentId) => run(() => repo().submitDocument(id(), documentId)),
+    decline: (requestId) => {
+      set((s) => ({ declined: [...s.declined, requestId] }));
+      return run(() => repo().decline(id(), requestId));
+    },
+    withdraw: (amount) => run(() => repo().withdraw(id(), amount)),
+  };
+});

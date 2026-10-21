@@ -8,7 +8,7 @@ import { BookingScaffold } from "@/components/service/BookingScaffold";
 import { propertyOptions } from "@/features/booking/catalog";
 import { movingSchema, type MovingForm } from "@/features/booking/schemas";
 import { useBookingStep } from "@/features/booking/useBookingFlow";
-import { illustrations } from "@/mocks/assets";
+import { illustrations } from "@/theme/images";
 import { useBookingStore } from "@/stores/useBookingStore";
 import { formatFloor } from "@/utils/format";
 import { colors } from "@/theme/colors";

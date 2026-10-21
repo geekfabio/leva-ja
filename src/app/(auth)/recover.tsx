@@ -14,8 +14,7 @@ import { colors } from "@/theme/colors";
 export default function RecoverScreen() {
   const { control, handleSubmit, formState } = useForm<{ email: string }>({ resolver: zodResolver(recoverSchema), defaultValues: { email: "" } });
   const submit = handleSubmit(async ({ email }) => {
-    await new Promise((r) => setTimeout(r, 700));
-    useSessionStore.getState().startRecovery(email);
+    await useSessionStore.getState().startRecovery(email);
     go("/verify-email");
   });
   return (

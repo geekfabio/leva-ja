@@ -1,57 +1,46 @@
 import { create } from "zustand";
 import type { ChatMessage } from "@/types/domain";
-import { autoReplies, openingMessages } from "@/mocks/chat";
-
-type Sender = ChatMessage["from"];
+import { repositories, type ChatParticipant } from "@/data";
 
 type ChatState = {
   threads: Record<string, ChatMessage[]>;
   typing: Record<string, boolean>;
-  ensureThread: (threadId: string, seed?: "service" | "support") => void;
-  /** Envia e, na simulação, agenda a resposta automática do outro lado. */
-  send: (threadId: string, from: Sender, text: string, replyAs?: Sender) => void;
-  markRead: (threadId: string, reader: Sender) => void;
+  /** Carrega a conversa e subscreve mensagens novas; devolve a função para sair. */
+  open: (threadId: string, kind?: "service" | "support") => () => void;
+  send: (threadId: string, from: ChatParticipant, text: string) => Promise<void>;
+  markRead: (threadId: string, reader: ChatParticipant) => void;
 };
 
-const replyIndex: Record<string, number> = {};
+/** Cache das conversas sobre o ChatRepository (respostas e "a escrever…" chegam por subscrição). */
+export const useChatStore = create<ChatState>((set) => {
+  const append = (threadId: string, message: ChatMessage) =>
+    set((s) => {
+      const list = s.threads[threadId] ?? [];
+      return list.some((m) => m.id === message.id) ? s : { threads: { ...s.threads, [threadId]: [...list, message] } };
+    });
+  return {
+    threads: {},
+    typing: {},
+    open: (threadId, kind = "service") => {
+      repositories()
+        .chat.messages(threadId, kind)
+        .then((messages) => set((s) => ({ threads: { ...s.threads, [threadId]: messages } })))
+        .catch(() => undefined);
+      return repositories().chat.subscribe(threadId, (event) => {
+        if (event.type === "message") append(threadId, event.message);
+        else set((s) => ({ typing: { ...s.typing, [threadId]: event.typing } }));
+      });
+    },
+    send: async (threadId, from, text) => {
+      if (!text.trim()) return;
+      await repositories().chat.send(threadId, from, text);
+    },
+    markRead: (threadId, reader) => {
+      set((s) => ({ threads: { ...s.threads, [threadId]: (s.threads[threadId] ?? []).map((m) => (m.from !== reader ? { ...m, read: true } : m)) } }));
+      repositories().chat.markRead(threadId, reader).catch(() => undefined);
+    },
+  };
+});
 
-/** Conversas simuladas por pedido ("req-…") e com o suporte ("support"). Sem rede nem notificações reais. */
-export const useChatStore = create<ChatState>((set, get) => ({
-  threads: {},
-  typing: {},
-  ensureThread: (threadId, seed = "service") => {
-    if (get().threads[threadId]) return;
-    const initial =
-      seed === "support"
-        ? [{ id: `${threadId}-s0`, requestId: threadId, from: "support" as const, text: autoReplies.support[0]!, at: new Date().toISOString(), read: false }]
-        : openingMessages(threadId);
-    set((s) => ({ threads: { ...s.threads, [threadId]: initial } }));
-  },
-  send: (threadId, from, text, replyAs) => {
-    const message: ChatMessage = { id: `${threadId}-${Date.now()}`, requestId: threadId, from, text: text.trim(), at: new Date().toISOString(), read: true };
-    if (!message.text) return;
-    set((s) => ({ threads: { ...s.threads, [threadId]: [...(s.threads[threadId] ?? []), message] } }));
-    if (!replyAs) return;
-    set((s) => ({ typing: { ...s.typing, [threadId]: true } }));
-    setTimeout(() => {
-      const options = autoReplies[replyAs];
-      const key = `${threadId}-${replyAs}`;
-      const index = (replyIndex[key] = ((replyIndex[key] ?? (replyAs === "support" ? 0 : -1)) + 1) % options.length);
-      const reply: ChatMessage = { id: `${threadId}-r${Date.now()}`, requestId: threadId, from: replyAs, text: options[index]!, at: new Date().toISOString(), read: false };
-      set((s) => ({
-        typing: { ...s.typing, [threadId]: false },
-        threads: { ...s.threads, [threadId]: [...(s.threads[threadId] ?? []), reply] },
-      }));
-    }, 1600);
-  },
-  markRead: (threadId, reader) =>
-    set((s) => ({
-      threads: {
-        ...s.threads,
-        [threadId]: (s.threads[threadId] ?? []).map((m) => (m.from !== reader ? { ...m, read: true } : m)),
-      },
-    })),
-}));
-
-export const unreadCount = (messages: ChatMessage[] | undefined, reader: Sender) =>
+export const unreadCount = (messages: ChatMessage[] | undefined, reader: ChatParticipant) =>
   (messages ?? []).filter((m) => m.from !== reader && !m.read).length;

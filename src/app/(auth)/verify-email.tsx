@@ -3,8 +3,7 @@ import { View } from "react-native";
 import { Image } from "expo-image";
 import { AppHeader, AppText, PrimaryButton, ScreenContainer, TextButton } from "@/components/kit";
 import { OtpInput } from "@/components/core/OtpInput";
-import { DEMO_OTP } from "@/features/auth/schemas";
-import { illustrations } from "@/mocks/assets";
+import { illustrations } from "@/theme/images";
 import { useSessionStore } from "@/stores/useSessionStore";
 import { enterApp, go, swap } from "@/features/navigation";
 import { toast } from "@/lib/toast";
@@ -30,17 +29,15 @@ export default function VerifyEmailScreen() {
   const confirm = async () => {
     if (code.length !== 6) return setError("Introduz os 6 dígitos.");
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 600));
-    setLoading(false);
-    if (code !== DEMO_OTP) return setError("Código incorrecto. Na demonstração usa 123456.");
-    const session = useSessionStore.getState();
-    if (purpose === "recover") {
-      toast.success({ title: "Acesso recuperado", message: "Já podes entrar com a tua conta." });
-      session.login(session.verificationEmail ?? "");
-    } else {
-      session.confirmEmail();
-      toast.success({ title: "Conta criada", message: "Bem-vindo à Leva Já!" });
+    try {
+      await useSessionStore.getState().verify(code);
+    } catch (e) {
+      setLoading(false);
+      return setError(e instanceof Error ? e.message : "Não foi possível confirmar o código.");
     }
+    setLoading(false);
+    const session = useSessionStore.getState();
+    toast.success(purpose === "recover" ? { title: "Acesso recuperado", message: "Já podes entrar com a tua conta." } : { title: "Conta criada", message: "Bem-vindo à Leva Já!" });
     if (session.locationGranted === null) swap("/enable-location");
     else enterApp(session.role ?? "client");
   };
@@ -83,6 +80,7 @@ export default function VerifyEmailScreen() {
           label="Reenviar código"
           onPress={() => {
             setLeft(RESEND_SECONDS);
+            useSessionStore.getState().resendCode().catch(() => undefined);
             toast.info({ title: "Código reenviado", message: "Verifica a tua caixa de correio (simulado)." });
           }}
         />

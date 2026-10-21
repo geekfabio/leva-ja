@@ -6,7 +6,6 @@ import { MapSheetLayout } from "@/components/service/MapSheetLayout";
 import { NoActiveRequest } from "@/components/service/NoActiveRequest";
 import { serviceTitle } from "@/features/booking/catalog";
 import { useActiveClientRequest, useClientSimulation, useStatusRoute } from "@/features/service/useClientSimulation";
-import { avatarFor, findProvider } from "@/mocks/people";
 import { useServiceStore } from "@/stores/useServiceStore";
 import { useAccountStore } from "@/stores/useAccountStore";
 import { formatKz, formatRating } from "@/utils/format";
@@ -31,11 +30,11 @@ export default function MatchingScreen() {
   }, []);
   if (!request) return <NoActiveRequest />;
   const proposal = request.proposal?.status === "sent" ? request.proposal : undefined;
-  const proposer = findProvider(request.providerId);
+  const proposer = request?.provider;
 
-  const cancel = () => {
-    useServiceStore.getState().cancel(request.id, reason);
+  const cancel = async () => {
     setConfirm(false);
+    if (!(await useServiceStore.getState().cancel(request.id, reason))) return toast.error({ title: "Não foi possível cancelar", message: useServiceStore.getState().lastError ?? undefined });
     toast.info({ title: "Pedido cancelado", message: "Não foi cobrado nenhum valor." });
     swap("/home");
   };
@@ -67,7 +66,7 @@ export default function MatchingScreen() {
           </AppText>
           <Card style={{ gap: 12 }}>
             <View style={{ flexDirection: "row", gap: 12, alignItems: "center" }}>
-              <Avatar name={proposer.name} initials={proposer.initials} photo={avatarFor[proposer.id]} size={52} verified />
+              <Avatar name={proposer.name} initials={proposer.initials} photo={proposer.avatar} size={52} verified />
               <View style={{ flex: 1 }}>
                 <AppText variant="title">{proposer.name}</AppText>
                 <AppText variant="caption" color={colors.muted}>

@@ -12,14 +12,18 @@ import { colors } from "@/theme/colors";
 /** 07 · Criar conta (passo 2 de 2): palavra-passe e termos. */
 export default function RegisterSecurityScreen() {
   const pending = useSessionStore((s) => s.pendingRegistration);
-  const { control, handleSubmit, formState } = useForm<RegisterSecurityForm>({
+  const { control, handleSubmit, formState, setError } = useForm<RegisterSecurityForm>({
     resolver: zodResolver(registerSecuritySchema),
     defaultValues: { password: "", confirm: "", terms: false as unknown as true },
   });
   if (!pending) return <Redirect href={"/register" as never} />;
-  const submit = handleSubmit(async () => {
-    await new Promise((r) => setTimeout(r, 600));
-    go("/verify-email");
+  const submit = handleSubmit(async ({ password }) => {
+    try {
+      await useSessionStore.getState().register(password);
+      go("/verify-email");
+    } catch (error) {
+      setError("password", { message: error instanceof Error ? error.message : "Não foi possível criar a conta." });
+    }
   });
   return (
     <ScreenContainer

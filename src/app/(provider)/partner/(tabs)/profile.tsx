@@ -19,16 +19,17 @@ import {
   VehicleImage,
   Appear,
 } from "@/components/kit";
-import { avatarFor, currentProvider } from "@/mocks/people";
 import { useProviderStore } from "@/stores/useProviderStore";
 import { useSessionStore } from "@/stores/useSessionStore";
 import { formatRating } from "@/utils/format";
 import { enterApp, go } from "@/features/navigation";
 import { colors } from "@/theme/colors";
+import { useMyProvider } from "@/features/provider/useProvider";
 
 /** 41 · Perfil profissional do prestador. */
 export default function ProviderProfile() {
-  const vehicle = useProviderStore((s) => s.vehicle);
+  const me = useMyProvider();
+  const vehicle = me.vehicle;
   const docsPending = useProviderStore(
     (s) => s.documents.filter((d) => d.state !== "verified").length,
   );
@@ -44,14 +45,14 @@ export default function ProviderProfile() {
       </AppText>
       <Card style={{ flexDirection: "row", gap: 16, alignItems: "center" }}>
         <Avatar
-          name={currentProvider.name}
-          initials={currentProvider.initials}
-          photo={avatarFor[currentProvider.id]}
+          name={me.name}
+          initials={me.initials}
+          photo={me.avatar}
           size={96}
           verified
         />
         <View style={{ flex: 1, gap: 6 }}>
-          <AppText variant="h2">{currentProvider.name}</AppText>
+          <AppText variant="h2">{me.name}</AppText>
           <StatusBadge
             label="Prestador verificado"
             tone="success"
@@ -60,10 +61,10 @@ export default function ProviderProfile() {
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
             <Star size={18} color={colors.star} fill={colors.star} />
             <AppText variant="label" weight="bold">
-              {formatRating(currentProvider.rating)}
+              {formatRating(me.rating)}
             </AppText>
             <AppText variant="caption" color={colors.muted}>
-              · {currentProvider.reviewsCount} avaliações
+              · {me.reviewsCount} avaliações
             </AppText>
           </View>
         </View>

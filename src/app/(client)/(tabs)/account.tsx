@@ -19,7 +19,6 @@ import {
   VehicleImage,
   Appear,
 } from "@/components/kit";
-import { avatarFor } from "@/mocks/people";
 import { useSessionStore } from "@/stores/useSessionStore";
 import { enterApp, go } from "@/features/navigation";
 import { colors } from "@/theme/colors";
@@ -72,7 +71,7 @@ export default function AccountScreen() {
             <Avatar
               name={user.name}
               initials={user.initials}
-              photo={avatarFor[user.id]}
+              photo={user.avatar}
               size={84}
               verified
             />

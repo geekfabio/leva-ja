@@ -3,8 +3,7 @@ import { Pressable, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { ArrowLeft, BadgeCheck, Bell, Car, ChevronRight } from "lucide-react-native";
-import { currentProvider, avatarFor } from "@/mocks/people";
-import { useProviderStore } from "@/stores/useProviderStore";
+import { useMyProvider } from "@/features/provider/useProvider";
 import { colors, radius } from "@/theme/colors";
 import { AppText } from "@/components/core/AppText";
 import { Avatar } from "@/components/core/Avatar";
@@ -22,7 +21,8 @@ export function NotificationBell({ inverse = false }: { inverse?: boolean }) {
 
 /** Cabeçalho verde-escuro com o prestador e a viatura (ref. 39, 40, 43, 45). */
 export function ProviderHeader({ title, back, right, onPress }: { title?: string; back?: boolean; right?: ReactNode; onPress?: () => void }) {
-  const vehicle = useProviderStore((s) => s.vehicle);
+  const me = useMyProvider();
+  const vehicle = me.vehicle;
   return (
     <SafeAreaView edges={["top"]} style={{ backgroundColor: colors.deep, paddingHorizontal: 12, paddingBottom: 18, paddingTop: 4 }}>
       {title ? (
@@ -34,12 +34,12 @@ export function ProviderHeader({ title, back, right, onPress }: { title?: string
           {right}
         </View>
       ) : (
-        <Pressable accessibilityRole={onPress ? "button" : undefined} accessibilityLabel={`${currentProvider.name}, prestador verificado`} onPress={onPress} style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 8, paddingTop: 6 }}>
+        <Pressable accessibilityRole={onPress ? "button" : undefined} accessibilityLabel={`${me.name}, prestador verificado`} onPress={onPress} style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 8, paddingTop: 6 }}>
           {back ? <IconButton label="Voltar" icon={<ArrowLeft size={24} color={colors.white} />} onPress={() => router.back()} /> : null}
-          <Avatar name={currentProvider.name} initials={currentProvider.initials} photo={avatarFor[currentProvider.id]} size={60} verified />
+          <Avatar name={me.name} initials={me.initials} photo={me.avatar} size={60} verified />
           <View style={{ flex: 1 }}>
             <AppText variant="h3" color={colors.white}>
-              {currentProvider.name}
+              {me.name}
             </AppText>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
               <BadgeCheck size={15} color={colors.deep} fill="#7BE3A6" />
@@ -64,14 +64,15 @@ export function ProviderHeader({ title, back, right, onPress }: { title?: string
 
 /** Cartão suave com o prestador e a viatura (ref. 37, 38, 42, 44). */
 export function ProviderSummaryCard({ right, showVehicleImage = false, onPress }: { right?: ReactNode; showVehicleImage?: boolean; onPress?: () => void }) {
-  const vehicle = useProviderStore((s) => s.vehicle);
+  const me = useMyProvider();
+  const vehicle = me.vehicle;
   const content = (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 14, borderRadius: radius.lg, backgroundColor: colors.primarySoft }}>
-      {showVehicleImage ? <VehicleImage art="pickup" width={84} height={56} /> : <Avatar name={currentProvider.name} initials={currentProvider.initials} photo={avatarFor[currentProvider.id]} size={right ? 52 : 60} verified />}
+      {showVehicleImage ? <VehicleImage art="pickup" width={84} height={56} /> : <Avatar name={me.name} initials={me.initials} photo={me.avatar} size={right ? 52 : 60} verified />}
       <View style={{ flex: 1, gap: 2 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
           <AppText variant={right ? "title" : "h3"} numberOfLines={1} style={{ flexShrink: 1 }}>
-            {currentProvider.name}
+            {me.name}
           </AppText>
           {showVehicleImage ? <BadgeCheck size={18} color={colors.white} fill={colors.accent} /> : null}
         </View>
@@ -97,7 +98,7 @@ export function ProviderSummaryCard({ right, showVehicleImage = false, onPress }
   );
   if (!onPress) return content;
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={`${currentProvider.name}, ver perfil`} onPress={onPress}>
+    <Pressable accessibilityRole="button" accessibilityLabel={`${me.name}, ver perfil`} onPress={onPress}>
       {content}
     </Pressable>
   );

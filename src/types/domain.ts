@@ -65,6 +65,8 @@ export type Client = {
   phone: string;
   initials: string;
   rating: number;
+  /** URL da fotografia ou chave de imagem local (ver src/theme/images.ts). */
+  avatar?: string;
 };
 
 export type Vehicle = {
@@ -87,6 +89,7 @@ export type Provider = {
   rating: number;
   reviewsCount: number;
   verified: boolean;
+  avatar?: string;
   vehicle: Vehicle;
   /** Posição simulada actual. */
   coords: Coordinates;
@@ -155,6 +158,10 @@ export type ServiceRequest = {
   status: ServiceStatus;
   clientId: string;
   providerId?: string;
+  /** Resumo do cliente, incluído pela API em cada pedido. */
+  client?: Client;
+  /** Prestador atribuído (ou que enviou proposta), incluído pela API. */
+  provider?: Provider;
   origin: Place;
   destination: Place;
   stops: Place[];

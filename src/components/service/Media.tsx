@@ -2,7 +2,7 @@ import { Pressable, View } from "react-native";
 import { Image } from "expo-image";
 import { Camera, ImagePlus, Plus, X } from "lucide-react-native";
 import type { Photo } from "@/types/domain";
-import { photoAssets, vehicleArt, type PhotoAssetKey, type VehicleArtKey } from "@/mocks/assets";
+import { photoAssets, vehicleArt, type PhotoAssetKey, type VehicleArtKey } from "@/theme/images";
 import { colors, radius } from "@/theme/colors";
 import { AppText } from "@/components/core/AppText";
 

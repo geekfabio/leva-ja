@@ -8,7 +8,7 @@ import type {
   ServiceStatus,
   TowDetails,
 } from "@/types/domain";
-import { estimateMinutes, roadDistanceKm } from "@/mocks/places";
+import { estimateMinutes, roadDistanceKm } from "@/utils/geo";
 import { estimatePrice, providerEarningFor } from "./pricing";
 import { statusFlow } from "@/features/service/stateMachine";
 

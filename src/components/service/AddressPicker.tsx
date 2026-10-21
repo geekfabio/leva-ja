@@ -3,8 +3,7 @@ import { View } from "react-native";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { BriefcaseBusiness, House, LocateFixed, MapPin, Search } from "lucide-react-native";
 import type { Place } from "@/types/domain";
-import { userLocation } from "@/mocks/places";
-import { usePlaceSearch } from "@/services/queries";
+import { useCurrentLocation, usePlaceSearch } from "@/services/queries";
 import { colors } from "@/theme/colors";
 import { AppText } from "@/components/core/AppText";
 import { ListRow } from "@/components/core/ListRow";
@@ -21,6 +20,7 @@ export const AddressPicker = forwardRef<BottomSheetModal, { title: string; onPic
 ) {
   const [query, setQuery] = useState("");
   const { data, isLoading, isError, refetch } = usePlaceSearch(query);
+  const { data: current } = useCurrentLocation();
   const pick = (place: Place) => {
     onPick(place);
     setQuery("");
@@ -28,8 +28,8 @@ export const AddressPicker = forwardRef<BottomSheetModal, { title: string; onPic
   return (
     <SheetModal ref={ref} title={title} snapPoints={["85%"]}>
       <TextField placeholder="Pesquisar bairro ou rua" accessibilityLabel="Pesquisar morada" icon={<Search size={20} color={colors.muted} />} value={query} onChangeText={setQuery} autoCorrect={false} />
-      {showCurrent && !query ? (
-        <ListRow variant="plain" icon={<LocateFixed size={22} color={colors.primary} />} title="Usar a minha localização" subtitle={`${userLocation.label} (simulada)`} onPress={() => pick(userLocation)} chevron={false} />
+      {showCurrent && !query && current ? (
+        <ListRow variant="plain" icon={<LocateFixed size={22} color={colors.primary} />} title="Usar a minha localização" subtitle={current.label} onPress={() => pick(current)} chevron={false} />
       ) : null}
       {isLoading ? <LoadingState rows={3} label="A procurar moradas" /> : null}
       {isError ? <ErrorState onRetry={refetch} /> : null}

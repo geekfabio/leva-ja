@@ -5,7 +5,6 @@ import { StatusBar } from "expo-status-bar";
 import Svg, { Circle, Path } from "react-native-svg";
 import { router } from "expo-router";
 import { Grid3x3, MicOff, Mic, PhoneOff, Volume2 } from "lucide-react-native";
-import type { AvatarKey } from "@/mocks/assets";
 import { colors } from "@/theme/colors";
 import { AppText } from "@/components/core/AppText";
 import { Avatar } from "@/components/core/Avatar";
@@ -25,7 +24,7 @@ function CallToggle({ label, active, onPress, icon }: { label: string; active: b
 }
 
 /** 25 · Chamada simulada: sem áudio real, apenas estados e temporizador. */
-export function CallScreen({ name, subtitle, initials, photo, from, to }: { name: string; subtitle: string; initials: string; photo?: AvatarKey; from: string; to: string }) {
+export function CallScreen({ name, subtitle, initials, photo, from, to }: { name: string; subtitle: string; initials: string; photo?: string; from: string; to: string }) {
   const [state, setState] = useState<"calling" | "connected" | "ended">("calling");
   const [seconds, setSeconds] = useState(0);
   const [muted, setMuted] = useState(false);

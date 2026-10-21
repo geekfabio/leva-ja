@@ -13,16 +13,19 @@ import { colors } from "@/theme/colors";
 /** 06 · Login com email e palavra-passe (validação simulada). */
 export default function LoginScreen() {
   const role = useSessionStore((s) => s.role) ?? "client";
-  const { control, handleSubmit, formState } = useForm<LoginForm>({
+  const { control, handleSubmit, formState, setError } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: role === "provider" ? "joao.manuel@levaja.ao" : "armando@email.com", password: "" },
   });
-  const submit = handleSubmit(async ({ email }) => {
-    await new Promise((r) => setTimeout(r, 700));
-    const session = useSessionStore.getState();
-    session.login(email);
+  const submit = handleSubmit(async ({ email, password }) => {
+    try {
+      await useSessionStore.getState().login(email, password);
+    } catch (error) {
+      setError("password", { message: error instanceof Error ? error.message : "Não foi possível entrar." });
+      return;
+    }
     if (role === "provider") useProviderStore.getState().setOnline(true);
-    if (session.locationGranted === null) go("/enable-location");
+    if (useSessionStore.getState().locationGranted === null) go("/enable-location");
     else enterApp(role);
   });
 

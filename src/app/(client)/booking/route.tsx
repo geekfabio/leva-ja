@@ -8,7 +8,8 @@ import { AppText, IconButton, MapPreview, PrimaryButton, SecondaryButton, StepPr
 import { AddressPicker } from "@/components/service/AddressPicker";
 import { routeSchema } from "@/features/booking/schemas";
 import { useBookingStep } from "@/features/booking/useBookingFlow";
-import { userLocation } from "@/mocks/places";
+import { useCurrentLocation } from "@/services/queries";
+import { useEffect } from "react";
 import { useBookingStore } from "@/stores/useBookingStore";
 import type { Place } from "@/types/domain";
 import { colors, radius } from "@/theme/colors";
@@ -67,6 +68,11 @@ export default function RouteStep() {
   const picker = useRef<BottomSheetModal>(null);
   const [target, setTarget] = useState<Target>("origin");
   const [errors, setErrors] = useState<{ origin?: string; destination?: string }>({});
+  const { data: current } = useCurrentLocation();
+  // Recolha por omissão: a posição actual devolvida pelo LocationRepository.
+  useEffect(() => {
+    if (current && !useBookingStore.getState().draft.origin) patch({ origin: current });
+  }, [current, patch]);
 
   const open = (t: Target) => {
     setTarget(t);
@@ -103,7 +109,7 @@ export default function RouteStep() {
           <View style={{ backgroundColor: colors.card, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 6 }}>
             <StepProgress current={position.current} total={position.total} />
           </View>
-          <IconButton variant="floating" label="Usar a minha localização como recolha" icon={<LocateFixed size={22} color={colors.ink} />} onPress={() => patch({ origin: userLocation })} />
+          <IconButton variant="floating" label="Usar a minha localização como recolha" icon={<LocateFixed size={22} color={colors.ink} />} onPress={() => current && patch({ origin: current })} />
         </SafeAreaView>
       </View>
       <SafeAreaView edges={["bottom"]} style={{ backgroundColor: colors.background, borderTopLeftRadius: 28, borderTopRightRadius: 28, marginTop: -28, paddingHorizontal: 20, paddingTop: 10, gap: 12 }}>

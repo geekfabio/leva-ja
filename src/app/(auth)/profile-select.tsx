@@ -5,7 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
 import { ArrowLeft, ArrowRight } from "lucide-react-native";
 import { AppText, IconButton, PrimaryButton, SelectionCard } from "@/components/kit";
-import { illustrations } from "@/mocks/assets";
+import { illustrations } from "@/theme/images";
 import { useSessionStore } from "@/stores/useSessionStore";
 import { go, swap } from "@/features/navigation";
 import type { Role } from "@/types/domain";

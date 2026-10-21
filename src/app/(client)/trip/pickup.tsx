@@ -4,7 +4,6 @@ import { ArrowRight, Check, CheckCircle2, Circle, ShieldCheck } from "lucide-rea
 import { AppHeader, AppText, Card, Divider, PhotoCount, PhotoTile, PrimaryButton, ScreenContainer, ScreenTitle } from "@/components/kit";
 import { NoActiveRequest } from "@/components/service/NoActiveRequest";
 import { useActiveClientRequest, useStatusRoute } from "@/features/service/useClientSimulation";
-import { cargoPhotos } from "@/mocks/photos";
 import { useServiceStore } from "@/stores/useServiceStore";
 import { swap } from "@/features/navigation";
 import { toast } from "@/lib/toast";
@@ -40,14 +39,16 @@ export default function PickupScreen() {
     : ["Carga verificada", "Embalagem segura", ...(request?.cargo?.helper || (request?.moving?.helpers ?? 0) > 0 ? ["Ajudante presente"] : ["Carga presa e estável"])];
   const [checked, setChecked] = useState<boolean[]>(() => checklist.map(() => true));
   if (!request) return <NoActiveRequest />;
-  const photos = request.pickupPhotos.length ? request.pickupPhotos : request.photos.length >= 3 ? request.photos : cargoPhotos;
+  // Fotos registadas pelo prestador na recolha; senão as que o cliente enviou no pedido.
+  const photos = request.pickupPhotos.length ? request.pickupPhotos : request.photos;
   const all = checked.every(Boolean);
-  const confirm = () => {
-    useServiceStore.getState().addPickupPhotos(request.id, photos);
-    if (useServiceStore.getState().transition(request.id, "pickup_confirmed", "client")) {
+  const confirm = async () => {
+    const store = useServiceStore.getState();
+    if (!request.pickupPhotos.length) await store.addPickupPhotos(request.id, photos);
+    if (await store.transition(request.id, "pickup_confirmed", "client")) {
       toast.success({ title: "Recolha confirmada", message: "O transporte vai começar." });
       swap("/trip/in-transit");
-    }
+    } else toast.error({ title: "Não foi possível confirmar", message: useServiceStore.getState().lastError ?? undefined });
   };
   return (
     <ScreenContainer header={<AppHeader right={<MiniSteps current={1} />} />} footer={<PrimaryButton label="Confirmar recolha" disabled={!all} onPress={confirm} trailingIcon={<ArrowRight size={22} color={colors.white} />} accessibilityHint={all ? undefined : "Marca todos os pontos da verificação"} />} gap={14}>

@@ -5,8 +5,8 @@ import { useMutation } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { MapPin, Phone, ShieldAlert, X } from "lucide-react-native";
 import { AppText, Card, DangerButton, IconButton, ListRow, StatusBadge, TextButton } from "@/components/kit";
-import { emergencyContacts } from "@/mocks/account";
-import { userLocation } from "@/mocks/places";
+import { repositories } from "@/data";
+import { useCurrentLocation, useEmergencyContacts } from "@/services/queries";
 import { useServiceStore } from "@/stores/useServiceStore";
 import { serviceTitle } from "@/features/booking/catalog";
 import { toast } from "@/lib/toast";
@@ -16,8 +16,10 @@ import { colors } from "@/theme/colors";
 export default function SosScreen() {
   const active = useServiceStore((s) => s.requests.find((r) => r.id === s.activeClientRequestId || r.id === s.activeProviderRequestId));
   const [sent, setSent] = useState(false);
+  const { data: location } = useCurrentLocation();
+  const { data: emergencyContacts = [] } = useEmergencyContacts();
   const alert = useMutation({
-    mutationFn: () => new Promise((r) => setTimeout(r, 1200)),
+    mutationFn: () => repositories().support.sendSosAlert({ requestId: active?.id, coords: location?.coords ?? { latitude: 0, longitude: 0 } }),
     onSuccess: () => {
       setSent(true);
       toast.success({ title: "Alerta enviado", message: "A equipa de segurança Leva Já vai contactar-te." });
@@ -46,7 +48,7 @@ export default function SosScreen() {
           <View style={{ flexDirection: "row", gap: 10, alignItems: "center" }}>
             <MapPin size={22} color={colors.danger} />
             <AppText variant="body" style={{ flex: 1 }}>
-              {userLocation.label} (localização simulada)
+              {location ? `${location.label} (posição aproximada)` : "A obter localização…"}
             </AppText>
           </View>
           {active ? (

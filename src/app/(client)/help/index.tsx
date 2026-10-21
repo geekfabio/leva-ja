@@ -17,7 +17,7 @@ import {
   TowTruckIcon,
   Appear,
 } from "@/components/kit";
-import { illustrations } from "@/mocks/assets";
+import { illustrations } from "@/theme/images";
 import { useHelpSearch } from "@/services/queries";
 import { go } from "@/features/navigation";
 import { colors } from "@/theme/colors";

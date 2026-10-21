@@ -5,8 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { ArrowLeft, CheckCheck, Paperclip, Phone, SendHorizontal } from "lucide-react-native";
 import type { ChatMessage } from "@/types/domain";
-import type { AvatarKey } from "@/mocks/assets";
-import { quickReplies } from "@/mocks/chat";
+import { quickReplies } from "@/features/chat/copy";
 import { useChatStore } from "@/stores/useChatStore";
 import { formatTime } from "@/utils/date";
 import { toast } from "@/lib/toast";
@@ -55,15 +54,13 @@ const NO_MESSAGES: ChatMessage[] = [];
 export function ChatThread({
   threadId,
   me,
-  replyAs,
   counterpart,
   onCall,
   seed = "service",
 }: {
   threadId: string;
   me: Me;
-  replyAs: Me;
-  counterpart: { name: string; initials: string; photo?: AvatarKey; subtitle?: string };
+  counterpart: { name: string; initials: string; photo?: string; subtitle?: string };
   onCall?: () => void;
   seed?: "service" | "support";
 }) {
@@ -74,9 +71,8 @@ export function ChatThread({
   const mountedAt = useRef(new Date().toISOString());
   const motionOn = useMotionEnabled();
 
-  useEffect(() => {
-    useChatStore.getState().ensureThread(threadId, seed);
-  }, [threadId, seed]);
+  // Abre a conversa no ChatRepository e recebe mensagens e "a escrever…" em tempo real.
+  useEffect(() => useChatStore.getState().open(threadId, seed), [threadId, seed]);
   useEffect(() => {
     useChatStore.getState().markRead(threadId, me);
     setTimeout(() => list.current?.scrollToEnd({ animated: true }), 50);
@@ -84,7 +80,7 @@ export function ChatThread({
 
   const send = (value = text) => {
     if (!value.trim()) return;
-    useChatStore.getState().send(threadId, me, value, replyAs);
+    useChatStore.getState().send(threadId, me, value);
     setText("");
   };
 

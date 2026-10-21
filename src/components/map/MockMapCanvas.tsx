@@ -5,7 +5,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withTiming, Easing, ZoomIn 
 import { useMotionEnabled } from "@/components/core/Motion";
 import { PulseRings } from "./PulseRings";
 
-import { placeList } from "@/mocks/places";
+import { useAreas } from "@/services/queries";
 import { boundsOf, mockRoute } from "@/utils/geo";
 import { colors } from "@/theme/colors";
 import { AppText } from "@/components/core/AppText";
@@ -40,6 +40,8 @@ const KM_PER_DEG = 111;
  * EXPO_PUBLIC_MOCK_MAP=1. Projecção equirectangular simples sobre Luanda.
  */
 export function MockMapCanvas({ markers = [], route, zones = [], pulse, onZonePress }: MapPreviewProps) {
+  // Nomes dos bairros vêm do LocationRepository (como camada de etiquetas do mapa).
+  const { data: placeList = [] } = useAreas();
   const [size, setSize] = useState({ width: 0, height: 0 });
   const routePoints = useMemo(() => (route ? mockRoute(route.from, route.to) : []), [route]);
 
@@ -64,7 +66,7 @@ export function MockMapCanvas({ markers = [], route, zones = [], pulse, onZonePr
     }
     const extra = (lonSpan / target - latSpan) / 2;
     return { ...b, minLat: b.minLat - extra, maxLat: b.maxLat + extra };
-  }, [markers, routePoints, zones, size]);
+  }, [markers, routePoints, zones, size, placeList]);
 
   const project = (lat: number, lon: number) => ({
     x: ((lon - bounds.minLon) / (bounds.maxLon - bounds.minLon)) * size.width,

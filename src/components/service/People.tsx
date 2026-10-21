@@ -1,7 +1,6 @@
 import {View} from "react-native";
 import { ArrowRight, BadgeCheck, ChevronRight, Clock3, MapPin, Route, Star } from "lucide-react-native";
 import type { Client, Place, Provider } from "@/types/domain";
-import { avatarFor } from "@/mocks/people";
 import { formatKm, formatRating } from "@/utils/format";
 import { colors, radius } from "@/theme/colors";
 import { AppText } from "@/components/core/AppText";
@@ -27,7 +26,7 @@ export function ProviderCard({
   const vehicleName = `${provider.vehicle.categoryLabel.startsWith("Pickup") ? "Pickup " : ""}${provider.vehicle.brand} ${provider.vehicle.model}`;
   const body = (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
-      <Avatar name={provider.name} initials={provider.initials} photo={avatarFor[provider.id]} size={layout === "stacked" ? 84 : 60} verified={layout === "stacked"} online={layout === "inline"} />
+      <Avatar name={provider.name} initials={provider.initials} photo={provider.avatar} size={layout === "stacked" ? 84 : 60} verified={layout === "stacked"} online={layout === "inline"} />
       <View style={{ flex: 1, gap: 3 }}>
         <AppText variant={layout === "stacked" ? "h2" : "h3"}>{provider.name}</AppText>
         {layout === "inline" ? (

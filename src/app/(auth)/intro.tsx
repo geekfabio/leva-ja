@@ -4,7 +4,7 @@ import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ArrowRight } from "lucide-react-native";
 import { Appear, AppText, DotsIndicator, PrimaryButton, TextButton } from "@/components/kit";
-import { illustrations } from "@/mocks/assets";
+import { illustrations } from "@/theme/images";
 import { useSessionStore } from "@/stores/useSessionStore";
 import { swap } from "@/features/navigation";
 import { colors } from "@/theme/colors";

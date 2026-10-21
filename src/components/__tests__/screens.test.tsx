@@ -6,6 +6,7 @@ import ReportScreen from "@/app/(client)/help/report";
 import AlertsScreen from "@/app/(client)/alerts";
 import EstimateStep from "@/app/(client)/booking/estimate";
 import { buildNotifications } from "@/features/notifications/build";
+import { resetMockDatabase } from "@/data";
 import { useAccountStore } from "@/stores/useAccountStore";
 import { useBookingStore } from "@/stores/useBookingStore";
 import { useServiceStore } from "@/stores/useServiceStore";
@@ -20,9 +21,10 @@ jest.mock("react-native-safe-area-context", () => require("react-native-safe-are
 
 const render = (ui: ReactElement) => rtlRender(<QueryClientProvider client={new QueryClient()}>{ui}</QueryClientProvider>);
 
-beforeEach(() => {
+beforeEach(async () => {
   jest.clearAllMocks();
-  useServiceStore.getState().reset();
+  resetMockDatabase();
+  await useServiceStore.getState().hydrate();
   useSessionStore.setState({ role: "client" });
 });
 

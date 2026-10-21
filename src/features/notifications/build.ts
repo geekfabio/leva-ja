@@ -1,7 +1,6 @@
 import type { ProviderDocument, Role, ServiceRequest, ServiceStatus, Transaction } from "@/types/domain";
 import { serviceTitle } from "@/features/booking/catalog";
 import { clientScreenFor, isActiveStatus } from "@/features/service/stateMachine";
-import { currentProvider } from "@/mocks/people";
 import { formatKz } from "@/utils/format";
 
 export type AppNotification = {
@@ -29,7 +28,7 @@ const clientCopy: Partial<Record<ServiceStatus, (r: ServiceRequest) => [string, 
  */
 export function buildNotifications(
   role: Role,
-  data: { requests: ServiceRequest[]; clientId: string; transactions: Transaction[]; documents: ProviderDocument[] },
+  data: { requests: ServiceRequest[]; clientId: string; providerId?: string | null; transactions: Transaction[]; documents: ProviderDocument[] },
 ): AppNotification[] {
   const items: AppNotification[] = [];
   if (role === "client") {
@@ -52,7 +51,7 @@ export function buildNotifications(
     for (const r of data.requests.filter((x) => x.status === "searching" && !x.providerId).slice(0, 3)) {
       items.push({ id: `new-${r.id}`, title: `Novo pedido: ${serviceTitle[r.kind]}`, body: `${r.origin.area} → ${r.destination.area} · ganho ${formatKz(r.providerEarning)}`, at: r.createdAt, kind: "service", href: `/partner/request/${r.id}` });
     }
-    for (const r of data.requests.filter((x) => x.providerId === currentProvider.id && x.proposal?.status === "accepted")) {
+    for (const r of data.requests.filter((x) => x.providerId === data.providerId && x.proposal?.status === "accepted")) {
       items.push({ id: `prop-${r.id}`, title: "Proposta aceite", body: `O cliente aceitou ${formatKz(r.proposal!.amount)}.`, at: r.timeline.at(-1)?.at ?? r.createdAt, kind: "service", href: `/partner/active/${r.id}` });
     }
     for (const t of data.transactions.slice(0, 4)) {

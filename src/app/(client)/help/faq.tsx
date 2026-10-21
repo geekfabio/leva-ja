@@ -1,3 +1,4 @@
+import type { HelpTopic } from "@/types/domain";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
 import { useLocalSearchParams } from "expo-router";
@@ -21,7 +22,7 @@ export default function FaqScreen() {
   const [category, setCategory] = useState<string>(params.category ?? "all");
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState<string | undefined>(params.open);
-  const { data, isLoading, isError, refetch } = useHelpSearch(query, category === "all" ? undefined : category);
+  const { data, isLoading, isError, refetch } = useHelpSearch(query, category === "all" ? undefined : (category as HelpTopic["category"]));
   return (
     <ScreenContainer header={<AppHeader title="Perguntas frequentes" />} gap={12}>
       <TextField placeholder="Pesquisar" accessibilityLabel="Pesquisar perguntas" icon={<Search size={20} color={colors.muted} />} value={query} onChangeText={setQuery} />

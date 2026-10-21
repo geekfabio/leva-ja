@@ -8,7 +8,6 @@ import { MapSheetLayout } from "@/components/service/MapSheetLayout";
 import { NoActiveRequest } from "@/components/service/NoActiveRequest";
 import { SuccessBurst } from "@/components/service/SuccessBurst";
 import { useActiveClientRequest, useStatusRoute } from "@/features/service/useClientSimulation";
-import { findProvider } from "@/mocks/people";
 import { go } from "@/features/navigation";
 import { colors, radius } from "@/theme/colors";
 
@@ -17,7 +16,7 @@ export default function ArrivedScreen() {
   const request = useActiveClientRequest();
   useStatusRoute(request, ["arrived"]);
   const contact = useRef<BottomSheetModal>(null);
-  const provider = findProvider(request?.providerId);
+  const provider = request?.provider;
   if (!request || !provider) return <NoActiveRequest />;
   const first = provider.name.split(" ")[0];
   return (

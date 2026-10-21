@@ -7,7 +7,6 @@ import { ContactSheet } from "@/components/service/ContactSheet";
 import { MapSheetLayout } from "@/components/service/MapSheetLayout";
 import { NoActiveRequest } from "@/components/service/NoActiveRequest";
 import { useActiveClientRequest, useClientSimulation, useStatusRoute } from "@/features/service/useClientSimulation";
-import { findProvider } from "@/mocks/people";
 import { go } from "@/features/navigation";
 import { approachStart } from "@/utils/geo";
 import { colors } from "@/theme/colors";
@@ -18,7 +17,7 @@ export default function FoundScreen() {
   useClientSimulation(request);
   useStatusRoute(request, ["assigned", "en_route"]);
   const contact = useRef<BottomSheetModal>(null);
-  const provider = findProvider(request?.providerId);
+  const provider = request?.provider;
   if (!request || !provider) return <NoActiveRequest />;
   const eta = 8;
   return (

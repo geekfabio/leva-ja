@@ -52,16 +52,24 @@ src/
     partner/              ProviderMetric, DocumentStatus, EarningsChart, TransactionRow, cabeçalhos do prestador
     map/                  MapPreview (react-native-maps no nativo, SVG na web/testes)
     ui/, orders/, provider/, admin/ …   Componentes do protótipo anterior
+  data/                   Padrão Repository: contratos, implementação mock, implementação HTTP e contentor
   features/               Lógica de negócio: máquina de estados, preços, catálogo, esquemas Zod, simulação
-  mocks/                  Clientes, prestadores, viaturas, pedidos, coordenadas, chat, ganhos, avaliações, documentos, fotos
-  services/               API simulada (latência e falhas) + hooks TanStack Query
-  stores/                 Zustand: sessão, rascunho do pedido, serviços, prestador, chat, conta
-  theme/                  Cores, fontes, tema do Paper
+  mocks/                  Sementes de demonstração (só usadas por data/mock)
+  services/queries.ts     Hooks TanStack Query sobre os repositórios
+  stores/                 Zustand: cache dos repositórios + sessão, rascunho do pedido e preferências
+  theme/                  Cores, fontes, tema do Paper e registo de imagens empacotadas
   types/domain.ts         Modelo de domínio partilhado por mocks e futura API
   utils/                  Formatação pt-PT (Kz, datas), geo e trajectos simulados
 ```
 
-A arquitectura e o plano para trocar mocks por API estão em [docs/arquitectura.md](docs/arquitectura.md).
+### Dados: padrão Repository
+
+Os ecrãs e as stores nunca importam mocks: falam com repositórios (`src/data`). Cada repositório tem um contrato (`AuthRepository`, `RequestRepository`, `ProviderRepository`, `LocationRepository`, `ChatRepository`, `AccountRepository`, `SupportRepository`, `MediaRepository`) e duas implementações:
+
+- **mock** (por omissão): base de dados em memória semeada a partir de `src/mocks`, com latência, erros de domínio, falhas de rede simuladas e tempo real por subscrição;
+- **http**: esqueleto REST com os endpoints propostos, activado com `EXPO_PUBLIC_DATA_SOURCE=http` e `EXPO_PUBLIC_API_URL`.
+
+Detalhes, regras e passos para ligar a API em [docs/arquitectura.md](docs/arquitectura.md).
 
 ## Mapa de ecrãs
 

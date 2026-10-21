@@ -6,6 +6,7 @@ import { z } from "zod";
 import { Lock, ShieldCheck } from "lucide-react-native";
 import { AppHeader, IconCircle, InfoNote, PrimaryButton, ScreenContainer, ScreenTitle, TextField } from "@/components/kit";
 import { toast } from "@/lib/toast";
+import { useSessionStore } from "@/stores/useSessionStore";
 import { colors } from "@/theme/colors";
 
 const schema = z
@@ -21,8 +22,12 @@ type Form = z.infer<typeof schema>;
 /** Alterar palavra-passe (validação local; nenhuma credencial é enviada nesta fase). */
 export default function ChangePasswordScreen() {
   const { control, handleSubmit, formState } = useForm<Form>({ resolver: zodResolver(schema), defaultValues: { current: "", password: "", confirm: "" } });
-  const save = handleSubmit(async () => {
-    await new Promise((r) => setTimeout(r, 700));
+  const save = handleSubmit(async ({ current, password }) => {
+    try {
+      await useSessionStore.getState().changePassword(current, password);
+    } catch (error) {
+      return toast.error({ title: "Palavra-passe não alterada", message: error instanceof Error ? error.message : undefined });
+    }
     toast.success({ title: "Palavra-passe alterada", message: "Usa a nova palavra-passe no próximo início de sessão." });
     router.back();
   });

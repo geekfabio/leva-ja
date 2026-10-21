@@ -7,13 +7,14 @@ import { MapSheetLayout } from "@/components/service/MapSheetLayout";
 import { serviceTitle } from "@/features/booking/catalog";
 import { describeLoad } from "@/features/booking/factory";
 import { needsProposal } from "@/features/booking/pricing";
-import { currentProvider, findClient } from "@/mocks/people";
 import { useProviderStore } from "@/stores/useProviderStore";
 import { useRequest, useServiceStore } from "@/stores/useServiceStore";
 import { formatFloor, formatKm } from "@/utils/format";
 import { swap } from "@/features/navigation";
 import { toast } from "@/lib/toast";
 import { colors, radius } from "@/theme/colors";
+import { clientOf } from "@/features/service/people";
+import { useMyProvider } from "@/features/provider/useProvider";
 
 function InfoRow({ icon, children, onPress }: { icon: React.ReactNode; children: React.ReactNode; onPress?: () => void }) {
   return (
@@ -30,10 +31,11 @@ export default function NewRequestScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const request = useRequest(id);
   const online = useProviderStore((s) => s.online);
-  const vehicle = useProviderStore((s) => s.vehicle);
+  const me = useMyProvider();
+  const vehicle = me.vehicle;
   const expire = useCallback(() => {
     if (!id) return;
-    useServiceStore.getState().decline(id);
+    useProviderStore.getState().decline(id);
     toast.info({ title: "Pedido expirado", message: "O pedido foi passado a outro prestador." });
     if (router.canGoBack()) router.back();
   }, [id]);
@@ -43,18 +45,18 @@ export default function NewRequestScreen() {
         <EmptyState title="Pedido indisponível" description="Este pedido já foi aceite por outro prestador ou cancelado." actionLabel="Ver outros pedidos" onAction={() => swap("/partner/requests")} />
       </ScreenContainer>
     );
-  const client = findClient(request.clientId);
+  const client = clientOf(request);
   const proposal = needsProposal(request.kind);
   const helpers = request.cargo?.helper ? 1 : (request.moving?.helpers ?? 0);
-  const accept = () => {
+  const accept = async () => {
     if (proposal) return swap(`/partner/proposal/${request.id}`);
-    if (useServiceStore.getState().accept(request.id, currentProvider.id)) {
+    if (await useServiceStore.getState().accept(request.id, me.id)) {
       toast.success({ title: "Pedido aceite", message: `Dirige-te a ${request.origin.area}.` });
       swap(`/partner/active/${request.id}`);
-    }
+    } else toast.error({ title: "Não foi possível aceitar", message: useServiceStore.getState().lastError ?? undefined });
   };
   const decline = () => {
-    useServiceStore.getState().decline(request.id);
+    useProviderStore.getState().decline(request.id);
     toast.info("Pedido recusado");
     router.back();
   };
@@ -104,7 +106,7 @@ export default function NewRequestScreen() {
       </InfoRow>
       <InfoRow icon={<VehicleImage art="pickup" width={90} height={54} />}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-          <AppText variant="title">{currentProvider.name}</AppText>
+          <AppText variant="title">{me.name}</AppText>
           <BadgeCheck size={16} color={colors.white} fill={colors.accent} />
         </View>
         <AppText variant="caption" color={colors.muted}>

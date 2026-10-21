@@ -7,15 +7,16 @@ import { BadgeCheck, Calendar, Car, CircleCheck, ImagePlus, Package, Pencil, Set
 import { AppHeader, AppText, Avatar, Card, Divider, PhotoTile, PrimaryButton, ScreenContainer, SecondaryButton, ServiceIcon, SheetModal, TextField } from "@/components/kit";
 import { serviceShortTitle } from "@/features/booking/catalog";
 import { vehicleSchema, type VehicleForm } from "@/features/provider/schemas";
-import { avatarFor, currentProvider } from "@/mocks/people";
 import { useProviderStore } from "@/stores/useProviderStore";
 import { formatNumber } from "@/utils/format";
 import { toast } from "@/lib/toast";
 import { colors, radius } from "@/theme/colors";
+import { useMyProvider } from "@/features/provider/useProvider";
 
 /** 42 · A minha viatura: detalhes, serviços aceites e edição. */
 export default function VehicleScreen() {
-  const vehicle = useProviderStore((s) => s.vehicle);
+  const me = useMyProvider();
+  const vehicle = me.vehicle;
   const services = useProviderStore((s) => s.services);
   const [photos, setPhotos] = useState(1);
   const edit = useRef<BottomSheetModal>(null);
@@ -23,8 +24,8 @@ export default function VehicleScreen() {
     resolver: zodResolver(vehicleSchema),
     defaultValues: { brand: vehicle.brand, model: vehicle.model, plate: vehicle.plate, capacityKg: vehicle.capacityKg },
   });
-  const save = handleSubmit((values) => {
-    useProviderStore.getState().updateVehicle(values);
+  const save = handleSubmit(async (values) => {
+    if (!(await useProviderStore.getState().updateVehicle(values))) return toast.error("Não foi possível guardar a viatura");
     edit.current?.dismiss();
     toast.success({ title: "Viatura actualizada", message: "A alteração fica sujeita a validação (simulada)." });
   });
@@ -38,10 +39,10 @@ export default function VehicleScreen() {
   return (
     <ScreenContainer header={<AppHeader title="A minha viatura" />} gap={14}>
       <Card tone="soft" style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-        <Avatar name={currentProvider.name} initials={currentProvider.initials} photo={avatarFor[currentProvider.id]} size={48} />
+        <Avatar name={me.name} initials={me.initials} photo={me.avatar} size={48} />
         <View>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-            <AppText variant="title">{currentProvider.name}</AppText>
+            <AppText variant="title">{me.name}</AppText>
             <BadgeCheck size={16} color={colors.white} fill={colors.accent} />
           </View>
           <AppText variant="caption" color={colors.muted}>

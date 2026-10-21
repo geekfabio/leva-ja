@@ -4,6 +4,7 @@ import { Accessibility, Bell, Globe, LogOut, MapPin, RotateCcw, ShieldCheck, Wif
 import { Switch } from "react-native-paper";
 import { AppHeader, AppText, Avatar, Card, ConfirmDialog, Divider, ListGroup, ListRow, ScreenContainer } from "@/components/kit";
 import { useAccountStore } from "@/stores/useAccountStore";
+import { dataSource, resetMockDatabase } from "@/data";
 import { useSessionStore } from "@/stores/useSessionStore";
 import { useServiceStore } from "@/stores/useServiceStore";
 import { useProviderStore } from "@/stores/useProviderStore";
@@ -69,7 +70,7 @@ export default function SettingsScreen() {
         <Divider inset={54} />
         <SwitchRow icon={<Wifi {...icon} />} title="Simular falhas de rede" subtitle="Mostra os estados de erro das listas" value={prefs.simulateNetworkErrors} onChange={(v) => setPrefs((p) => ({ ...p, simulateNetworkErrors: v }))} />
         <Divider inset={54} />
-        <ListRow variant="plain" icon={<RotateCcw {...icon} />} title="Repor dados de demonstração" onPress={() => setReset(true)} />
+        {dataSource === "mock" ? <ListRow variant="plain" icon={<RotateCcw {...icon} />} title="Repor dados de demonstração" onPress={() => setReset(true)} /> : null}
       </ListGroup>
       <ListRow tone="danger" icon={<LogOut size={24} color={colors.danger} />} title="Terminar sessão" chevron={false} onPress={() => setLogout(true)} />
       <AppText variant="tiny" color={colors.subtle} align="center">
@@ -96,8 +97,12 @@ export default function SettingsScreen() {
         onCancel={() => setReset(false)}
         onConfirm={() => {
           setReset(false);
-          useServiceStore.getState().reset();
-          useProviderStore.getState().reset();
+          // Repõe a base de dados mock e volta a carregar as stores a partir dos repositórios.
+          resetMockDatabase();
+          useServiceStore.getState().hydrate();
+          const providerId = useSessionStore.getState().providerId;
+          if (providerId) useProviderStore.getState().hydrate(providerId);
+          useAccountStore.getState().hydrate(useSessionStore.getState().user.id);
           toast.success("Dados de demonstração repostos");
         }}
       />

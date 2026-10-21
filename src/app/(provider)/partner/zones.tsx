@@ -4,37 +4,39 @@ import { router } from "expo-router";
 import { BadgeCheck } from "lucide-react-native";
 import { AppHeader, AppText, Avatar, Card, ChoiceChip, MapPreview, PrimaryButton, ScreenContainer, SelectionCard, ServiceIcon, VehicleImage } from "@/components/kit";
 import { serviceTitle } from "@/features/booking/catalog";
-import { availableZones } from "@/mocks/provider";
-import { avatarFor, currentProvider } from "@/mocks/people";
+import { useZones } from "@/services/queries";
 import { useProviderStore } from "@/stores/useProviderStore";
 import type { ServiceKind } from "@/types/domain";
 import { toast } from "@/lib/toast";
 import { colors, radius } from "@/theme/colors";
+import { useMyProvider } from "@/features/provider/useProvider";
 
 const kinds: ServiceKind[] = ["tow", "cargo", "small_move", "house_move"];
 
 /** 44 · Zonas de actuação e serviços aceites. */
 export default function ZonesScreen() {
-  const vehicle = useProviderStore((s) => s.vehicle);
+  const me = useMyProvider();
+  const vehicle = me.vehicle;
   const [zones, setZones] = useState(useProviderStore.getState().zones);
   const [services, setServices] = useState(useProviderStore.getState().services);
   const [error, setError] = useState<string>();
+  const { data: availableZones = [] } = useZones();
   const toggleZone = (id: string) => setZones((z) => (z.includes(id) ? z.filter((x) => x !== id) : [...z, id]));
   const toggleService = (k: ServiceKind) => setServices((s) => (s.includes(k) ? s.filter((x) => x !== k) : [...s, k]));
-  const save = () => {
+  const save = async () => {
     if (!zones.length) return setError("Escolhe pelo menos uma zona.");
     if (!services.length) return setError("Escolhe pelo menos um serviço.");
     setError(undefined);
-    useProviderStore.getState().saveCoverage(zones, services);
+    if (!(await useProviderStore.getState().saveCoverage(zones, services))) return setError(useProviderStore.getState().lastError ?? "Não foi possível guardar.");
     toast.success({ title: "Alterações guardadas", message: "Vais receber pedidos destas zonas e serviços." });
     router.back();
   };
   return (
     <ScreenContainer header={<AppHeader title="Zonas e serviços" />} footer={<PrimaryButton label="Guardar alterações" onPress={save} />} gap={14}>
       <Card style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-        <Avatar name={currentProvider.name} initials={currentProvider.initials} photo={avatarFor[currentProvider.id]} size={52} verified />
+        <Avatar name={me.name} initials={me.initials} photo={me.avatar} size={52} verified />
         <View style={{ flex: 1 }}>
-          <AppText variant="title">{currentProvider.name}</AppText>
+          <AppText variant="title">{me.name}</AppText>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
             <BadgeCheck size={14} color={colors.white} fill={colors.accent} />
             <AppText variant="caption" color={colors.muted}>

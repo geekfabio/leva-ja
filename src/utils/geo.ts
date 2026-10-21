@@ -1,4 +1,4 @@
-import type { Coordinates } from "@/types/domain";
+import type { Coordinates, Place } from "@/types/domain";
 
 /**
  * Trajecto simulado entre dois pontos: curva suave determinística com alguns
@@ -69,3 +69,18 @@ export const approachStart = (origin: Coordinates): Coordinates => ({
   latitude: origin.latitude - 0.028,
   longitude: origin.longitude + 0.026,
 });
+
+/** Distância por estrada estimada (km): linha recta × factor urbano, mínimo 2 km. */
+export function roadDistanceKm(a: Place, b: Place) {
+  const toRad = (v: number) => (v * Math.PI) / 180;
+  const dLat = toRad(b.coords.latitude - a.coords.latitude);
+  const dLon = toRad(b.coords.longitude - a.coords.longitude);
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(a.coords.latitude)) * Math.cos(toRad(b.coords.latitude)) * Math.sin(dLon / 2) ** 2;
+  const straight = 2 * 6371 * Math.asin(Math.sqrt(h));
+  return Math.max(2, Math.round(straight * 1.35));
+}
+
+/** Duração estimada em minutos para trânsito urbano de Luanda (~22 km/h). */
+export const estimateMinutes = (km: number) => Math.max(8, Math.round((km / 22) * 60));

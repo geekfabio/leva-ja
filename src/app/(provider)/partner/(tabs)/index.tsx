@@ -8,19 +8,19 @@ import { AvailabilityToggle } from "@/components/partner/AvailabilityToggle";
 import { serviceTitle } from "@/features/booking/catalog";
 import { statusLabel } from "@/features/service/stateMachine";
 import { usePendingProposal, useProviderActiveRequest } from "@/features/provider/useProviderActive";
-import { avatarFor, currentProvider } from "@/mocks/people";
-import { places } from "@/mocks/places";
 import { useFinanceSummary, useNearbyRequests } from "@/services/queries";
 import { useProviderStore } from "@/stores/useProviderStore";
 import { formatKz } from "@/utils/format";
 import { go } from "@/features/navigation";
 import { toast } from "@/lib/toast";
 import { colors, radius } from "@/theme/colors";
+import { useMyProvider } from "@/features/provider/useProvider";
 
 /** 34 · Painel do prestador: disponibilidade, viatura, ganhos e pedidos próximos. */
 export default function ProviderDashboard() {
   const online = useProviderStore((s) => s.online);
-  const vehicle = useProviderStore((s) => s.vehicle);
+  const me = useMyProvider();
+  const vehicle = me.vehicle;
   const nearby = useNearbyRequests();
   const finance = useFinanceSummary();
   const active = useProviderActiveRequest();
@@ -28,7 +28,7 @@ export default function ProviderDashboard() {
   const snapPoints = useMemo(() => ["62%", "92%"], []);
   const list = online ? (nearby.data ?? []) : [];
   const markers: MapMarker[] = [
-    { id: "me", kind: "user", coords: places.maculusso.coords },
+    { id: "me", kind: "user", coords: me.coords },
     // Só os pedidos a menos de 6 km, para o mapa não afastar demasiado e sobrepor marcadores.
     ...list.filter((n) => n.distanceKm <= 6).slice(0, 4).map(({ request, distanceKm }) => ({
       id: request.id,
@@ -51,10 +51,10 @@ export default function ProviderDashboard() {
       <BottomSheet index={0} snapPoints={snapPoints} enableDynamicSizing={false} backgroundStyle={{ borderRadius: 28, backgroundColor: colors.background }} handleIndicatorStyle={{ backgroundColor: colors.borderStrong, width: 44 }}>
         <BottomSheetScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32, gap: 14 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-            <Avatar name={currentProvider.name} initials={currentProvider.initials} photo={avatarFor[currentProvider.id]} size={56} verified />
+            <Avatar name={me.name} initials={me.initials} photo={me.avatar} size={56} verified />
             <View style={{ flex: 1 }}>
               <AppText variant="h2" accessibilityRole="header">
-                Olá, {currentProvider.name.split(" ")[0]}
+                Olá, {me.name.split(" ")[0]}
               </AppText>
               <AppText variant="body" color={colors.muted}>
                 {online ? "Estás disponível" : "Estás indisponível"}

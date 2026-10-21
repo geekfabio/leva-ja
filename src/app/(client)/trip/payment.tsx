@@ -27,7 +27,7 @@ import {
   useActiveClientRequest,
   useStatusRoute,
 } from "@/features/service/useClientSimulation";
-import { paymentKindCopy } from "@/mocks/account";
+import { paymentKindCopy } from "@/features/payment/copy";
 import { useAccountStore } from "@/stores/useAccountStore";
 import { useServiceStore } from "@/stores/useServiceStore";
 import type { PaymentMethodKind } from "@/types/domain";
@@ -56,9 +56,9 @@ export default function PaymentScreen() {
   const reference = useRef<BottomSheetModal>(null);
   const pay = useMutation({
     mutationFn: async () => {
-      await new Promise((r) => setTimeout(r, 1500));
-      if (!useServiceStore.getState().pay(request!.id, method))
-        throw new Error("Estado inválido");
+      // A confirmação do pagamento vem do RequestRepository (simulada nesta fase).
+      if (!(await useServiceStore.getState().pay(request!.id, method)))
+        throw new Error(useServiceStore.getState().lastError ?? "Estado inválido");
     },
     onSuccess: () => {
       reference.current?.dismiss();

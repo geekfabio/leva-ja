@@ -5,15 +5,17 @@ import { ChevronRight, MapPin, Star } from "lucide-react-native";
 import { AppText, Avatar, Card, DeliveryProofSummary, EmptyState, ErrorState, IconCircle, LoadingState, PriceSummary, RatingStars, RouteTimeline, ScreenContainer, SecondaryButton, SegmentedTabs, ServiceIcon, SheetModal, StatusBadge, Appear } from "@/components/kit";
 import { ProviderHeader } from "@/components/partner/ProviderHeader";
 import { serviceTitle } from "@/features/booking/catalog";
-import { avatarFor, currentProvider, findClient } from "@/mocks/people";
 import { useProviderRequests, useProviderReviews } from "@/services/queries";
 import type { ServiceRequest } from "@/types/domain";
 import { formatLongDateTime } from "@/utils/date";
 import { formatKz, formatRating } from "@/utils/format";
 import { colors } from "@/theme/colors";
+import { clientOf } from "@/features/service/people";
+import { useMyProvider } from "@/features/provider/useProvider";
 
 /** 40 · Histórico de serviços concluídos/cancelados e avaliações recebidas. */
 export default function ProviderHistory() {
+  const me = useMyProvider();
   const [tab, setTab] = useState<"done" | "cancelled">("done");
   const [selected, setSelected] = useState<ServiceRequest>();
   const detail = useRef<BottomSheetModal>(null);
@@ -34,9 +36,9 @@ export default function ProviderHistory() {
         <Card tone="soft" style={{ gap: 8 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
             <Star size={22} color={colors.star} fill={colors.star} />
-            <AppText variant="h3">{formatRating(currentProvider.rating)}</AppText>
+            <AppText variant="h3">{formatRating(me.rating)}</AppText>
             <AppText variant="caption" color={colors.muted}>
-              · {currentProvider.reviewsCount} avaliações
+              · {me.reviewsCount} avaliações
             </AppText>
           </View>
           {reviews.data?.slice(0, 2).map((rv) => (
@@ -63,7 +65,7 @@ export default function ProviderHistory() {
           <ErrorState onRetry={refetch} />
         ) : list.length ? (
           list.map((r, i) => {
-            const client = findClient(r.clientId);
+            const client = clientOf(r);
             return (
               <Appear key={`${tab}-${r.id}`} index={i}>
               <Card style={{ gap: 12 }}>
@@ -86,7 +88,7 @@ export default function ProviderHistory() {
                   </AppText>
                 </View>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                  <Avatar name={client.name} initials={client.initials} photo={avatarFor[client.id]} size={40} />
+                  <Avatar name={client.name} initials={client.initials} photo={client.avatar} size={40} />
                   {r.rating ? (
                     <>
                       <Star size={18} color={colors.star} fill={colors.star} />
@@ -116,7 +118,7 @@ export default function ProviderHistory() {
           <>
             <RouteTimeline stops={[{ label: "Recolha", place: selected.origin.label }, { label: "Entrega", place: selected.destination.label }]} />
             <AppText variant="caption" color={colors.muted}>
-              Cliente: {findClient(selected.clientId).name}
+              Cliente: {clientOf(selected).name}
             </AppText>
             {selected.rating ? (
               <Card tone="muted" style={{ gap: 6 }}>

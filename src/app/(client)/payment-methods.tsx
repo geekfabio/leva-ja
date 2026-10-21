@@ -30,8 +30,8 @@ export default function PaymentMethodsScreen() {
   const methods = useAccountStore((s) => s.paymentMethods);
   const sheet = useRef<BottomSheetModal>(null);
   const { control, handleSubmit, reset } = useForm<CardForm>({ resolver: zodResolver(cardSchema), defaultValues: { number: "", expiry: "", cvv: "" } });
-  const add = handleSubmit(({ number }) => {
-    useAccountStore.getState().addCard(number.slice(-4));
+  const add = handleSubmit(async ({ number }) => {
+    if (!(await useAccountStore.getState().addCard(number.slice(-4)))) return toast.error("Não foi possível guardar o cartão");
     sheet.current?.dismiss();
     reset();
     toast.success("Cartão adicionado (simulado)");

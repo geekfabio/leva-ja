@@ -11,7 +11,7 @@ import { AppText, BrandLogo, IconButton, IconCircle, InfoNote, SelectField, Sele
 import { BookingScaffold } from "@/components/service/BookingScaffold";
 import { scheduleSchema, type ScheduleForm } from "@/features/booking/schemas";
 import { useBookingStep } from "@/features/booking/useBookingFlow";
-import { illustrations } from "@/mocks/assets";
+import { illustrations } from "@/theme/images";
 import { useBookingStore } from "@/stores/useBookingStore";
 import { formatWeekdayDate } from "@/utils/date";
 import { colors } from "@/theme/colors";

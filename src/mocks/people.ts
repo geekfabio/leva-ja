@@ -8,6 +8,7 @@ export const currentClient: Client = {
   phone: "+244 923 456 789",
   initials: "AM",
   rating: 4.8,
+  avatar: "armando-manuel",
 };
 
 export const clients: Client[] = [
@@ -94,6 +95,7 @@ export const currentProvider: Provider = {
   rating: 4.9,
   reviewsCount: 128,
   verified: true,
+  avatar: "joao-manuel",
   vehicle: vehicles.hilux,
   coords: places.maculusso.coords,
 };

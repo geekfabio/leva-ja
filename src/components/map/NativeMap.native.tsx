@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import MapView, { Circle, Marker, Polyline, PROVIDER_DEFAULT } from "react-native-maps";
 import { colors } from "@/theme/colors";
 import { mockRoute, regionFor } from "@/utils/geo";
-import { placeList } from "@/mocks/places";
+import { useAreas } from "@/services/queries";
 import { MarkerView } from "./MarkerView";
 import type { MapPreviewProps } from "./types";
 
@@ -11,11 +11,12 @@ import type { MapPreviewProps } from "./types";
  * simulado e zonas. Não usa GPS real nem serviços de rotas.
  */
 export function NativeMap({ markers = [], route, zones = [], static: isStatic, onZonePress }: MapPreviewProps) {
+  const { data: placeList = [] } = useAreas();
   const routePoints = useMemo(() => (route ? mockRoute(route.from, route.to) : []), [route]);
   const region = useMemo(() => {
     const pts = [...markers.map((m) => m.coords), ...routePoints, ...zones.map((z) => z.coords)];
     return regionFor(pts.length ? pts : placeList.map((p) => p.coords));
-  }, [markers, routePoints, zones]);
+  }, [markers, routePoints, zones, placeList]);
 
   return (
     <MapView

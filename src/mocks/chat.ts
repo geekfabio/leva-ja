@@ -19,8 +19,3 @@ export const autoReplies: Record<"provider" | "client" | "support", string[]> = 
   ],
 };
 
-export const quickReplies = {
-  client: ["Estou a chegar", "Onde está?", "Pode ligar-me?"],
-  provider: ["Estou a caminho", "Cheguei ao local", "Pode descer?"],
-  support: ["Problema com pagamento", "Prestador atrasado", "Objecto danificado"],
-};

@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowRight, Mail, Phone, UserRound } from "lucide-react-native";
 import { AppHeader, AppText, PrimaryButton, ScreenContainer, StepProgress, TextButton, TextField } from "@/components/kit";
 import { registerSchema, type RegisterForm } from "@/features/auth/schemas";
-import { illustrations } from "@/mocks/assets";
+import { illustrations } from "@/theme/images";
 import { useSessionStore } from "@/stores/useSessionStore";
 import { go, swap } from "@/features/navigation";
 import { maskPhone } from "@/utils/format";

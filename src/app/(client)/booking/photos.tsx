@@ -3,13 +3,11 @@ import { ImageIcon } from "lucide-react-native";
 import { AppText, IconCircle, PhotoTile, AddPhotoTile, PrimaryButton, ScreenTitle, TextField } from "@/components/kit";
 import { BookingScaffold } from "@/components/service/BookingScaffold";
 import { useBookingStep } from "@/features/booking/useBookingFlow";
-import { cargoPhotos } from "@/mocks/photos";
+import { repositories } from "@/data";
 import { useBookingStore } from "@/stores/useBookingStore";
 import { toast } from "@/lib/toast";
 import { colors, radius } from "@/theme/colors";
-import type { Photo } from "@/types/domain";
 
-const towPhotos: Photo[] = [{ id: "tow-1", asset: "hilux-street", caption: "Viatura parada na estrada" }];
 const MAX = 6;
 
 /** 18 · Fotos da carga/viatura e instruções. A câmara é simulada com fotos de exemplo. */
@@ -18,12 +16,16 @@ export default function PhotosStep() {
   const photos = useBookingStore((s) => s.draft.photos);
   const instructions = useBookingStore((s) => s.draft.instructions);
   const patch = useBookingStore((s) => s.patch);
-  const pool = kind === "tow" ? [...towPhotos, ...cargoPhotos] : cargoPhotos;
 
-  const addPhoto = () => {
+  /** Câmara: na fase mock o MediaRepository devolve fotos de exemplo. */
+  const addPhoto = async () => {
     if (photos.length >= MAX) return toast.info({ title: "Limite atingido", message: `Podes adicionar até ${MAX} fotos.` });
-    const source = pool[photos.length % pool.length]!;
-    patch({ photos: [...photos, { ...source, id: `${source.id}-${Date.now()}` }] });
+    try {
+      const photo = await repositories().media.capture(kind === "tow" ? "vehicle" : "cargo", photos.length);
+      patch({ photos: [...useBookingStore.getState().draft.photos, photo] });
+    } catch {
+      toast.error("Não foi possível abrir a câmara");
+    }
   };
   const remove = (id: string) => patch({ photos: photos.filter((p) => p.id !== id) });
   const slots = Math.max(0, 3 - photos.length);

@@ -20,9 +20,9 @@ export default function AddressesScreen() {
   const [label, setLabel] = useState("");
   const [icon, setIcon] = useState<SavedAddress["icon"]>("pin");
   const [remove, setRemove] = useState<SavedAddress>();
-  const save = () => {
+  const save = async () => {
     if (!place || label.trim().length < 2) return;
-    useAccountStore.getState().addAddress({ label: label.trim(), place, icon });
+    if (!(await useAccountStore.getState().addAddress({ label: label.trim(), place, icon }))) return toast.error("Não foi possível guardar o endereço");
     labelSheet.current?.dismiss();
     setLabel("");
     toast.success("Endereço guardado");

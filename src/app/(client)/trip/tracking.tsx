@@ -6,7 +6,6 @@ import { MapSheetLayout } from "@/components/service/MapSheetLayout";
 import { NoActiveRequest } from "@/components/service/NoActiveRequest";
 import { clientAutoAdvance } from "@/features/service/stateMachine";
 import { useActiveClientRequest, useClientSimulation, useStageProgress, useStatusRoute } from "@/features/service/useClientSimulation";
-import { findProvider } from "@/mocks/people";
 import { approachStart, mockRoute, pointAlong } from "@/utils/geo";
 import { unreadCount, useChatStore } from "@/stores/useChatStore";
 import { go } from "@/features/navigation";
@@ -22,7 +21,7 @@ export default function TrackingScreen() {
   useStatusRoute(request, ["assigned", "en_route"]);
   const progress = useStageProgress(request, "en_route", clientAutoAdvance.en_route!.afterMs);
   const unread = useChatStore((s) => unreadCount(request ? s.threads[request.id] : undefined, "client"));
-  const provider = findProvider(request?.providerId);
+  const provider = request?.provider;
   if (!request || !provider) return <NoActiveRequest />;
   const route = mockRoute(approachStart(request.origin.coords), request.origin.coords);
   const position = request.status === "en_route" ? pointAlong(route, progress) : approachStart(request.origin.coords);

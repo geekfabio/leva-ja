@@ -1,6 +1,6 @@
 /**
- * Registo único de imagens locais usadas pelos mocks. Na integração com a API,
- * `Photo.asset` passa a ser um URL remoto e este registo deixa de ser necessário.
+ * Imagens empacotadas na app: ilustrações, viaturas 3D e as fotos de exemplo usadas pela
+ * demonstração. Os dados referem fotos por chave (`imageSource`) ou por URL remoto.
  */
 export const photoAssets = {
   "pickup-bed": require("../../assets/photos/pickup-bed.jpg"),
@@ -48,3 +48,14 @@ export const avatars = {
 export type AvatarKey = keyof typeof avatars;
 
 export const brandMark = require("../../assets/brand/leva-ja-mark.png");
+
+/**
+ * Resolve uma referência de imagem vinda dos dados: chave de uma imagem local
+ * empacotada (dados de demonstração) ou URL remoto (API).
+ */
+export function imageSource(ref?: string) {
+  if (!ref) return undefined;
+  if (ref in photoAssets) return photoAssets[ref as PhotoAssetKey];
+  if (ref in avatars) return avatars[ref as AvatarKey];
+  return { uri: ref };
+}

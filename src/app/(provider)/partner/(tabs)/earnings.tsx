@@ -6,7 +6,6 @@ import { CalendarDays, ChartColumn, ChevronDown, FileText, Landmark, List, Setti
 import { AppText, BrandLogo, Card, EarningsChart, ErrorState, IconButton, IconCircle, InfoNote, LoadingState, PrimaryButton, ProviderMetric, ScreenContainer, SecondaryButton, SheetModal, Skeleton, TextField, AnimatedAmount } from "@/components/kit";
 import { NotificationBell, ProviderSummaryCard } from "@/components/partner/ProviderHeader";
 import { withdrawSchema } from "@/features/provider/schemas";
-import { bankAccount } from "@/mocks/finance";
 import { useFinanceSummary } from "@/services/queries";
 import { useProviderStore } from "@/stores/useProviderStore";
 import { formatMonthYear } from "@/utils/date";
@@ -21,6 +20,7 @@ const weekLabels = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 export default function EarningsScreen() {
   const { data, isLoading, isError, refetch, isRefetching } = useFinanceSummary();
   const balance = useProviderStore((s) => s.balance);
+  const bankAccount = useProviderStore((s) => s.payout) ?? { bank: "—", iban: "—", holder: "—" };
   const withdrawSheet = useRef<BottomSheetModal>(null);
   const monthSheet = useRef<BottomSheetModal>(null);
   const months = Array.from({ length: 4 }, (_, i) => {
@@ -38,9 +38,9 @@ export default function EarningsScreen() {
     if (!result.success) return setError(result.error.issues[0]?.message);
     setError(undefined);
     setSending(true);
-    await new Promise((r) => setTimeout(r, 900));
+    const ok = await useProviderStore.getState().withdraw(amount);
     setSending(false);
-    useProviderStore.getState().withdraw(amount);
+    if (!ok) return setError(useProviderStore.getState().lastError ?? "Não foi possível pedir o levantamento.");
     withdrawSheet.current?.dismiss();
     toast.success({ title: "Levantamento pedido", message: `${formatKz(amount)} para ${bankAccount.bank} (simulado).` });
   };

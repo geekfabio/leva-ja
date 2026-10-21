@@ -8,19 +8,20 @@ import { AppText, Avatar, BrandLogo, Card, Divider, EmptyState, IconButton, Icon
 import { NotificationBell } from "@/components/partner/ProviderHeader";
 import { serviceTitle } from "@/features/booking/catalog";
 import { proposalSchema, type ProposalForm } from "@/features/provider/schemas";
-import { avatarFor, currentProvider, findClient } from "@/mocks/people";
-import { useProviderStore } from "@/stores/useProviderStore";
 import { useRequest, useServiceStore } from "@/stores/useServiceStore";
 import { formatKz, formatNumber, parseAmount } from "@/utils/format";
 import { go, swap } from "@/features/navigation";
 import { toast } from "@/lib/toast";
 import { colors, radius } from "@/theme/colors";
+import { clientOf } from "@/features/service/people";
+import { useMyProvider } from "@/features/provider/useProvider";
 
 /** 45 · Proposta de preço para serviços complexos (mudança de casa). */
 export default function ProposalScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const request = useRequest(id);
-  const vehicle = useProviderStore((s) => s.vehicle);
+  const me = useMyProvider();
+  const vehicle = me.vehicle;
   const suggested = request ? request.price.total - request.price.platformFee : 0;
   const { control, handleSubmit, formState } = useForm<ProposalForm>({
     resolver: zodResolver(proposalSchema),
@@ -34,7 +35,7 @@ export default function ProposalScreen() {
           <BrandLogo inverse size="sm" tagline="Parceiro" />
         </View>
         <NotificationBell inverse />
-        <Avatar name={currentProvider.name} initials={currentProvider.initials} photo={avatarFor[currentProvider.id]} size={40} verified />
+        <Avatar name={me.name} initials={me.initials} photo={me.avatar} size={40} verified />
       </View>
     </SafeAreaView>
   );
@@ -44,9 +45,9 @@ export default function ProposalScreen() {
         <EmptyState title="Proposta indisponível" description="Este pedido já não está disponível." actionLabel="Ver pedidos" onAction={() => swap("/partner/requests")} />
       </ScreenContainer>
     );
-  const client = findClient(request.clientId);
+  const client = clientOf(request);
   const proposal = request.proposal;
-  const mine = request.providerId === currentProvider.id;
+  const mine = request.providerId === me.id;
 
   if (proposal && mine && (proposal.status === "sent" || proposal.status === "accepted"))
     return (
@@ -67,7 +68,7 @@ export default function ProposalScreen() {
         {proposal.status === "sent" ? (
           <>
             <PrimaryButton label="Simular aceitação do cliente" onPress={() => useServiceStore.getState().answerProposal(request.id, true)} />
-            <SecondaryButton label="Simular recusa do cliente" onPress={() => { useServiceStore.getState().answerProposal(request.id, false); toast.info("O cliente recusou a proposta"); swap("/partner/requests"); }} />
+            <SecondaryButton label="Simular recusa do cliente" onPress={async () => { await useServiceStore.getState().answerProposal(request.id, false); toast.info("O cliente recusou a proposta"); swap("/partner/requests"); }} />
           </>
         ) : (
           <PrimaryButton label="Iniciar serviço" onPress={() => swap(`/partner/active/${request.id}`)} />
@@ -75,8 +76,9 @@ export default function ProposalScreen() {
       </ScreenContainer>
     );
 
-  const send = handleSubmit((values) => {
-    if (useServiceStore.getState().submitProposal(request.id, values.amount, values.reason)) toast.success({ title: "Proposta enviada", message: "Vais ser notificado quando o cliente responder." });
+  const send = handleSubmit(async (values) => {
+    if (await useServiceStore.getState().submitProposal(request.id, values.amount, values.reason)) toast.success({ title: "Proposta enviada", message: "Vais ser notificado quando o cliente responder." });
+    else toast.error({ title: "Proposta não enviada", message: useServiceStore.getState().lastError ?? undefined });
   });
 
   return (

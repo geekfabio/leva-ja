@@ -12,9 +12,9 @@ export default function DocumentsScreen() {
   const documents = useProviderStore((s) => s.documents);
   const [selected, setSelected] = useState(() => documents.find((d) => d.state !== "verified")?.id ?? documents[0]?.id);
   const doc = documents.find((d) => d.id === selected);
-  const submit = () => {
+  const submit = async () => {
     if (!doc) return;
-    useProviderStore.getState().submitDocument(doc.id);
+    if (!(await useProviderStore.getState().submitDocument(doc.id))) return toast.error("Não foi possível enviar o documento");
     toast.success({ title: "Documento enviado", message: `${doc.title} está em análise (simulado).` });
   };
   return (

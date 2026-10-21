@@ -11,7 +11,6 @@ import { serviceTitle } from "@/features/booking/catalog";
 import { describeLoad } from "@/features/booking/factory";
 import { clientAutoAdvance } from "@/features/service/stateMachine";
 import { useActiveClientRequest, useClientSimulation, useStageProgress, useStatusRoute } from "@/features/service/useClientSimulation";
-import { findProvider } from "@/mocks/people";
 import { mockRoute, pointAlong } from "@/utils/geo";
 import { go } from "@/features/navigation";
 import { toast } from "@/lib/toast";
@@ -25,7 +24,7 @@ export default function InTransitScreen() {
   const progress = useStageProgress(request, "in_transit", clientAutoAdvance.in_transit!.afterMs);
   const contact = useRef<BottomSheetModal>(null);
   const details = useRef<BottomSheetModal>(null);
-  const provider = findProvider(request?.providerId);
+  const provider = request?.provider;
   if (!request || !provider) return <NoActiveRequest />;
   const moving = request.status === "in_transit";
   const position = pointAlong(mockRoute(request.origin.coords, request.destination.coords), moving ? progress : 0);

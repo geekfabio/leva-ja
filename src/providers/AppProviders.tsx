@@ -7,6 +7,7 @@ import { paperTheme } from '@/theme/paperTheme';
 import { useServiceStore } from '@/stores/useServiceStore';
 import { useProviderStore } from '@/stores/useProviderStore';
 import { useAccountStore } from '@/stores/useAccountStore';
+import { DataBootstrap } from './DataBootstrap';
 
 export function AppProviders({ children }: PropsWithChildren) {
   const [queryClient] = useState(() => new QueryClient({
@@ -27,7 +28,9 @@ export function AppProviders({ children }: PropsWithChildren) {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
         <PaperProvider theme={paperTheme}>
-          <BottomSheetModalProvider>{children}</BottomSheetModalProvider>
+          <BottomSheetModalProvider>
+            <DataBootstrap>{children}</DataBootstrap>
+          </BottomSheetModalProvider>
         </PaperProvider>
       </QueryClientProvider>
     </GestureHandlerRootView>

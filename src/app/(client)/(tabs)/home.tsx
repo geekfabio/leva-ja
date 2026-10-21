@@ -7,19 +7,13 @@ import { AppText, BrandLogo, EmptyState, ErrorState, IconButton, LoadingState, M
 import { serviceCatalog, serviceTitle } from "@/features/booking/catalog";
 import { startBooking } from "@/features/booking/useBookingFlow";
 import { clientScreenFor, isActiveStatus, statusLabel } from "@/features/service/stateMachine";
-import { places } from "@/mocks/places";
-import { useClientRequests } from "@/services/queries";
+import { useClientRequests, useCurrentLocation, useNearbyVehicles } from "@/services/queries";
 import { useSessionStore } from "@/stores/useSessionStore";
 import { useRequest, useServiceStore } from "@/stores/useServiceStore";
 import { go } from "@/features/navigation";
 import { colors, radius } from "@/theme/colors";
 import { useNotifications } from "@/features/notifications/useNotifications";
 
-const nearbyProviders: MapMarker[] = [
-  { id: "me", kind: "user", coords: places.maianga.coords },
-  { id: "p1", kind: "vehicle", coords: places.maculusso.coords, icon: "cargo" },
-  { id: "p2", kind: "vehicle", coords: places.rangel.coords, icon: "tow" },
-];
 
 /** 11 · Início do cliente: mapa, serviços rápidos e serviços recentes. */
 export default function ClientHome() {
@@ -28,6 +22,12 @@ export default function ClientHome() {
   const active = useRequest(activeId);
   const { data, isLoading, isError, refetch } = useClientRequests(user.id);
   const sheet = useRef<BottomSheet>(null);
+  const { data: here } = useCurrentLocation();
+  const { data: vehicles = [] } = useNearbyVehicles(here?.coords);
+  const markers: MapMarker[] = [
+    ...(here ? [{ id: "me", kind: "user" as const, coords: here.coords }] : []),
+    ...vehicles.map((v) => ({ id: v.id, kind: "vehicle" as const, coords: v.coords, icon: v.kind })),
+  ];
   const snapPoints = useMemo(() => ["60%", "92%"], []);
   const recent = (data ?? []).filter((r) => !isActiveStatus(r.status)).slice(0, 3);
   const firstName = user.name.split(" ")[0];
@@ -36,7 +36,7 @@ export default function ClientHome() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <View style={{ height: "48%" }}>
-        <MapPreview height="100%" markers={nearbyProviders} pulse accessibilityLabel="Mapa de Luanda com prestadores próximos (simulado)" />
+        <MapPreview height="100%" markers={markers} pulse accessibilityLabel="Mapa de Luanda com prestadores próximos (simulado)" />
         <SafeAreaView edges={["top"]} style={{ position: "absolute", left: 0, right: 0, top: 0, paddingHorizontal: 16, paddingTop: 6, flexDirection: "row", alignItems: "flex-start" }}>
           <View style={{ flex: 1, backgroundColor: "rgba(255,255,255,0.85)", alignSelf: "flex-start", borderRadius: radius.md, paddingHorizontal: 10, paddingVertical: 6 }}>
             <BrandLogo size="sm" tagline="Reboque • Carga • Mudança" />
