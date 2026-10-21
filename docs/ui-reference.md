@@ -97,11 +97,16 @@ O prestador possui uma app operacional própria. O seu estado de disponibilidade
 
 ## Mapeamento para implementação
 
-| Domínio | Componentes reutilizáveis |
-| --- | --- |
-| Pedido | `ScreenHeader`, `SelectionCard`, `AppInput`, `BottomAction`, `ServiceSummary`, `PriceSummary` |
-| Acompanhamento | `ServiceTimeline`, `ContactActions`, `StatusBadge`, mapa e folhas inferiores |
-| Conta | `ListRow`, `AppCard`, `IconButton`, `StateMessage` |
-| Prestador | `ProviderNav`, `ProviderMetric`, `OrderCard`, `EarningsChart`, `VehicleCard`, `DocumentStatus`, `DeliveryProof`, `ServiceTimeline` |
+Cada referência tem um ecrã correspondente; a tabela completa referência → rota está no [README](../README.md#mapa-de-ecrãs).
 
-Os nomes e valores apresentados nas imagens são mockados. Para a fase de backend, substituir mapas, fotografias, coordenadas, prestadores, preços e métodos de pagamento por dados validados pelo serviço.
+| Domínio | Componentes reutilizáveis (`src/components/kit.ts`) |
+| --- | --- |
+| Base | `ScreenContainer`, `AppHeader`, `BottomAction`, `PrimaryButton`, `SecondaryButton`, `TextField`, `SelectField`, `SheetModal`, `ConfirmDialog` |
+| Pedido | `SelectionCard`, `ChoiceChip`, `Stepper`, `ToggleRow`, `ServiceCatalogCard`, `ServiceTile`, `PriceSummary`, `AmountHighlight` |
+| Acompanhamento | `MapPreview`, `ServiceTimeline`, `RouteTimeline`, `ContactActions`, `StatusBadge`, `ProviderCard`, `VehicleRow` |
+| Conta | `ListRow`, `ListGroup`, `Avatar`, `EmptyState`, `LoadingState`, `ErrorState`, `InfoNote` |
+| Prestador | `ProviderMetric`, `OrderCard`, `EarningsChart`, `TransactionRow`, `DocumentStatus`, `DeliveryProofForm`, `SignaturePad`, `CountdownRing` |
+
+Os nomes e valores apresentados nas imagens são mockados. Para a fase de backend, substituir mapas, fotografias, coordenadas, prestadores, preços e métodos de pagamento por dados validados pelo serviço (ver [arquitectura](arquitectura.md)).
+
+> Nota: os ficheiros 09, 10, 19, 20, 29 e 30 tinham os nomes trocados entre si (por exemplo, `09-email-verification.jpg` mostrava a estimativa). Foram renomeados para corresponder ao conteúdo e às tabelas acima.

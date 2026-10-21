@@ -1,5 +1,15 @@
 # Design QA
 
+## Nova experiência a partir das 46 referências — 21 de Outubro de 2026
+
+- 46 referências implementadas (rotas no README), com componentes partilhados em `src/components/kit.ts`.
+- `npm run typecheck`: passou.
+- `npm run lint`: sem erros (avisos só em ficheiros do protótipo anterior).
+- `npm test`: 9 suites, 53 testes — máquina de estados, preços, esquemas Zod, formatação, ciclo de vida cliente/prestador, kit e fluxos de login e reboque.
+- `npx expo export --platform web` e `--platform android --platform ios`: bundles gerados sem erros. Não é uma instalação em dispositivo.
+- Revisão visual no Chromium (Playwright, 390 × 844) da exportação web: acesso, pedido de carga e de mudança de casa (com proposta), acompanhamento completo até à avaliação, conta, definições, ajuda, SOS, e área do prestador do painel ao comprovativo, ganhos, levantamento e transacções. Corrigidos durante a revisão: rótulos truncados, cabeçalhos verdes cortados, redireccionamento por ecrãs em segundo plano na pilha e acções de proposta fora do ecrã.
+- Não verificado: aparência e gestos em Android/iOS reais (mapa nativo, folhas inferiores, assinatura, teclado). O mapa da web é a versão ilustrativa em SVG.
+
 ## Cargo and moving redesign — 11 October 2026
 
 - Added light freight, heavy freight and home moving to the customer and partner flows, sharing request data through completion.

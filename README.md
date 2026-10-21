@@ -1,91 +1,167 @@
 # Leva Já
 
-Aplicação mobile de transporte de cargas leves e pesadas, mudanças de casa, reboque e assistência automóvel em Luanda. Esta fase usa dados locais de demonstração para validar os fluxos antes da integração com backend.
+Aplicação mobile de assistência, transporte e logística em Luanda: reboque de viaturas, transporte de carga com pickup, pequenas mudanças e mudanças completas de casa. Tem dois perfis — **Cliente** e **Prestador de Serviço** — e, nesta fase, funciona inteiramente com dados mockados, sem backend.
 
-## Redesign de transporte e mudanças
-
-- Selecção de categorias com imagens 3D locais: reboque plataforma, pickup tipo Hilux, carrinha fechada, camião de mudanças, camião de carga pesada e viatura de apoio.
-- Fluxo com descrição da carga, peso, dimensões, ajuda à carga/descarga, acessos e moradas.
-- O pedido confirmado conserva a viatura, os detalhes e o preço no acompanhamento do cliente e na execução do parceiro.
-- O parceiro pode aceitar, deslocar-se, confirmar recolha, concluir entrega, registar comprovativos de exemplo e propor um preço para aceitação do cliente.
-- `/demo` inclui atalhos para cargas leves, mudanças e cargas pesadas. `/ui-kit` mostra o catálogo de componentes apenas em desenvolvimento.
-
-Detalhes e limites: [redesign de transportes](docs/transport-redesign.md).
-
-Referências de todas as telas mobile criadas: [guia visual UI/UX](docs/ui-reference.md).
-
-## Fluxo actual
-
-1. Entrada como cliente ou parceiro
-2. Escolha de carga leve, mudança, carga pesada, reboque ou apoio automóvel
-3. Detalhes da carga ou incidente, peso, dimensões e acessos
-4. Escolha da categoria de viatura com imagens 3D
-5. Confirmação da origem e do destino
-6. Resumo, estimativa e forma de pagamento
-7. Pedido disponível para aceitação pelo parceiro
-8. Acompanhamento de recolha, transporte ou assistência e conclusão
-9. Histórico, resumo do pagamento, avaliação e ocorrência
-10. Área do parceiro com disponibilidade, execução, propostas e ganhos locais
-
-## Stack
-
-- Expo + React Native + TypeScript
-- Expo Router
-- NativeWind
-- Zustand para estado mockado
-- TanStack Query preparado para integração futura
-- React Hook Form + Zod
-- Moti e Reanimated
+A interface segue as 46 referências documentadas em [docs/ui-reference.md](docs/ui-reference.md), adaptadas a Android e iOS (e à web, para revisão).
 
 ## Começar
 
 ```bash
 npm install
-npx expo start --web
+npx expo start            # development build (script "start" usa --dev-client)
+npx expo start --go       # Expo Go
+npx expo start --web      # pré-visualização no browser (mapa ilustrativo em SVG)
 ```
 
-## Limites desta fase
+Fluxo de entrada: **splash → onboarding → escolha de perfil → login**. Os acessos são locais:
 
-- Não há chamadas de API reais, pagamentos ou geolocalização real.
-- Valores, viaturas, localização, condutores e estados são mocks.
-- A navegação e as telas representam o fluxo do cliente para validação UI/UX.
-
-## Acessos de demonstração
-
-Todos os acessos são locais e não enviam SMS nem validam credenciais reais.
-
-| Área | Rota | Dados mockados |
+| Perfil | Como entrar | Dados |
 | --- | --- | --- |
-| Cliente | `/(auth)/phone` | `+244 912 345 678` · OTP `123456` |
-| Prestador | `/provider/login` | `+244 923 456 789` · OTP `123456` |
+| Cliente | Escolhe «Preciso de um serviço» e entra | `armando@email.com` + qualquer palavra-passe com 6+ caracteres |
+| Prestador | Escolhe «Sou prestador» e entra | `joao.manuel@levaja.ao` + qualquer palavra-passe com 6+ caracteres |
+| Registo / recuperação | «Criar conta» ou «Esqueci-me da palavra-passe» | Código de confirmação `123456` |
+
+Atalhos: a rota `/demo` abre a nova experiência já autenticada como cliente ou prestador. No perfil de cada área existe «Mudar para prestador/cliente».
+
+### Verificações
+
+```bash
+npm run typecheck   # TypeScript
+npm run lint        # ESLint (eslint-config-expo)
+npm test            # Jest: lógica de negócio, stores, kit e fluxos
+```
+
+## Stack
+
+React Native 0.81 + Expo 54 + TypeScript · Expo Router · NativeWind · Zustand · TanStack Query · React Hook Form + Zod · React Native Paper · Lucide · Reanimated + Gesture Handler · @gorhom/bottom-sheet · expo-image · react-native-maps · Plus Jakarta Sans.
+
+## Estrutura
+
+```
+src/
+  app/                    Rotas (Expo Router; a raiz do projecto já era src/app)
+    index.tsx             01 Splash
+    (auth)/               02–10 Onboarding, perfil, login, registo, recuperação, email, localização
+    (client)/             11–33 Separadores do cliente, pedido (booking/), acompanhamento (trip/), conta e suporte
+    (provider)/partner/   34–46 Separadores do prestador, pedido, serviço activo, proposta, comprovativo, gestão
+    legacy/, request/, transport/, order/, provider/, admin/, demo …   Protótipo anterior (mantido)
+  components/
+    kit.ts                Ponto de entrada da biblioteca de componentes
+    core/                 Texto, botões, ScreenContainer, AppHeader, BottomAction, campos, estados, folhas, diálogos
+    service/              ServiceCard, StatusBadge, PriceSummary, ServiceTimeline, ContactActions, OrderCard, DeliveryProof, chat, chamada
+    partner/              ProviderMetric, DocumentStatus, EarningsChart, TransactionRow, cabeçalhos do prestador
+    map/                  MapPreview (react-native-maps no nativo, SVG na web/testes)
+    ui/, orders/, provider/, admin/ …   Componentes do protótipo anterior
+  features/               Lógica de negócio: máquina de estados, preços, catálogo, esquemas Zod, simulação
+  mocks/                  Clientes, prestadores, viaturas, pedidos, coordenadas, chat, ganhos, avaliações, documentos, fotos
+  services/               API simulada (latência e falhas) + hooks TanStack Query
+  stores/                 Zustand: sessão, rascunho do pedido, serviços, prestador, chat, conta
+  theme/                  Cores, fontes, tema do Paper
+  types/domain.ts         Modelo de domínio partilhado por mocks e futura API
+  utils/                  Formatação pt-PT (Kz, datas), geo e trajectos simulados
+```
+
+A arquitectura e o plano para trocar mocks por API estão em [docs/arquitectura.md](docs/arquitectura.md).
+
+## Mapa de ecrãs
+
+| Ref. | Ecrã | Rota |
+| --- | --- | --- |
+| 01 | Splash | `/` |
+| 02–04 | Onboarding | `/intro` |
+| 05 | Escolha de perfil | `/profile-select` |
+| 06 | Login | `/login` |
+| 07 | Criar conta (1 e 2 de 2) | `/register`, `/register-security` |
+| 08 | Recuperar acesso | `/recover` |
+| 09 | Confirmar email | `/verify-email` |
+| 10 | Activar localização | `/enable-location` |
+| 11 | Início do cliente | `/home` |
+| 12 | O que precisas transportar? | `/services` |
+| 13 | Reboque: problema | `/booking/incident` |
+| 14 | Reboque: dados da viatura | `/booking/vehicle` |
+| 15 | Carga: tipo, peso, volume, pickup, ajudante | `/booking/cargo` |
+| 16 | Mudança: imóvel, divisões, mobília, ajudantes, pisos, elevador | `/booking/moving` |
+| 17 | Mudança: data, hora e desmontagem | `/booking/schedule` |
+| 18 | Fotos e instruções | `/booking/photos` |
+| 19 | Trajecto | `/booking/route` |
+| 20 | Estimativa e confirmação | `/booking/estimate` |
+| 21 | A procurar prestador (e proposta nas mudanças de casa) | `/trip/matching` |
+| 22 | Prestador encontrado | `/trip/found` |
+| 23 | Acompanhamento no mapa | `/trip/tracking` |
+| 24 | Chat | `/trip/chat` |
+| 25 | Chamada | `/trip/call` |
+| 26 | O prestador chegou | `/trip/arrived` |
+| 27 | Confirmar recolha | `/trip/pickup` |
+| 28 | Em transporte | `/trip/in-transit` |
+| 29 | Serviço concluído e pagamento | `/trip/payment` |
+| 30 | Recibo e avaliação | `/trip/receipt` (`?id=` para o histórico) |
+| 31 | Perfil do cliente | `/account` |
+| 32 | Definições | `/settings`, `/settings/[section]` |
+| 33 | Ajuda e suporte | `/help`, `/help/faq`, `/help/chat`, `/help/report`, `/sos` |
+| 34 | Painel do prestador | `/partner` |
+| 35 | Novo pedido | `/partner/request/[id]` |
+| 36 | Serviço em curso | `/partner/active/[id]` |
+| 37 | Pedidos com filtros | `/partner/requests` |
+| 38 | Ganhos | `/partner/earnings` |
+| 39 | Transacções | `/partner/transactions` |
+| 40 | Histórico e avaliações | `/partner/history` |
+| 41 | Perfil profissional | `/partner/profile` |
+| 42 | A minha viatura | `/partner/vehicle` |
+| 43 | Documentos | `/partner/documents` |
+| 44 | Zonas e serviços | `/partner/zones` |
+| 45 | Propor valor | `/partner/proposal/[id]` |
+| 46 | Comprovativo de entrega | `/partner/proof/[id]` |
+
+Ecrãs de apoio: `/trips` (as minhas viagens), `/addresses`, `/payment-methods`, `/edit-profile`, `/partner/chat/[id]`, `/partner/call/[id]`.
+
+## Funcionalidades mockadas
+
+**Pedido dinâmico.** O formulário só mostra os passos do serviço escolhido e valida cada passo com Zod:
+
+- Reboque: incidente → viatura (marca, modelo, matrícula `LD-12-34-AB`, cor, se se desloca) → trajecto → fotos.
+- Carga (e entrega de mercadoria): tipo, descrição, peso, volume, pickup/carrinha/camião, ajudante → trajecto → fotos.
+- Mudança pequena / de casa: tipo de imóvel e divisões (só casa), mobília, ajudantes, pisos, elevador → data e desmontagem → trajecto → fotos.
+
+A estimativa (`features/booking/pricing.ts`) soma base, distância e extras, arredonda a 500 Kz e acrescenta 500 Kz de taxa; o ganho do prestador desconta 15% de comissão.
+
+**Estados do serviço.** `features/service/stateMachine.ts` define o fluxo partilhado: a procurar → atribuído → a caminho → no local → recolha confirmada → em transporte → entregue → pago → avaliado (cancelamento só antes da recolha). Cada transição tem um actor (cliente, prestador ou sistema) e fica registada na cronologia do pedido.
+
+**Simulação.** Do lado do cliente, os estados que viriam do servidor avançam sozinhos (prestador atribuído em ~4 s, chegada ~15 s, entrega ~15 s). Nas mudanças de casa, o prestador simulado envia uma proposta que o cliente aceita ou recusa. Em **Definições → Demonstração** é possível:
+
+- desligar o avanço automático e conduzir o mesmo pedido pela área do prestador (aceitar, deslocar, registar fotos, transportar, comprovativo);
+- simular falhas de rede para ver os estados de erro das listas;
+- repor os dados de demonstração.
+
+**Sem integrações reais.** Pagamentos (referência Multicaixa, cartão, numerário), localização (posição fixa em Luanda), chamadas, chat (respostas automáticas), câmara (fotos de exemplo), assinatura (desenhada mas não enviada), documentos, levantamentos e notificações são simulados. Nenhum dado sai do dispositivo e a sessão reinicia ao fechar a app.
+
+**Imagens.** As ilustrações, fotos de carga/entrega, a Hilux e os retratos de João Manuel e Armando Manuel são recortes das próprias referências (`assets/illustrations`, `assets/photos`, `assets/avatars`); as viaturas 3D vêm de `assets/vehicles/fleet-3d.png`, separadas em ficheiros individuais.
+
+## Mapa
+
+`MapPreview` usa `react-native-maps` no Android e iOS, com marcadores, trajecto simulado e zonas mockadas. Na web, nos testes ou com `EXPO_PUBLIC_MOCK_MAP=1` usa um mapa ilustrativo em SVG, sem rede. No Android, uma build de produção precisa de uma chave Google Maps (`android.config.googleMaps.apiKey` no `app.json`); sem ela os marcadores aparecem sobre um fundo vazio — usa `EXPO_PUBLIC_MOCK_MAP=1` nesse caso.
+
+## Acessibilidade e responsividade
+
+- Texto em Plus Jakarta Sans por família de peso, com escala do sistema limitada a 1,6×.
+- Botões com altura mínima de 48–56 pt, áreas de toque de 44 pt, papéis e estados (`radio`, `checkbox`, `switch`, `tab`, `progressbar`, `timer`) para leitores de ecrã.
+- Estados de carregamento (esqueletos), vazio, erro com repetição e sucesso em todas as listas assíncronas.
+- Verde de acção `#0A8743` com texto branco (contraste 4,6:1); o verde vivo das referências `#12A150` é usado só em elementos sem texto.
+- Na web a área da app fica limitada a 520 px.
+
+## Protótipo anterior
+
+Os ecrãs do protótipo anterior continuam disponíveis e sem alterações funcionais: separadores antigos em `/legacy`, fluxos `request/`, `transport/`, `order/`, área de parceiro em `/provider/*`, administração em `/admin` e o centro de demonstrações `/demo`. Os separadores antigos passaram de `/` para `/legacy` para libertar a raiz para o splash.
+
+| Área anterior | Rota | Dados mockados |
+| --- | --- | --- |
+| Cliente | `/phone` | `+244 912 345 678` · OTP `123456` |
+| Parceiro | `/provider/login` | `+244 923 456 789` · OTP `123456` |
 | Administração | `/admin/login` | `admin@levaja.ao` · OTP `123456` |
 
-O painel administrativo inclui dados paginados e pesquisáveis de pedidos, clientes, prestadores, pagamentos e alertas SOS. Todas as acções são demonstrações locais.
+O `/demo` mantém os cenários de apresentação anteriores (reboque a caminho, pedido novo, falha de pagamento, disputa). Documentação: [redesign de transportes](docs/transport-redesign.md) e [sistema visual anterior](docs/design-system.md).
 
-## Seed para apresentação
+## Limites conhecidos
 
-Abre a rota `/demo` para carregar cenários de demonstração sem editar dados manualmente. Cada cenário repõe uma cópia local dos pedidos e define o pedido activo para o fluxo correspondente:
-
-- Cliente com reboque a caminho;
-- Prestador com pedido novo ou já no local;
-- Falha de pagamento;
-- Pedido em disputa para operações e segurança.
-
-As mudanças de estado do prestador e do cliente usam a mesma store mockada, permitindo demonstrar o workflow ponta-a-ponta no mesmo runtime.
-
-## Identidade visual
-
-- Logótipo/símbolo: `assets/brand/leva-ja-mark.png`
-- Logótipos wordmark: `assets/brand/leva-ja-wordmark-light.svg` e `assets/brand/leva-ja-wordmark-dark.svg`
-- Ícone da aplicação: `assets/icons/app-icon.png`
-- Ícone Android adaptativo: `assets/icons/adaptive-icon.png`
-- Favicon web: `assets/icons/favicon.png`
-- Paleta: verde vivo `#34D186`, verde escuro `#087F4F`, quase-preto `#132A21` e branco `#FFFFFF`
-
-O [sistema visual](docs/design-system.md) documenta os componentes partilhados, estados de interacção e os fluxos de cliente e parceiro. As cores têm uma fonte comum em `src/theme/palette.json`.
-
-Os activos estão ligados em `app.json` para Android, iOS/web e splash screen.
-
-## Próxima fase
-
-Integrar backend, localização/GPS, mapa, disponibilidade de prestadores, chat, notificações e pagamentos.
+- Sem persistência: os dados mockados vivem em memória (Zustand).
+- `@shopify/flash-list` (usado só pelo protótipo anterior) está numa versão abaixo da recomendada pelo Expo 54.
+- A revisão visual foi feita no browser (Playwright, 390 × 844); as builds Android e iOS foram exportadas mas não testadas em dispositivo — ver [design-qa.md](design-qa.md).
