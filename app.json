@@ -8,7 +8,7 @@
     "splash": {
       "image": "./assets/brand/leva-ja-mark.png",
       "resizeMode": "contain",
-      "backgroundColor": "#132A21"
+      "backgroundColor": "#053420"
     },
     "web": {
       "favicon": "./assets/icons/favicon.png"
@@ -21,7 +21,8 @@
       "expo-secure-store",
       "expo-location",
       "expo-notifications",
-      "expo-font"
+      "expo-font",
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true

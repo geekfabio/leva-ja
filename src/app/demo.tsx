@@ -10,6 +10,7 @@ import { VehicleArt } from "@/components/transport/VehicleArt";
 import { useOrderStore } from "@/stores/useOrderStore";
 import { demoScenarios } from "@/mocks/demo";
 import { money } from "@/domain/catalog";
+import { useSessionStore } from "@/stores/useSessionStore";
 
 export default function DemoCenter() {
   const [audience, setAudience] = useState<"customer" | "provider">("customer");
@@ -28,8 +29,36 @@ export default function DemoCenter() {
           pedidos e pagamentos são simulados.
         </Text>
       </View>
+      <AppCard>
+        <Text className="text-lg font-bold text-ink dark:text-white">
+          Nova experiência (referências 01–46)
+        </Text>
+        <Text className="mb-4 mt-1 text-sm leading-6 text-muted">
+          Abre a app redesenhada a partir do splash, ou entra directamente numa
+          das áreas.
+        </Text>
+        <View className="gap-3">
+          <AppButton label="Abrir desde o splash" onPress={() => router.push("/" as never)} />
+          <AppButton
+            variant="ghost"
+            label="Entrar como cliente"
+            onPress={() => {
+              useSessionStore.setState({ hasOnboarded: true, authenticated: true, role: "client", locationGranted: true });
+              router.push("/home" as never);
+            }}
+          />
+          <AppButton
+            variant="ghost"
+            label="Entrar como prestador"
+            onPress={() => {
+              useSessionStore.setState({ hasOnboarded: true, authenticated: true, role: "provider", locationGranted: true });
+              router.push("/partner" as never);
+            }}
+          />
+        </View>
+      </AppCard>
       <Text className="mt-6 text-lg font-bold text-ink dark:text-white">
-        Escolhe o teu perfil
+        Protótipo anterior · escolhe o teu perfil
       </Text>
       <SelectionCard
         icon={<UserRound size={24} color="#087F4F" />}

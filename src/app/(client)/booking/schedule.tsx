@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { View } from "react-native";
 import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -46,7 +47,13 @@ export default function ScheduleStep() {
   const hero = (
     <View>
       <Image source={illustrations.movingHouse} style={{ position: "absolute", right: 0, top: 0, width: "62%", height: 260 }} contentFit="cover" accessibilityLabel="" />
-      <View style={{ position: "absolute", left: 0, top: 0, right: 0, height: 260, backgroundColor: "rgba(248,249,247,0.35)" }} />
+      <LinearGradient
+        colors={[colors.background, colors.background, "rgba(248,249,247,0.75)", "rgba(248,249,247,0)"]}
+        locations={[0, 0.38, 0.55, 0.8]}
+        start={{ x: 0, y: 0.5 }}
+        end={{ x: 1, y: 0.5 }}
+        style={{ position: "absolute", left: 0, top: 0, right: 0, height: 260 }}
+      />
       <SafeAreaView edges={["top"]} style={{ paddingHorizontal: 12, height: 260 }}>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
           <IconButton label="Voltar" icon={<ArrowLeft size={24} color={colors.ink} />} onPress={() => router.back()} />
@@ -54,8 +61,8 @@ export default function ScheduleStep() {
             {position.current} de {position.total}
           </AppText>
         </View>
-        <View style={{ paddingHorizontal: 8, gap: 6, maxWidth: "62%" }}>
-          <BrandLogo size="sm" tagline="Mudanças • Carga • Reboque" />
+        <View style={{ paddingHorizontal: 8, gap: 6, maxWidth: "58%" }}>
+          <BrandLogo size="sm" tagline={false} />
           <AppText variant="h1" accessibilityRole="header">
             Organiza a tua mudança
           </AppText>

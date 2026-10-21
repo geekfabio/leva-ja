@@ -49,7 +49,16 @@ export default function MatchingScreen() {
           <BrandLogo size="sm" />
         </View>
       }
-      footer={<SecondaryButton label="Cancelar pedido" onPress={() => setConfirm(true)} />}
+      footer={
+        proposal ? (
+          <>
+            <PrimaryButton label="Aceitar proposta" onPress={() => useServiceStore.getState().answerProposal(request.id, true)} trailingIcon={<ArrowRight size={22} color={colors.white} />} />
+            <SecondaryButton label="Recusar e procurar outro" onPress={() => useServiceStore.getState().answerProposal(request.id, false)} />
+          </>
+        ) : (
+          <SecondaryButton label="Cancelar pedido" onPress={() => setConfirm(true)} />
+        )
+      }
     >
       {proposal && proposer ? (
         <>
@@ -74,8 +83,6 @@ export default function MatchingScreen() {
               Estimativa inicial: {formatKz(request.price.total)}. O total inclui {formatKz(request.price.platformFee)} de taxa de plataforma.
             </AppText>
           </Card>
-          <PrimaryButton label="Aceitar proposta" onPress={() => useServiceStore.getState().answerProposal(request.id, true)} trailingIcon={<ArrowRight size={22} color={colors.white} />} />
-          <SecondaryButton label="Recusar e procurar outro" onPress={() => useServiceStore.getState().answerProposal(request.id, false)} />
         </>
       ) : (
         <>

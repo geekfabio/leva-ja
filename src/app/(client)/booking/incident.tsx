@@ -11,7 +11,7 @@ import { colors } from "@/theme/colors";
 function IncidentArt({ type }: { type: IncidentType }) {
   const main = { size: 44, color: colors.primary, strokeWidth: 1.8 };
   const badge = (node: React.ReactNode, bg: string = colors.card) => (
-    <View style={{ position: "absolute", right: -6, top: -6, width: 30, height: 30, borderRadius: 15, backgroundColor: bg, alignItems: "center", justifyContent: "center" }}>{node}</View>
+    <View style={{ position: "absolute", left: -6, top: -6, width: 30, height: 30, borderRadius: 15, backgroundColor: bg, alignItems: "center", justifyContent: "center" }}>{node}</View>
   );
   return (
     <IconCircle size={84}>

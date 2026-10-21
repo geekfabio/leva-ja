@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useBookingStore } from "@/stores/useBookingStore";
 import { go } from "@/features/navigation";
 import type { ServiceKind } from "@/types/domain";
@@ -12,6 +13,14 @@ export function startBooking(kind: ServiceKind, variant?: "goods") {
 /** Posição "x de y" do passo actual e navegação para o seguinte, conforme o serviço. */
 export function useBookingStep(step: BookingStep) {
   const kind = useBookingStore((s) => s.draft.kind);
+  // Ligação directa a um passo de outro serviço (ex.: /booking/incident com rascunho de carga):
+  // recomeça o rascunho com um serviço que inclua este passo.
+  const valid = bookingSteps[kind].includes(step);
+  useEffect(() => {
+    if (valid) return;
+    const fallback = (Object.keys(bookingSteps) as ServiceKind[]).find((k) => bookingSteps[k].includes(step));
+    if (fallback) useBookingStore.getState().start(fallback);
+  }, [valid, step]);
   return {
     kind,
     position: stepPosition(kind, step),
