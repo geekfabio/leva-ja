@@ -48,8 +48,10 @@ export function DocumentStatus({ document, onPress, selected }: { document: Prov
         <AppText variant="caption" color={colors.muted}>
           Válido até {formatDate(document.validUntil)}
         </AppText>
+        <View style={{ marginTop: 4 }}>
+          <StatusBadge label={state.label} tone={state.tone} icon={document.state === "verified" ? "check" : "alert"} />
+        </View>
       </View>
-      <StatusBadge label={state.label} tone={state.tone} icon={document.state === "verified" ? "check" : "alert"} />
       <ChevronRight size={20} color={colors.text} />
     </Pressable>
   );

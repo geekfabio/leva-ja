@@ -1,0 +1,68 @@
+import { View } from "react-native";
+import { ArrowLeftRight, ChevronRight, CircleHelp, FileText, MapPin, Settings, Star } from "lucide-react-native";
+import { AppText, Avatar, Card, ListRow, PlateTag, ScreenContainer, StatusBadge, VehicleImage } from "@/components/kit";
+import { avatarFor, currentProvider } from "@/mocks/people";
+import { useProviderStore } from "@/stores/useProviderStore";
+import { useSessionStore } from "@/stores/useSessionStore";
+import { formatRating } from "@/utils/format";
+import { enterApp, go } from "@/features/navigation";
+import { colors } from "@/theme/colors";
+
+/** 41 · Perfil profissional do prestador. */
+export default function ProviderProfile() {
+  const vehicle = useProviderStore((s) => s.vehicle);
+  const docsPending = useProviderStore((s) => s.documents.filter((d) => d.state !== "verified").length);
+  const icon = { size: 24, color: colors.primary };
+  return (
+    <ScreenContainer gap={12} contentStyle={{ paddingTop: 16 }}>
+      <AppText variant="display" accessibilityRole="header" style={{ fontSize: 34 }}>
+        Perfil
+      </AppText>
+      <Card style={{ flexDirection: "row", gap: 16, alignItems: "center" }}>
+        <Avatar name={currentProvider.name} initials={currentProvider.initials} photo={avatarFor[currentProvider.id]} size={96} verified />
+        <View style={{ flex: 1, gap: 6 }}>
+          <AppText variant="h2">{currentProvider.name}</AppText>
+          <StatusBadge label="Prestador verificado" tone="success" icon="check" />
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+            <Star size={18} color={colors.star} fill={colors.star} />
+            <AppText variant="label" weight="bold">
+              {formatRating(currentProvider.rating)}
+            </AppText>
+            <AppText variant="caption" color={colors.muted}>
+              · {currentProvider.reviewsCount} avaliações
+            </AppText>
+          </View>
+        </View>
+      </Card>
+      <Card onPress={() => go("/partner/vehicle")} accessibilityLabel={`A minha viatura: ${vehicle.brand} ${vehicle.model}, ${vehicle.plate}`} style={{ gap: 8 }}>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+          <AppText variant="h3">A minha viatura</AppText>
+          <ChevronRight size={22} color={colors.text} />
+        </View>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+          <VehicleImage art="pickup" width={170} height={104} />
+          <View style={{ gap: 2 }}>
+            <AppText variant="caption" color={colors.muted}>
+              {vehicle.brand}
+            </AppText>
+            <AppText variant="h2">{vehicle.model}</AppText>
+            <PlateTag plate={vehicle.plate} />
+          </View>
+        </View>
+      </Card>
+      <ListRow icon={<FileText {...icon} />} title="Documentos" subtitle={docsPending ? `${docsPending} por actualizar` : "Todos verificados"} onPress={() => go("/partner/documents")} />
+      <ListRow icon={<MapPin {...icon} />} title="Zonas e serviços" onPress={() => go("/partner/zones")} />
+      <ListRow icon={<Settings {...icon} />} title="Definições" onPress={() => go("/settings")} />
+      <ListRow icon={<CircleHelp {...icon} />} title="Ajuda e suporte" onPress={() => go("/help")} />
+      <ListRow
+        icon={<ArrowLeftRight {...icon} />}
+        title="Mudar para cliente"
+        subtitle="Abre a área de pedidos (demonstração)"
+        onPress={() => {
+          useSessionStore.getState().setRole("client");
+          enterApp("client");
+        }}
+      />
+    </ScreenContainer>
+  );
+}
