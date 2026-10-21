@@ -25,7 +25,7 @@ export default function ConfirmedScreen() {
       <AppButton
         label="Voltar ao início"
         variant="ghost"
-        onPress={() => router.replace("/")}
+        onPress={() => router.replace("/legacy")}
       />
     </ScreenLayout>
   );

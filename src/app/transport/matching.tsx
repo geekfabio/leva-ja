@@ -22,7 +22,7 @@ export default function TransportMatchingScreen() {
       </View>
       <View className="gap-3">
         <AppButton label="Ver transportador encontrado" onPress={() => router.replace('/order/LJ-3001')} />
-        <AppButton label="Cancelar pedido" variant="ghost" onPress={() => router.replace('/(tabs)')} />
+        <AppButton label="Cancelar pedido" variant="ghost" onPress={() => router.replace('/legacy')} />
       </View>
     </View>
   );

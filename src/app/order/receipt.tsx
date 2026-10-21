@@ -16,7 +16,7 @@ export default function ReceiptScreen() {
       action={
         <AppButton
           label="Ver os meus pedidos"
-          onPress={() => router.replace("/(tabs)/orders")}
+          onPress={() => router.replace("/legacy/orders")}
         />
       }
     >

@@ -1,0 +1,50 @@
+import { useEffect } from "react";
+import { View } from "react-native";
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+import Svg, { Path } from "react-native-svg";
+import { StatusBar } from "expo-status-bar";
+import { AppText, TowTruckIcon } from "@/components/kit";
+import { useSessionStore } from "@/stores/useSessionStore";
+import { swap, homeFor } from "@/features/navigation";
+import { colors } from "@/theme/colors";
+
+const DURATION = 1800;
+
+/** 01 · Splash: marca enquanto a sessão (mock) arranca. */
+export default function SplashScreen() {
+  const progress = useSharedValue(0);
+  useEffect(() => {
+    progress.value = withTiming(1, { duration: DURATION, easing: Easing.inOut(Easing.quad) });
+    const timer = setTimeout(() => {
+      const { hasOnboarded, authenticated, role } = useSessionStore.getState();
+      if (!hasOnboarded) swap("/intro");
+      else if (authenticated && role) swap(homeFor(role));
+      else swap("/profile-select");
+    }, DURATION + 150);
+    return () => clearTimeout(timer);
+  }, [progress]);
+  const bar = useAnimatedStyle(() => ({ width: `${progress.value * 100}%` }));
+
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.deeper, alignItems: "center", justifyContent: "center" }}>
+      <StatusBar style="light" />
+      <Svg style={{ position: "absolute", inset: 0 }} width="100%" height="100%" viewBox="0 0 400 860" preserveAspectRatio="xMidYMid slice">
+        <Path d="M420 60 C 250 160, 380 300, 260 420 S 60 640, 120 900" stroke="rgba(255,255,255,0.05)" strokeWidth={70} fill="none" />
+        <Path d="M420 60 C 250 160, 380 300, 260 420 S 60 640, 120 900" stroke="rgba(255,255,255,0.08)" strokeWidth={2} strokeDasharray="14 18" fill="none" />
+        <Path d="M-20 520 C 80 600, 40 760, 180 900" stroke="rgba(255,255,255,0.04)" strokeWidth={50} fill="none" />
+      </Svg>
+      <View accessible accessibilityLabel="Leva Já, reboque, carga e mudanças" style={{ alignItems: "center", gap: 6 }}>
+        <TowTruckIcon size={104} color={colors.white} strokeWidth={1.8} />
+        <AppText weight="extrabold" color={colors.white} style={{ fontSize: 48, lineHeight: 56, letterSpacing: 1 }}>
+          LEVA JÁ
+        </AppText>
+        <AppText variant="h3" weight="regular" color="#D3EFDF">
+          Reboque, carga e mudanças
+        </AppText>
+      </View>
+      <View style={{ position: "absolute", bottom: 72, width: 120, height: 4, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.18)", overflow: "hidden" }}>
+        <Animated.View style={[{ height: 4, backgroundColor: colors.accent, borderRadius: 2 }, bar]} />
+      </View>
+    </View>
+  );
+}

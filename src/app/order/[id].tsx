@@ -25,7 +25,7 @@ export default function OrderDetailScreen() {
           title="Pedido não encontrado"
           description="Consulta os teus pedidos para continuar."
           action="Ver pedidos"
-          onPress={() => router.replace("/(tabs)/orders")}
+          onPress={() => router.replace("/legacy/orders")}
         />
       </ScreenLayout>
     );
@@ -65,7 +65,7 @@ export default function OrderDetailScreen() {
           }
           action={cancelled ? "Voltar ao início" : "Consultar reclamação"}
           onPress={() =>
-            router.push(cancelled ? "/" : ("/order/complaint-status" as never))
+            router.push(cancelled ? "/legacy" : ("/order/complaint-status" as never))
           }
         />
       ) : (

@@ -32,7 +32,7 @@ export default function AddressScreen() {
           disabled={!valid}
           onPress={() => {
             update({ address: address.trim() });
-            router.replace("/(tabs)");
+            router.replace("/legacy");
           }}
         />
       </View>

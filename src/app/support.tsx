@@ -38,7 +38,7 @@ export default function SupportScreen() {
       <ListRow
         title="Preciso de ajuda com um pedido"
         description="Escolhe o pedido e consulta os contactos."
-        onPress={() => router.push("/(tabs)/orders")}
+        onPress={() => router.push("/legacy/orders")}
       />
       <ListRow
         title="Ajuda e segurança"

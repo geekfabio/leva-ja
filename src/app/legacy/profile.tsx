@@ -4,7 +4,7 @@ import { ScreenLayout } from "@/components/ui/ScreenLayout";
 import { ListRow } from "@/components/ui/ListRow";
 import { AppButton } from "@/components/ui/AppButton";
 const entries = [
-  ["Os meus pedidos", "Transportes, mudanças e assistência", "/(tabs)/orders"],
+  ["Os meus pedidos", "Transportes, mudanças e assistência", "/legacy/orders"],
   ["Moradas guardadas", "Locais de recolha e entrega", "/account/addresses"],
   ["Viaturas para assistência", "Dados dos teus veículos", "/account/vehicles"],
   ["Métodos de pagamento", "As tuas opções de pagamento", "/account/payments"],

@@ -2,20 +2,21 @@ import { Tabs } from "expo-router";
 import { CarFront, ClipboardList, UserRound } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { View, useColorScheme } from "react-native";
-const icon =
-  (Icon: typeof CarFront) =>
-  ({ color, focused }: { color: string; focused: boolean }) => (
-    <View
-      style={{
-        borderRadius: 24,
-        paddingHorizontal: 18,
-        paddingVertical: 3,
-        backgroundColor: focused ? "#E5F8EE" : "transparent",
-      }}
-    >
-      <Icon color={color} size={22} strokeWidth={2} />
-    </View>
-  );
+const icon = (Icon: typeof CarFront) =>
+  function TabIcon({ color, focused }: { color: string; focused: boolean }) {
+    return (
+      <View
+        style={{
+          borderRadius: 24,
+          paddingHorizontal: 18,
+          paddingVertical: 3,
+          backgroundColor: focused ? "#E5F8EE" : "transparent",
+        }}
+      >
+        <Icon color={color} size={22} strokeWidth={2} />
+      </View>
+    );
+  };
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
   const dark = useColorScheme() === "dark";

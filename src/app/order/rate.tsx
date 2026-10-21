@@ -20,7 +20,7 @@ export default function RateOrderScreen() {
           disabled={order.status !== "completed"}
           onPress={() => {
             patchOrder(order.id, { rating, review: note });
-            router.replace("/(tabs)/orders");
+            router.replace("/legacy/orders");
           }}
         />
       }

@@ -17,7 +17,7 @@ export default function MatchingScreen() {
           title="Não encontrámos este pedido"
           description="Volta ao início para criar um transporte."
           action="Voltar ao início"
-          onPress={() => router.replace("/")}
+          onPress={() => router.replace("/legacy")}
         />
       </ScreenLayout>
     );
@@ -59,7 +59,7 @@ export default function MatchingScreen() {
         variant="danger"
         onPress={() => {
           cancelOrder(order.id);
-          router.replace("/(tabs)/orders");
+          router.replace("/legacy/orders");
         }}
       />
     </ScreenLayout>
