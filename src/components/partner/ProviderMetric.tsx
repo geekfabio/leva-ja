@@ -14,7 +14,7 @@ export function ProviderMetric({ icon, label, value, onPress }: { icon: ReactNod
         <AppText variant="caption" color={colors.text}>
           {label}
         </AppText>
-        <AppText variant="h2" numberOfLines={1} adjustsFontSizeToFit>
+        <AppText variant="h3" style={{ fontSize: 19 }}>
           {value}
         </AppText>
       </View>

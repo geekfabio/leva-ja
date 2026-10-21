@@ -107,7 +107,7 @@ export function MockMapCanvas({ markers = [], route, zones = [], pulse, onZonePr
               />
             ) : null}
           </Svg>
-          {placeList
+          {(zones.length ? [] : placeList)
             .filter((p, i, all) => all.findIndex((o) => o.area === p.area) === i)
             .map((p) => {
               const q = project(p.coords.latitude, p.coords.longitude);
