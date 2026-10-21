@@ -1,3 +1,4 @@
+import { ReactNode } from "react";
 import { Dialog, Portal } from "react-native-paper";
 import { View } from "react-native";
 import { colors } from "@/theme/colors";
@@ -15,6 +16,7 @@ export function ConfirmDialog({
   loading,
   onConfirm,
   onCancel,
+  children,
 }: {
   visible: boolean;
   title: string;
@@ -25,6 +27,7 @@ export function ConfirmDialog({
   loading?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
+  children?: ReactNode;
 }) {
   const Confirm = destructive ? DangerButton : PrimaryButton;
   return (
@@ -37,6 +40,7 @@ export function ConfirmDialog({
           <AppText variant="body" color={colors.muted}>
             {message}
           </AppText>
+          {children}
         </Dialog.Content>
         <View style={{ paddingHorizontal: 24, paddingBottom: 20, gap: 4 }}>
           <Confirm label={confirmLabel} onPress={onConfirm} loading={loading} />

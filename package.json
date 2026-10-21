@@ -17,6 +17,8 @@
     "@expo/vector-icons": "^15.0.0",
     "@gorhom/bottom-sheet": "^5.1.8",
     "@hookform/resolvers": "^3.10.0",
+    "@react-navigation/bottom-tabs": "^7.21.0",
+    "@react-navigation/native": "^7.5.1",
     "@shopify/flash-list": "^1.7.3",
     "@tanstack/react-query": "^5.66.8",
     "axios": "^1.8.1",

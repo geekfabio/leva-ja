@@ -1,7 +1,23 @@
 import { View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ArrowLeftRight, CircleHelp, CreditCard, History, MapPin, Pencil, Settings } from "lucide-react-native";
-import { AppText, Avatar, Card, ListRow, ScreenContainer, SecondaryButton, VehicleImage } from "@/components/kit";
+import {
+  ArrowLeftRight,
+  CircleHelp,
+  CreditCard,
+  History,
+  MapPin,
+  Pencil,
+  Settings,
+} from "lucide-react-native";
+import {
+  AppText,
+  Avatar,
+  Card,
+  ListRow,
+  ScreenContainer,
+  SecondaryButton,
+  VehicleImage,
+} from "@/components/kit";
 import { avatarFor } from "@/mocks/people";
 import { useSessionStore } from "@/stores/useSessionStore";
 import { enterApp, go } from "@/features/navigation";
@@ -13,41 +29,103 @@ export default function AccountScreen() {
   const icon = { size: 24, color: colors.primary };
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <SafeAreaView edges={["top"]} style={{ backgroundColor: colors.primary, paddingHorizontal: 20, paddingBottom: 56, overflow: "hidden" }}>
-        <View style={{ position: "absolute", right: -10, bottom: -6, opacity: 0.35 }}>
-          <VehicleImage art="tow" width={180} height={110} label="" />
-        </View>
-        <AppText variant="h1" color={colors.white} accessibilityRole="header" style={{ marginTop: 18 }}>
-          O meu perfil
-        </AppText>
-      </SafeAreaView>
-      <ScreenContainer edges={[]} gap={12} contentStyle={{ marginTop: -44 }}>
-        <Card style={{ flexDirection: "row", alignItems: "center", gap: 16, padding: 18 }}>
-          <Avatar name={user.name} initials={user.initials} photo={avatarFor[user.id]} size={84} verified />
-          <View style={{ flex: 1, gap: 2 }}>
-            <AppText variant="h3">{user.name}</AppText>
-            <AppText variant="caption" color={colors.muted}>
-              {user.email}
-            </AppText>
-            <View style={{ alignSelf: "flex-start", marginTop: 8 }}>
-              <SecondaryButton tone="soft" size="sm" label="Editar perfil" icon={<Pencil size={16} color={colors.primary} />} onPress={() => go("/edit-profile")} />
-            </View>
-          </View>
-        </Card>
-        <ListRow icon={<History {...icon} />} title="Histórico de serviços" onPress={() => go("/trips")} />
-        <ListRow icon={<MapPin {...icon} />} title="Endereços guardados" onPress={() => go("/addresses")} />
-        <ListRow icon={<CreditCard {...icon} />} title="Métodos de pagamento" onPress={() => go("/payment-methods")} />
-        <ListRow icon={<Settings {...icon} />} title="Definições" onPress={() => go("/settings")} />
-        <ListRow icon={<CircleHelp {...icon} />} title="Ajuda e suporte" onPress={() => go("/help")} />
-        <ListRow
-          icon={<ArrowLeftRight {...icon} />}
-          title="Mudar para prestador"
-          subtitle="Abre a área profissional (demonstração)"
-          onPress={() => {
-            useSessionStore.getState().setRole("provider");
-            enterApp("provider");
+      <ScreenContainer edges={[]} gap={12} padded={false}>
+        <SafeAreaView
+          edges={["top"]}
+          style={{
+            backgroundColor: colors.primary,
+            paddingHorizontal: 20,
+            paddingBottom: 56,
+            overflow: "hidden",
+            marginBottom: -56,
           }}
-        />
+        >
+          <View
+            style={{
+              position: "absolute",
+              right: -10,
+              bottom: -6,
+              opacity: 0.35,
+            }}
+          >
+            <VehicleImage art="tow" width={180} height={110} label="" />
+          </View>
+          <AppText
+            variant="h1"
+            color={colors.white}
+            accessibilityRole="header"
+            style={{ marginTop: 18 }}
+          >
+            O meu perfil
+          </AppText>
+        </SafeAreaView>
+        <View style={{ paddingHorizontal: 20, gap: 12 }}>
+          <Card
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 16,
+              padding: 18,
+            }}
+          >
+            <Avatar
+              name={user.name}
+              initials={user.initials}
+              photo={avatarFor[user.id]}
+              size={84}
+              verified
+            />
+            <View style={{ flex: 1, gap: 2 }}>
+              <AppText variant="h3">{user.name}</AppText>
+              <AppText variant="caption" color={colors.muted}>
+                {user.email}
+              </AppText>
+              <View style={{ alignSelf: "flex-start", marginTop: 8 }}>
+                <SecondaryButton
+                  tone="soft"
+                  size="sm"
+                  label="Editar perfil"
+                  icon={<Pencil size={16} color={colors.primary} />}
+                  onPress={() => go("/edit-profile")}
+                />
+              </View>
+            </View>
+          </Card>
+          <ListRow
+            icon={<History {...icon} />}
+            title="Histórico de serviços"
+            onPress={() => go("/trips")}
+          />
+          <ListRow
+            icon={<MapPin {...icon} />}
+            title="Endereços guardados"
+            onPress={() => go("/addresses")}
+          />
+          <ListRow
+            icon={<CreditCard {...icon} />}
+            title="Métodos de pagamento"
+            onPress={() => go("/payment-methods")}
+          />
+          <ListRow
+            icon={<Settings {...icon} />}
+            title="Definições"
+            onPress={() => go("/settings")}
+          />
+          <ListRow
+            icon={<CircleHelp {...icon} />}
+            title="Ajuda e suporte"
+            onPress={() => go("/help")}
+          />
+          <ListRow
+            icon={<ArrowLeftRight {...icon} />}
+            title="Mudar para prestador"
+            subtitle="Abre a área profissional (demonstração)"
+            onPress={() => {
+              useSessionStore.getState().setRole("provider");
+              enterApp("provider");
+            }}
+          />
+        </View>
       </ScreenContainer>
     </View>
   );

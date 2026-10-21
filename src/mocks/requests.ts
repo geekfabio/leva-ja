@@ -106,7 +106,7 @@ const nearbyRequests: ServiceRequest[] = [
     kind: "house_move",
     origin: places.talatona,
     destination: places.benfica,
-    clientId: "cli-armando",
+    clientId: "cli-carlos",
     createdAt: daysAgo(0, "14:28"),
     moving: { propertyType: "t3", rooms: 3, items: "Mobília de sala, 3 quartos e cozinha", helpers: 2, pickupFloor: 3, deliveryFloor: 0, elevator: false, disassembly: true, when: "scheduled", date: daysAgo(-2, "10:00"), time: "10:00" },
     scheduledFor: daysAgo(-2, "10:00"),

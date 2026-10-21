@@ -63,3 +63,9 @@ export function regionFor(points: Coordinates[]) {
     longitudeDelta: b.maxLon - b.minLon,
   };
 }
+
+/** Ponto de partida simulado do prestador (~4 km da recolha) para a aproximação no mapa. */
+export const approachStart = (origin: Coordinates): Coordinates => ({
+  latitude: origin.latitude - 0.028,
+  longitude: origin.longitude + 0.026,
+});
