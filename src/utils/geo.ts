@@ -34,8 +34,19 @@ export function boundsOf(points: Coordinates[], paddingRatio = 0.25) {
   let maxLat = Math.max(...lats);
   let minLon = Math.min(...lons);
   let maxLon = Math.max(...lons);
-  const latSpan = Math.max(maxLat - minLat, 0.02);
-  const lonSpan = Math.max(maxLon - minLon, 0.02);
+  // Área mínima de ~7 km para o mapa nunca parecer vazio.
+  const latSpan = Math.max(maxLat - minLat, 0.06);
+  const lonSpan = Math.max(maxLon - minLon, 0.06);
+  if (maxLat - minLat < latSpan) {
+    const c = (maxLat + minLat) / 2;
+    minLat = c - latSpan / 2;
+    maxLat = c + latSpan / 2;
+  }
+  if (maxLon - minLon < lonSpan) {
+    const c = (maxLon + minLon) / 2;
+    minLon = c - lonSpan / 2;
+    maxLon = c + lonSpan / 2;
+  }
   minLat -= latSpan * paddingRatio;
   maxLat += latSpan * paddingRatio;
   minLon -= lonSpan * paddingRatio;

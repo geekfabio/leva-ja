@@ -54,7 +54,7 @@ export function AppHeader({
       )}
       <View style={{ flex: 1, alignItems: align === "center" ? "center" : "flex-start", paddingHorizontal: 4 }}>
         {brand ? (
-          <BrandLogo size="sm" inverse={inverse} />
+          <BrandLogo size="sm" inverse={inverse} tagline={step ? false : undefined} />
         ) : title ? (
           <AppText variant="h3" color={fg} accessibilityRole="header" numberOfLines={1}>
             {title}

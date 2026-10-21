@@ -72,7 +72,7 @@ export function ServiceTile({ service, onPress }: { service: ServiceDefinition; 
         <VehicleImage art={service.art} width={92} height={60} label={service.title} />
       </View>
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 4 }}>
-        <AppText variant="label" weight="bold" numberOfLines={1} style={{ flexShrink: 1 }}>
+        <AppText variant="caption" weight="bold" numberOfLines={2} style={{ flexShrink: 1 }}>
           {service.shortTitle}
         </AppText>
         <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: colors.primarySoft, alignItems: "center", justifyContent: "center" }}>
