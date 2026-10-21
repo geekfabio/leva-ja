@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
-import { Pressable, View, type StyleProp, type ViewStyle } from "react-native";
+import {View, type StyleProp, type ViewStyle} from "react-native";
 import { colors, radius, shadow } from "@/theme/colors";
+import { ScalePressable } from "./Motion";
 
 type Props = {
   children: ReactNode;
@@ -31,14 +32,14 @@ export function Card({ children, onPress, tone = "white", padding = 16, style, a
   if (!onPress)
     return <View style={[base, elevated ? shadow.card : null, style]}>{children}</View>;
   return (
-    <Pressable
+    <ScalePressable
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       onPress={onPress}
       style={({ pressed }) => [base, elevated ? shadow.card : null, { opacity: pressed ? 0.85 : 1 }, style]}
     >
       {children}
-    </Pressable>
+    </ScalePressable>
   );
 }
 

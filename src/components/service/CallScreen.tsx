@@ -9,6 +9,7 @@ import type { AvatarKey } from "@/mocks/assets";
 import { colors } from "@/theme/colors";
 import { AppText } from "@/components/core/AppText";
 import { Avatar } from "@/components/core/Avatar";
+import { PulseRings } from "@/components/map/PulseRings";
 
 function CallToggle({ label, active, onPress, icon }: { label: string; active: boolean; onPress: () => void; icon: React.ReactNode }) {
   return (
@@ -68,6 +69,7 @@ export function CallScreen({ name, subtitle, initials, photo, from, to }: { name
         </View>
         <View style={{ alignItems: "center", gap: 8 }} accessible accessibilityLabel={`${status} com ${name}${state === "connected" ? `, ${time}` : ""}`}>
           <View style={{ borderWidth: 4, borderColor: colors.accent, borderRadius: 110, padding: 4 }}>
+            {state === "calling" ? <PulseRings x={96} y={96} size={300} /> : null}
             <Avatar name={name} initials={initials} photo={photo} size={180} />
           </View>
           <AppText variant="h1" color={colors.white} style={{ marginTop: 12 }}>

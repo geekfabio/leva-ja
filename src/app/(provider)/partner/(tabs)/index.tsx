@@ -3,7 +3,7 @@ import { View } from "react-native";
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ChevronRight, LocateFixed, Navigation, Radio, SlidersHorizontal, Wallet } from "lucide-react-native";
-import { AppText, Avatar, Card, EmptyState, ErrorState, IconButton, IconCircle, LoadingState, MapPreview, OrderCard, PrimaryButton, SecondaryButton, VehicleImage, type MapMarker } from "@/components/kit";
+import { AppText, Avatar, Card, EmptyState, ErrorState, IconButton, IconCircle, LoadingState, MapPreview, OrderCard, PrimaryButton, SecondaryButton, VehicleImage, type MapMarker, Appear, AnimatedAmount } from "@/components/kit";
 import { AvailabilityToggle } from "@/components/partner/AvailabilityToggle";
 import { serviceTitle } from "@/features/booking/catalog";
 import { statusLabel } from "@/features/service/stateMachine";
@@ -87,9 +87,13 @@ export default function ProviderDashboard() {
               <AppText variant="caption" color="#D3EFDF">
                 Ganhos hoje
               </AppText>
-              <AppText variant="h2" color={colors.white} numberOfLines={1}>
-                {finance.data ? formatKz(finance.data.today) : "—"}
-              </AppText>
+              {finance.data ? (
+                <AnimatedAmount value={finance.data.today} variant="h2" color={colors.white} numberOfLines={1} />
+              ) : (
+                <AppText variant="h2" color={colors.white}>
+                  —
+                </AppText>
+              )}
               <AppText variant="caption" color="#D3EFDF">
                 {finance.data?.todayCount ?? 0} serviços concluídos
               </AppText>
@@ -109,7 +113,11 @@ export default function ProviderDashboard() {
           ) : nearby.isError ? (
             <ErrorState onRetry={nearby.refetch} />
           ) : list.length ? (
-            list.slice(0, 4).map(({ request, distanceKm }) => <OrderCard key={request.id} variant="row" request={request} distanceKm={distanceKm} onPress={() => go(`/partner/request/${request.id}`)} />)
+            list.slice(0, 4).map(({ request, distanceKm }, i) => (
+              <Appear key={request.id} index={i}>
+                <OrderCard variant="row" request={request} distanceKm={distanceKm} onPress={() => go(`/partner/request/${request.id}`)} />
+              </Appear>
+            ))
           ) : (
             <EmptyState title="Sem pedidos por perto" description="Vamos avisar-te quando surgir um pedido na tua zona." />
           )}

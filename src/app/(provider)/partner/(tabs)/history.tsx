@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { View } from "react-native";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { ChevronRight, MapPin, Star } from "lucide-react-native";
-import { AppText, Avatar, Card, DeliveryProofSummary, EmptyState, ErrorState, IconCircle, LoadingState, PriceSummary, RatingStars, RouteTimeline, ScreenContainer, SecondaryButton, SegmentedTabs, ServiceIcon, SheetModal, StatusBadge } from "@/components/kit";
+import { AppText, Avatar, Card, DeliveryProofSummary, EmptyState, ErrorState, IconCircle, LoadingState, PriceSummary, RatingStars, RouteTimeline, ScreenContainer, SecondaryButton, SegmentedTabs, ServiceIcon, SheetModal, StatusBadge, Appear } from "@/components/kit";
 import { ProviderHeader } from "@/components/partner/ProviderHeader";
 import { serviceTitle } from "@/features/booking/catalog";
 import { avatarFor, currentProvider, findClient } from "@/mocks/people";
@@ -62,10 +62,11 @@ export default function ProviderHistory() {
         ) : isError ? (
           <ErrorState onRetry={refetch} />
         ) : list.length ? (
-          list.map((r) => {
+          list.map((r, i) => {
             const client = findClient(r.clientId);
             return (
-              <Card key={r.id} style={{ gap: 12 }}>
+              <Appear key={`${tab}-${r.id}`} index={i}>
+              <Card style={{ gap: 12 }}>
                 <View style={{ flexDirection: "row", gap: 12, alignItems: "center" }}>
                   <IconCircle size={52} shape="rounded">
                     <ServiceIcon kind={r.kind} size={26} color={colors.ink} />
@@ -103,6 +104,7 @@ export default function ProviderHistory() {
                 </View>
                 <SecondaryButton size="md" label="Ver detalhes" trailingIcon={<ChevronRight size={18} color={colors.primary} />} onPress={() => open(r)} />
               </Card>
+              </Appear>
             );
           })
         ) : (

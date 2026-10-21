@@ -3,7 +3,9 @@ import { Pressable, View } from "react-native";
 import { Switch } from "react-native-paper";
 import { Check, Minus, Plus, Star } from "lucide-react-native";
 import { colors, radius } from "@/theme/colors";
+import Animated from "react-native-reanimated";
 import { AppText } from "./AppText";
+import { useBump } from "./Motion";
 
 /** Contador − 3 + (ref. 16: pisos, ajudantes, divisões). */
 export function Stepper({
@@ -21,6 +23,7 @@ export function Stepper({
   label: string;
   format?: (value: number) => string;
 }) {
+  const bump = useBump(value);
   const button = (kind: "dec" | "inc") => {
     const disabled = kind === "dec" ? value <= min : value >= max;
     return (
@@ -58,15 +61,11 @@ export function Stepper({
       }}
     >
       {button("dec")}
-      <AppText
-        variant="h3"
-        align="center"
-        style={{ flex: 1 }}
-        accessibilityLiveRegion="polite"
-        accessibilityLabel={`${label}: ${format(value)}`}
-      >
-        {format(value)}
-      </AppText>
+      <Animated.View style={[{ flex: 1 }, bump]}>
+        <AppText variant="h3" align="center" accessibilityLiveRegion="polite" accessibilityLabel={`${label}: ${format(value)}`}>
+          {format(value)}
+        </AppText>
+      </Animated.View>
       {button("inc")}
     </View>
   );

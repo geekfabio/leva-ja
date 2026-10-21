@@ -1,4 +1,4 @@
-import { Pressable, View } from "react-native";
+import {View} from "react-native";
 import { ArrowRight, ChevronRight } from "lucide-react-native";
 import type { ServiceDefinition } from "@/features/booking/catalog";
 import { serviceShortTitle, serviceTitle } from "@/features/booking/catalog";
@@ -10,11 +10,12 @@ import { IconCircle } from "@/components/core/Card";
 import { ServiceIcon } from "./ServiceIcon";
 import { StatusBadge } from "./StatusBadge";
 import { VehicleImage } from "./Media";
+import { ScalePressable } from "@/components/core/Motion";
 
 /** Linha do catálogo "O que precisas transportar?" (ref. 12). */
 export function ServiceCatalogCard({ service, onPress }: { service: ServiceDefinition; onPress: () => void }) {
   return (
-    <Pressable
+    <ScalePressable
       accessibilityRole="button"
       accessibilityLabel={`${service.title}. ${service.description}`}
       onPress={onPress}
@@ -43,14 +44,14 @@ export function ServiceCatalogCard({ service, onPress }: { service: ServiceDefin
         </AppText>
       </View>
       <ChevronRight size={22} color={colors.text} />
-    </Pressable>
+    </ScalePressable>
   );
 }
 
 /** Mosaico com ilustração 3D no início do cliente (ref. 11). */
 export function ServiceTile({ service, onPress }: { service: ServiceDefinition; onPress: () => void }) {
   return (
-    <Pressable
+    <ScalePressable
       accessibilityRole="button"
       accessibilityLabel={service.title}
       onPress={onPress}
@@ -79,14 +80,14 @@ export function ServiceTile({ service, onPress }: { service: ServiceDefinition; 
           <ChevronRight size={14} color={colors.primary} strokeWidth={3} />
         </View>
       </View>
-    </Pressable>
+    </ScalePressable>
   );
 }
 
 /** Serviço recente ou do histórico (ref. 11 "Serviços recentes"). */
 export function ServiceCard({ request, onPress, compact }: { request: ServiceRequest; onPress?: () => void; compact?: boolean }) {
   return (
-    <Pressable
+    <ScalePressable
       accessibilityRole="button"
       accessibilityLabel={`${serviceTitle[request.kind]}, ${request.origin.area} para ${request.destination.area}`}
       onPress={onPress}
@@ -125,6 +126,6 @@ export function ServiceCard({ request, onPress, compact }: { request: ServiceReq
       </View>
       <StatusBadge status={request.status} />
       {onPress ? <ChevronRight size={20} color={colors.text} /> : null}
-    </Pressable>
+    </ScalePressable>
   );
 }

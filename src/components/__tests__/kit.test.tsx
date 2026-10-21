@@ -1,6 +1,8 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
-import { PrimaryButton, SelectionCard, Stepper, StatusBadge } from "@/components/kit";
+import { StyleSheet } from "react-native";
+import { AnimatedAmount, PrimaryButton, ScalePressable, SelectionCard, Stepper, StatusBadge } from "@/components/kit";
+import { useAccountStore } from "@/stores/useAccountStore";
 import LoginScreen from "@/app/(auth)/login";
 import IncidentStep from "@/app/(client)/booking/incident";
 import { useBookingStore } from "@/stores/useBookingStore";
@@ -66,4 +68,27 @@ test("o reboque começa pelo incidente e avança para a viatura", () => {
   expect(screen.getByLabelText("Passo 1 de 4")).toBeTruthy();
   fireEvent.press(screen.getByRole("button", { name: "Continuar" }));
   expect(router.push).toHaveBeenCalledWith("/booking/vehicle");
+});
+
+test("ScalePressable mantém o layout no invólucro e continua a responder ao toque", () => {
+  const onPress = jest.fn();
+  render(
+    <ScalePressable accessibilityRole="button" accessibilityLabel="Cartão" onPress={onPress} style={{ width: "50%", flex: 1, padding: 12, backgroundColor: "red" }}>
+      <></>
+    </ScalePressable>,
+  );
+  const button = screen.getByRole("button", { name: "Cartão" });
+  const inner = StyleSheet.flatten(button.props.style);
+  expect(inner.width).toBeUndefined();
+  expect(inner.padding).toBe(12);
+  expect(inner.flex).toBe(1);
+  fireEvent.press(button);
+  expect(onPress).toHaveBeenCalled();
+});
+
+test("Reduzir movimento mostra os valores finais de imediato", () => {
+  useAccountStore.getState().setPreferences((p) => ({ ...p, accessibility: { ...p.accessibility, reduceMotion: true } }));
+  render(<AnimatedAmount value={12500} />);
+  expect(screen.getByText("12 500 Kz")).toBeTruthy();
+  useAccountStore.getState().setPreferences((p) => ({ ...p, accessibility: { ...p.accessibility, reduceMotion: false } }));
 });

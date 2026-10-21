@@ -1,7 +1,8 @@
-import { Pressable, View } from "react-native";
+import {View} from "react-native";
 import { MessageCircle, Phone, Share2 } from "lucide-react-native";
 import { colors, radius } from "@/theme/colors";
 import { AppText } from "@/components/core/AppText";
+import { ScalePressable } from "@/components/core/Motion";
 
 type Props = {
   onChat: () => void;
@@ -22,7 +23,7 @@ export function ContactActions({ onChat, onCall, onShare, variant = "row", unrea
     return (
       <View style={{ flexDirection: "row", gap: 14 }}>
         {actions.map(({ key, label, Icon, onPress }) => (
-          <Pressable key={key} accessibilityRole="button" accessibilityLabel={label} onPress={onPress} hitSlop={6} style={{ alignItems: "center", gap: 4 }}>
+          <ScalePressable key={key} accessibilityRole="button" accessibilityLabel={label} onPress={onPress} hitSlop={6} style={{ alignItems: "center", gap: 4 }}>
             {({ pressed }) => (
               <>
                 <View style={{ width: 46, height: 46, borderRadius: 23, backgroundColor: pressed ? colors.primaryTint : colors.primarySoft, alignItems: "center", justifyContent: "center" }}>
@@ -32,14 +33,14 @@ export function ContactActions({ onChat, onCall, onShare, variant = "row", unrea
                 <AppText variant="tiny">{label}</AppText>
               </>
             )}
-          </Pressable>
+          </ScalePressable>
         ))}
       </View>
     );
   return (
     <View style={{ flexDirection: "row", gap: 10 }}>
       {actions.map(({ key, label, Icon, onPress }) => (
-        <Pressable
+        <ScalePressable
           key={key}
           accessibilityRole="button"
           accessibilityLabel={label}
@@ -60,7 +61,7 @@ export function ContactActions({ onChat, onCall, onShare, variant = "row", unrea
             {label}
           </AppText>
           {key === "chat" && unread ? <Badge count={unread} /> : null}
-        </Pressable>
+        </ScalePressable>
       ))}
     </View>
   );

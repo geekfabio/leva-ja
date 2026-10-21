@@ -1,6 +1,7 @@
-import { Pressable, View } from "react-native";
+import {View} from "react-native";
 import { colors, radius } from "@/theme/colors";
 import { AppText } from "./AppText";
+import { ScalePressable } from "./Motion";
 
 type Option<T extends string> = { value: T; label: string; dot?: boolean };
 
@@ -32,7 +33,7 @@ export function SegmentedTabs<T extends string>({
       {options.map((option) => {
         const active = option.value === value;
         return (
-          <Pressable
+          <ScalePressable
             key={option.value}
             accessibilityRole="tab"
             accessibilityState={{ selected: active }}
@@ -55,7 +56,7 @@ export function SegmentedTabs<T extends string>({
               {option.label}
             </AppText>
             {option.dot ? <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: active ? colors.white : colors.accent }} /> : null}
-          </Pressable>
+          </ScalePressable>
         );
       })}
     </View>

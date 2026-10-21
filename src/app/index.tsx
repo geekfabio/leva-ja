@@ -3,7 +3,7 @@ import { View } from "react-native";
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import Svg, { Path } from "react-native-svg";
 import { StatusBar } from "expo-status-bar";
-import { AppText, TowTruckIcon } from "@/components/kit";
+import { Appear, AppText, TowTruckIcon } from "@/components/kit";
 import { useSessionStore } from "@/stores/useSessionStore";
 import { swap, homeFor } from "@/features/navigation";
 import { colors } from "@/theme/colors";
@@ -34,13 +34,19 @@ export default function SplashScreen() {
         <Path d="M-20 520 C 80 600, 40 760, 180 900" stroke="rgba(255,255,255,0.04)" strokeWidth={50} fill="none" />
       </Svg>
       <View accessible accessibilityLabel="Leva Já, reboque, carga e mudanças" style={{ alignItems: "center", gap: 6 }}>
-        <TowTruckIcon size={104} color={colors.white} strokeWidth={1.8} />
-        <AppText weight="extrabold" color={colors.white} style={{ fontSize: 48, lineHeight: 56, letterSpacing: 1 }}>
-          LEVA JÁ
-        </AppText>
-        <AppText variant="h3" weight="regular" color="#D3EFDF">
-          Reboque, carga e mudanças
-        </AppText>
+        <Appear from="pop">
+          <TowTruckIcon size={104} color={colors.white} strokeWidth={1.8} />
+        </Appear>
+        <Appear delay={180}>
+          <AppText weight="extrabold" color={colors.white} style={{ fontSize: 48, lineHeight: 56, letterSpacing: 1 }}>
+            LEVA JÁ
+          </AppText>
+        </Appear>
+        <Appear delay={320} from="fade">
+          <AppText variant="h3" weight="regular" color="#D3EFDF">
+            Reboque, carga e mudanças
+          </AppText>
+        </Appear>
       </View>
       <View style={{ position: "absolute", bottom: 72, width: 120, height: 4, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.18)", overflow: "hidden" }}>
         <Animated.View style={[{ height: 4, backgroundColor: colors.accent, borderRadius: 2 }, bar]} />

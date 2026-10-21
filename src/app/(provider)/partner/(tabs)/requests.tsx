@@ -3,7 +3,7 @@ import { View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { Bell, Settings, SlidersHorizontal } from "lucide-react-native";
-import { AppText, BrandLogo, ChoiceChip, EmptyState, ErrorState, IconButton, LoadingState, OrderCard, PrimaryButton, ScreenContainer, SegmentedTabs, SheetModal, SelectionCard, ServiceIcon } from "@/components/kit";
+import { AppText, BrandLogo, ChoiceChip, EmptyState, ErrorState, IconButton, LoadingState, OrderCard, PrimaryButton, ScreenContainer, SegmentedTabs, SheetModal, SelectionCard, ServiceIcon, Appear } from "@/components/kit";
 import { AvailabilityToggle } from "@/components/partner/AvailabilityToggle";
 import { notifyProvider, ProviderSummaryCard } from "@/components/partner/ProviderHeader";
 import { serviceTitle } from "@/features/booking/catalog";
@@ -72,14 +72,15 @@ export default function ProviderRequests() {
         ) : !online && tab !== "ongoing" && !current.length ? (
           <EmptyState title="Estás indisponível" description="Fica disponível para ver pedidos novos." actionLabel="Ficar disponível" onAction={() => useProviderStore.getState().setOnline(true)} />
         ) : list.length ? (
-          list.map(({ request, distanceKm }) => (
+          list.map(({ request, distanceKm }, i) => (
+            <Appear key={`${tab}-${request.id}`} index={i}>
             <OrderCard
-              key={request.id}
               request={request}
               distanceKm={distanceKm}
               onPress={() => open(request)}
               badge={request.status === "searching" && request.proposal?.status !== "sent" ? undefined : { label: request.proposal?.status === "sent" && request.status === "searching" ? "Proposta enviada" : statusLabel[request.status], tone: "info" }}
             />
+            </Appear>
           ))
         ) : (
           <EmptyState title={tab === "ongoing" ? "Sem serviços em curso" : "Sem pedidos com estes filtros"} description={tab === "ongoing" ? "Aceita um pedido novo para começar." : "Alarga a distância ou os tipos de serviço."} />

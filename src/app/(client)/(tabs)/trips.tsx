@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { View } from "react-native";
 import { Truck } from "lucide-react-native";
-import { AppHeader, AppText, EmptyState, ErrorState, LoadingState, ScreenContainer, SegmentedTabs, ServiceCard } from "@/components/kit";
+import { AppHeader, AppText, EmptyState, ErrorState, LoadingState, ScreenContainer, SegmentedTabs, ServiceCard, Appear } from "@/components/kit";
 import { clientScreenFor, isActiveStatus } from "@/features/service/stateMachine";
 import { useClientRequests } from "@/services/queries";
 import { useServiceStore } from "@/stores/useServiceStore";
@@ -43,8 +43,10 @@ export default function TripsScreen() {
         <ErrorState onRetry={refetch} />
       ) : list.length ? (
         <View style={{ gap: 10 }}>
-          {list.map((r) => (
-            <ServiceCard key={r.id} request={r} onPress={() => open(r)} />
+          {list.map((r, i) => (
+            <Appear key={`${filter}-${r.id}`} index={i}>
+              <ServiceCard request={r} onPress={() => open(r)} />
+            </Appear>
           ))}
           <AppText variant="caption" align="center" style={{ opacity: 0.6 }}>
             {list.length} {list.length === 1 ? "serviço" : "serviços"}

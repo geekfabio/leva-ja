@@ -3,7 +3,7 @@ import { Pressable, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { ChevronDown, MapPin } from "lucide-react-native";
-import { AppText, BrandLogo, ListRow, ScreenContainer, ServiceCatalogCard, SheetModal, StatusBadge } from "@/components/kit";
+import { AppText, BrandLogo, ListRow, ScreenContainer, ServiceCatalogCard, SheetModal, StatusBadge, Appear } from "@/components/kit";
 import { serviceCatalog } from "@/features/booking/catalog";
 import { startBooking } from "@/features/booking/useBookingFlow";
 import { colors } from "@/theme/colors";
@@ -37,8 +37,10 @@ export default function ServicesScreen() {
         <AppText variant="display" accessibilityRole="header" style={{ marginBottom: 10 }}>
           O que precisas{"\n"}transportar?
         </AppText>
-        {serviceCatalog.map((service) => (
-          <ServiceCatalogCard key={service.title} service={service} onPress={() => startBooking(service.kind, service.variant)} />
+        {serviceCatalog.map((service, i) => (
+          <Appear key={service.title} index={i}>
+            <ServiceCatalogCard service={service} onPress={() => startBooking(service.kind, service.variant)} />
+          </Appear>
         ))}
       </ScreenContainer>
       <SheetModal ref={citySheet} title="Onde precisas do serviço?">

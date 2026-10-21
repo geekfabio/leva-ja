@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { Pressable, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { ArrowLeft, BadgeCheck, ChevronRight, Coins, MapPin, Package, Users } from "lucide-react-native";
-import { AppHeader, AppText, CountdownRing, DangerButton, EmptyState, IconButton, IconCircle, InfoNote, PhotoTile, PrimaryButton, ScreenContainer, ServiceIcon, VehicleImage } from "@/components/kit";
+import { AppHeader, AppText, CountdownRing, DangerButton, EmptyState, IconButton, IconCircle, InfoNote, PhotoTile, PrimaryButton, ScreenContainer, ServiceIcon, VehicleImage, AnimatedAmount } from "@/components/kit";
 import { MapSheetLayout } from "@/components/service/MapSheetLayout";
 import { serviceTitle } from "@/features/booking/catalog";
 import { describeLoad } from "@/features/booking/factory";
@@ -151,9 +151,7 @@ export default function NewRequestScreen() {
         <Coins size={30} color={colors.ink} />
         <View>
           <AppText variant="caption">{proposal ? "Valor sugerido (podes ajustar)" : "Estimativa de ganho"}</AppText>
-          <AppText weight="extrabold" style={{ fontSize: 32, lineHeight: 38 }}>
-            {formatKz(request.providerEarning)}
-          </AppText>
+<AnimatedAmount value={request.providerEarning} weight="extrabold" style={{ fontSize: 32, lineHeight: 38 }} />
         </View>
       </View>
     </MapSheetLayout>

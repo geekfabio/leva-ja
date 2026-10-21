@@ -1,4 +1,4 @@
-import { Pressable, View } from "react-native";
+import {View} from "react-native";
 import { ArrowRight, BadgeCheck, ChevronRight, Clock3, MapPin, Route, Star } from "lucide-react-native";
 import type { Client, Place, Provider } from "@/types/domain";
 import { avatarFor } from "@/mocks/people";
@@ -7,6 +7,7 @@ import { colors, radius } from "@/theme/colors";
 import { AppText } from "@/components/core/AppText";
 import { Avatar } from "@/components/core/Avatar";
 import { VehicleImage } from "./Media";
+import { ScalePressable } from "@/components/core/Motion";
 
 const artFor = (provider: Provider) =>
   ({ pickup: "pickup", tow_truck: "tow", van: "van", truck: "box" } as const)[provider.vehicle.vehicleClass];
@@ -51,9 +52,9 @@ export function ProviderCard({
   );
   if (!onPress) return body;
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={`${provider.name}, ver detalhes`} onPress={onPress} style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}>
+    <ScalePressable accessibilityRole="button" accessibilityLabel={`${provider.name}, ver detalhes`} onPress={onPress} style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}>
       {body}
-    </Pressable>
+    </ScalePressable>
   );
 }
 

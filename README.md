@@ -140,6 +140,18 @@ A estimativa (`features/booking/pricing.ts`) soma base, distância e extras, arr
 
 `MapPreview` usa `react-native-maps` no Android e iOS, com marcadores, trajecto simulado e zonas mockadas. Na web, nos testes ou com `EXPO_PUBLIC_MOCK_MAP=1` usa um mapa ilustrativo em SVG, sem rede. No Android, uma build de produção precisa de uma chave Google Maps (`android.config.googleMaps.apiKey` no `app.json`); sem ela os marcadores aparecem sobre um fundo vazio — usa `EXPO_PUBLIC_MOCK_MAP=1` nesse caso.
 
+## Animações
+
+Primitivas em `src/components/core/Motion.tsx` (Reanimated 4), com durações e molas partilhadas (`motion`):
+
+- **Entradas:** `Appear` faz deslizar e aparecer blocos e itens de lista em sequência (passos do pedido, folhas do acompanhamento, listas de serviços, pedidos, transacções, documentos, perfil e ajuda).
+- **Toque:** `ScalePressable` encolhe ligeiramente botões, cartões, opções e ícones ao toque.
+- **Valores:** `AnimatedAmount` conta até ao valor (estimativa, total a pagar, ganho, saldo); `useBump` faz saltar contadores (pisos, ajudantes, segundos finais).
+- **Progresso:** barras "x de y" e linha temporal do serviço preenchem-se; o passo activo pulsa; os pontos do onboarding alargam-se em pílula; o separador activo entra com mola.
+- **Mapa e estados:** ondas de radar na procura (também sobre o mapa nativo), viatura a deslizar no mapa ilustrativo, anel de contagem contínuo, visto de sucesso com raios, anel a pulsar na chamada, bolhas do chat e indicador "a escrever…", transição suave entre ecrãs do acompanhamento.
+
+Todas respeitam «reduzir movimento» do sistema e a opção em Definições → Acessibilidade: nesses casos os valores finais aparecem de imediato.
+
 ## Acessibilidade e responsividade
 
 - Texto em Plus Jakarta Sans por família de peso, com escala do sistema limitada a 1,6×.

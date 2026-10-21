@@ -1,7 +1,8 @@
 import { ReactNode } from "react";
-import { ActivityIndicator, Pressable, View, type StyleProp, type ViewStyle } from "react-native";
+import {ActivityIndicator, View, type StyleProp, type ViewStyle} from "react-native";
 import { colors, radius } from "@/theme/colors";
 import { AppText } from "./AppText";
+import { ScalePressable } from "./Motion";
 
 type Variant = "primary" | "secondary" | "outline" | "danger" | "dangerOutline" | "ghost";
 
@@ -46,7 +47,7 @@ function BaseButton({
   const tone = palette[variant];
   const blocked = disabled || loading;
   return (
-    <Pressable
+    <ScalePressable
       testID={testID}
       accessibilityRole="button"
       accessibilityLabel={label}
@@ -87,7 +88,7 @@ function BaseButton({
           {trailingIcon}
         </View>
       ) : null}
-    </Pressable>
+    </ScalePressable>
   );
 }
 

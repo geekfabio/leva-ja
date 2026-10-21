@@ -1,13 +1,37 @@
 import { useEffect, useMemo, useState } from "react";
 import { Pressable, View } from "react-native";
 import Svg, { Circle, Path, Polyline, Rect } from "react-native-svg";
-import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withTiming, Easing } from "react-native-reanimated";
+import Animated, { useAnimatedStyle, useSharedValue, withTiming, Easing, ZoomIn } from "react-native-reanimated";
+import { useMotionEnabled } from "@/components/core/Motion";
+import { PulseRings } from "./PulseRings";
+
 import { placeList } from "@/mocks/places";
 import { boundsOf, mockRoute } from "@/utils/geo";
 import { colors } from "@/theme/colors";
 import { AppText } from "@/components/core/AppText";
 import { MarkerView } from "./MarkerView";
 import type { MapPreviewProps } from "./types";
+
+/**
+ * Marcador posicionado no mapa. A viatura desliza entre actualizações em vez de
+ * saltar; os restantes marcadores entram com um pequeno "pop".
+ */
+function PositionedMarker({ x, y, glide, children }: { x: number; y: number; glide: boolean; children: React.ReactNode }) {
+  const enabled = useMotionEnabled();
+  const left = useSharedValue(x);
+  const top = useSharedValue(y);
+  useEffect(() => {
+    const animate = enabled && glide;
+    left.value = animate ? withTiming(x, { duration: 950, easing: Easing.linear }) : x;
+    top.value = animate ? withTiming(y, { duration: 950, easing: Easing.linear }) : y;
+  }, [x, y, glide, enabled, left, top]);
+  const style = useAnimatedStyle(() => ({ left: left.value, top: top.value }));
+  return (
+    <Animated.View pointerEvents="none" entering={enabled ? ZoomIn.duration(260) : undefined} style={[{ position: "absolute", minWidth: 44, alignItems: "flex-start" }, style]}>
+      {children}
+    </Animated.View>
+  );
+}
 
 const KM_PER_DEG = 111;
 
@@ -54,11 +78,6 @@ export function MockMapCanvas({ markers = [], route, zones = [], pulse, onZonePr
   ].map(([lat, lon]) => project(lat!, lon!));
   const sea = `M ${coast.map((p) => `${p.x} ${p.y}`).join(" L ")} L -2000 ${size.height + 2000} L -2000 -2000 L ${coast[0]!.x + 2000} -2000 Z`;
 
-  const pulseScale = useSharedValue(0.6);
-  useEffect(() => {
-    pulseScale.value = withRepeat(withTiming(1.4, { duration: 1600, easing: Easing.out(Easing.quad) }), -1, false);
-  }, [pulseScale]);
-  const pulseStyle = useAnimatedStyle(() => ({ transform: [{ scale: pulseScale.value }], opacity: 1.4 - pulseScale.value }));
   const pulseCenter = pulse ? markers.find((m) => m.kind === "origin" || m.kind === "user") : undefined;
 
   return (
@@ -139,36 +158,16 @@ export function MockMapCanvas({ markers = [], route, zones = [], pulse, onZonePr
               </Pressable>
             );
           })}
-          {pulseCenter ? (
-            <Animated.View
-              pointerEvents="none"
-              style={[
-                {
-                  position: "absolute",
-                  width: 160,
-                  height: 160,
-                  borderRadius: 80,
-                  backgroundColor: "rgba(18,161,80,0.22)",
-                  left: project(pulseCenter.coords.latitude, pulseCenter.coords.longitude).x - 80,
-                  top: project(pulseCenter.coords.latitude, pulseCenter.coords.longitude).y - 80,
-                },
-                pulseStyle,
-              ]}
-            />
-          ) : null}
+          {pulseCenter ? <PulseRings x={project(pulseCenter.coords.latitude, pulseCenter.coords.longitude).x} y={project(pulseCenter.coords.latitude, pulseCenter.coords.longitude).y} /> : null}
           {markers.map((marker) => {
             const q = project(marker.coords.latitude, marker.coords.longitude);
             const anchorBottom = marker.kind === "destination";
             return (
-              <View
-                key={marker.id}
-                pointerEvents="none"
-                style={{ position: "absolute", left: q.x - 22, top: anchorBottom ? q.y - 34 : q.y - 22, minWidth: 44, alignItems: "flex-start" }}
-              >
+              <PositionedMarker key={marker.id} x={q.x - 22} y={anchorBottom ? q.y - 34 : q.y - 22} glide={marker.kind === "vehicle"}>
                 <View style={{ marginLeft: marker.kind === "destination" ? 5 : marker.kind === "origin" || marker.kind === "stop" ? 11 : 0 }}>
                   <MarkerView marker={marker} />
                 </View>
-              </View>
+              </PositionedMarker>
             );
           })}
         </>

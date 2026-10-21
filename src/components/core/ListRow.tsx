@@ -1,9 +1,10 @@
 import { ReactNode } from "react";
-import { Pressable, View } from "react-native";
+import {View} from "react-native";
 import { ChevronRight } from "lucide-react-native";
 import { colors, radius, shadow } from "@/theme/colors";
 import { AppText } from "./AppText";
 import { IconCircle } from "./Card";
+import { ScalePressable } from "./Motion";
 
 type Props = {
   title: string;
@@ -89,9 +90,9 @@ export function ListRow({
   );
   if (!onPress) return content(false);
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={subtitle ? `${title}. ${subtitle}` : title} accessibilityHint={accessibilityHint} onPress={onPress}>
+    <ScalePressable accessibilityRole="button" accessibilityLabel={subtitle ? `${title}. ${subtitle}` : title} accessibilityHint={accessibilityHint} onPress={onPress}>
       {({ pressed }) => content(pressed)}
-    </Pressable>
+    </ScalePressable>
   );
 }
 
@@ -111,11 +112,11 @@ export function SectionHeader({ title, action, onAction }: { title: string; acti
         {title}
       </AppText>
       {action && onAction ? (
-        <Pressable accessibilityRole="button" onPress={onAction} hitSlop={10}>
+        <ScalePressable accessibilityRole="button" onPress={onAction} hitSlop={10}>
           <AppText variant="label" weight="bold" color={colors.primary}>
             {action}
           </AppText>
-        </Pressable>
+        </ScalePressable>
       ) : null}
     </View>
   );

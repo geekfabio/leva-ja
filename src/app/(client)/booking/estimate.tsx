@@ -3,22 +3,7 @@ import { Pressable, View } from "react-native";
 import { useMutation } from "@tanstack/react-query";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { ArrowRight, Info, Package, ShieldCheck, UserRound } from "lucide-react-native";
-import {
-  AppHeader,
-  AppText,
-  BrandLogo,
-  Card,
-  Divider,
-  ErrorState,
-  InfoNote,
-  MapPreview,
-  PriceSummary,
-  PrimaryButton,
-  RouteSummary,
-  ScreenContainer,
-  SheetModal,
-  VehicleImage,
-} from "@/components/kit";
+import { AppHeader, AppText, BrandLogo, Card, Divider, ErrorState, InfoNote, MapPreview, PriceSummary, PrimaryButton, RouteSummary, ScreenContainer, SheetModal, VehicleImage, AnimatedAmount } from "@/components/kit";
 import { serviceTitle } from "@/features/booking/catalog";
 import { estimatePrice, needsProposal, recommendVehicle } from "@/features/booking/pricing";
 import { draftIssues } from "@/features/booking/validation";
@@ -114,9 +99,7 @@ export default function EstimateStep() {
             <Info size={20} color={colors.ink} />
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-            <AppText weight="extrabold" color={colors.primary} style={{ fontSize: 40, lineHeight: 48, letterSpacing: -1, flex: 1 }}>
-              {formatKz(price.total)}
-            </AppText>
+            <AnimatedAmount value={price.total} weight="extrabold" color={colors.primary} style={{ fontSize: 40, lineHeight: 48, letterSpacing: -1, flex: 1 }} />
             <AppText variant="tiny" color={colors.muted} style={{ maxWidth: 130 }}>
               {proposal ? "Valor indicativo: o prestador envia a proposta final." : "O valor pode variar ligeiramente conforme o local de carga."}
             </AppText>

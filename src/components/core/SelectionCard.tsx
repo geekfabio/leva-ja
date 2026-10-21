@@ -1,8 +1,9 @@
 import { ReactNode } from "react";
-import { Pressable, View, type StyleProp, type ViewStyle } from "react-native";
+import {View, type StyleProp, type ViewStyle} from "react-native";
 import { Check } from "lucide-react-native";
 import { colors, radius } from "@/theme/colors";
 import { AppText } from "./AppText";
+import { Appear, ScalePressable } from "./Motion";
 
 type Props = {
   title: string;
@@ -44,7 +45,11 @@ export function SelectionCard({
           justifyContent: "center",
         }}
       >
-        {selected ? <Check size={16} color={colors.white} strokeWidth={3} /> : null}
+        {selected ? (
+          <Appear from="pop">
+            <Check size={16} color={colors.white} strokeWidth={3} />
+          </Appear>
+        ) : null}
       </View>
     ) : (
       <View
@@ -58,12 +63,16 @@ export function SelectionCard({
           justifyContent: "center",
         }}
       >
-        {selected ? <View style={{ width: 11, height: 11, borderRadius: 6, backgroundColor: colors.accent }} /> : null}
+        {selected ? (
+          <Appear from="pop">
+            <View style={{ width: 11, height: 11, borderRadius: 6, backgroundColor: colors.accent }} />
+          </Appear>
+        ) : null}
       </View>
     );
 
   return (
-    <Pressable
+    <ScalePressable
       accessibilityRole={role}
       accessibilityLabel={description ? `${title}. ${description}` : title}
       accessibilityState={{ checked: selected, selected }}
@@ -111,14 +120,14 @@ export function SelectionCard({
           {mark}
         </>
       )}
-    </Pressable>
+    </ScalePressable>
   );
 }
 
 /** Opção compacta tipo "chip" (tipo de imóvel, volume, filtros). */
 export function ChoiceChip({ label, selected, onPress, icon }: { label: string; selected: boolean; onPress: () => void; icon?: ReactNode }) {
   return (
-    <Pressable
+    <ScalePressable
       accessibilityRole="radio"
       accessibilityState={{ checked: selected }}
       accessibilityLabel={label}
@@ -140,6 +149,6 @@ export function ChoiceChip({ label, selected, onPress, icon }: { label: string; 
       <AppText variant="label" color={selected ? colors.primary : colors.text}>
         {label}
       </AppText>
-    </Pressable>
+    </ScalePressable>
   );
 }

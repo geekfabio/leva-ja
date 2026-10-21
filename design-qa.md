@@ -1,5 +1,11 @@
 # Design QA
 
+## Animações — 21 de Outubro de 2026
+
+- Primitivas de movimento (`Appear`, `ScalePressable`, `AnimatedAmount`, `useBump`) aplicadas ao kit e aos ecrãs; respeitam reduzir movimento (sistema e preferência da app).
+- `npm run typecheck`, `npm run lint` e `npm test` (55 testes) passaram; exportação web revista no Chromium sem alterações de layout.
+- As capturas estáticas não validam a fluidez: falta rever a cadência a 60 fps num dispositivo Android e iOS.
+
 ## Nova experiência a partir das 46 referências — 21 de Outubro de 2026
 
 - 46 referências implementadas (rotas no README), com componentes partilhados em `src/components/kit.ts`.

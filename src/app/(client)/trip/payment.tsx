@@ -20,8 +20,7 @@ import {
   ScreenContainer,
   SelectionCard,
   SheetModal,
-  VehicleImage,
-} from "@/components/kit";
+  VehicleImage, AnimatedAmount } from "@/components/kit";
 import { NoActiveRequest } from "@/components/service/NoActiveRequest";
 import { serviceTitle } from "@/features/booking/catalog";
 import {
@@ -225,12 +224,7 @@ export default function PaymentScreen() {
           </View>
           <Card tone="muted" style={{ gap: 2 }}>
             <AppText variant="body">Total a pagar</AppText>
-            <AppText
-              weight="extrabold"
-              style={{ fontSize: 34, lineHeight: 42 }}
-            >
-              {formatKz(request.price.total)}
-            </AppText>
+            <AnimatedAmount value={request.price.total} weight="extrabold" style={{ fontSize: 34, lineHeight: 42 }} />
           </Card>
         </View>
       </ScreenContainer>

@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@/theme/colors";
+import { Appear } from "@/components/core/Motion";
 import { MapPreview, type MapPreviewProps } from "@/components/map/MapPreview";
 
 /**
@@ -34,7 +35,9 @@ export function MapSheetLayout({
       <View style={{ flex: 1 - mapRatio, marginTop: -28, backgroundColor: colors.background, borderTopLeftRadius: 28, borderTopRightRadius: 28, overflow: "hidden" }}>
         <View style={{ alignSelf: "center", width: 44, height: 5, borderRadius: 3, backgroundColor: colors.borderStrong, marginTop: 10, marginBottom: 4 }} />
         <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: 16, gap: 14 }} showsVerticalScrollIndicator={false}>
-          {children}
+          <Appear style={{ gap: 14 }} delay={80}>
+            {children}
+          </Appear>
         </ScrollView>
         {footer ? (
           <SafeAreaView edges={["bottom"]} style={{ paddingHorizontal: 20, paddingBottom: 12, paddingTop: 6, gap: 10 }}>

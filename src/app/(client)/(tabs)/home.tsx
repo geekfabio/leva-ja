@@ -3,19 +3,7 @@ import { View } from "react-native";
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ArrowRight, Bell, ChevronRight, Radio, UserRound } from "lucide-react-native";
-import {
-  AppText,
-  BrandLogo,
-  EmptyState,
-  ErrorState,
-  IconButton,
-  LoadingState,
-  MapPreview,
-  PrimaryButton,
-  ServiceCard,
-  ServiceTile,
-  type MapMarker,
-} from "@/components/kit";
+import { AppText, BrandLogo, EmptyState, ErrorState, IconButton, LoadingState, MapPreview, PrimaryButton, ServiceCard, ServiceTile, type MapMarker, Appear } from "@/components/kit";
 import { serviceCatalog, serviceTitle } from "@/features/booking/catalog";
 import { startBooking } from "@/features/booking/useBookingFlow";
 import { clientScreenFor, isActiveStatus, statusLabel } from "@/features/service/stateMachine";
@@ -78,8 +66,10 @@ export default function ClientHome() {
             />
           ) : null}
           <View style={{ flexDirection: "row", gap: 10 }}>
-            {serviceCatalog.slice(0, 3).map((service) => (
-              <ServiceTile key={service.title} service={service} onPress={() => startBooking(service.kind, service.variant)} />
+            {serviceCatalog.slice(0, 3).map((service, i) => (
+              <Appear key={service.title} index={i} from="pop" style={{ flex: 1 }}>
+                <ServiceTile service={service} onPress={() => startBooking(service.kind, service.variant)} />
+              </Appear>
             ))}
           </View>
           <AppText variant="h3" accessibilityRole="header" style={{ marginTop: 6 }}>
@@ -90,7 +80,11 @@ export default function ClientHome() {
           ) : isError ? (
             <ErrorState onRetry={refetch} />
           ) : recent.length ? (
-            recent.map((request) => <ServiceCard key={request.id} request={request} onPress={() => go(`/trip/receipt?id=${request.id}`)} />)
+            recent.map((request, i) => (
+              <Appear key={request.id} index={i}>
+                <ServiceCard request={request} onPress={() => go(`/trip/receipt?id=${request.id}`)} />
+              </Appear>
+            ))
           ) : (
             <EmptyState title="Ainda sem serviços" description="Os teus pedidos concluídos aparecem aqui." />
           )}

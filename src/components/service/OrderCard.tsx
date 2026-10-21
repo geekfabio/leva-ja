@@ -1,4 +1,4 @@
-import { Pressable, View } from "react-native";
+import {View} from "react-native";
 import { ChevronRight, Coins, MapPin, Navigation2 } from "lucide-react-native";
 import type { ServiceRequest } from "@/types/domain";
 import { serviceTitle } from "@/features/booking/catalog";
@@ -10,6 +10,7 @@ import { IconCircle } from "@/components/core/Card";
 import { PrimaryButton } from "@/components/core/Buttons";
 import { ServiceIcon } from "./ServiceIcon";
 import { StatusBadge } from "./StatusBadge";
+import { ScalePressable } from "@/components/core/Motion";
 
 /**
  * Pedido visto pelo prestador. `full`: caixa de pedidos (ref. 37);
@@ -32,7 +33,7 @@ export function OrderCard({
   const label = `${serviceTitle[request.kind]}, ${request.origin.area}, ${formatKm(distanceKm)}, ${formatKz(request.providerEarning)}`;
   if (variant === "row")
     return (
-      <Pressable
+      <ScalePressable
         accessibilityRole="button"
         accessibilityLabel={label}
         onPress={onPress}
@@ -68,12 +69,12 @@ export function OrderCard({
         <View style={{ justifyContent: "center" }}>
           <ChevronRight size={20} color={colors.text} />
         </View>
-      </Pressable>
+      </ScalePressable>
     );
 
   return (
     <View style={[{ borderRadius: radius.lg, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, overflow: "hidden" }, shadow.card]}>
-      <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} style={({ pressed }) => ({ padding: 16, gap: 10, backgroundColor: pressed ? "#F6FAF7" : colors.card })}>
+      <ScalePressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} style={({ pressed }) => ({ padding: 16, gap: 10, backgroundColor: pressed ? "#F6FAF7" : colors.card })}>
         <View style={{ flexDirection: "row", gap: 14, alignItems: "center" }}>
           <IconCircle size={52} shape="rounded">
             <ServiceIcon kind={request.kind} size={28} color={colors.deep} />
@@ -102,7 +103,7 @@ export function OrderCard({
           </View>
           <ChevronRight size={20} color={colors.subtle} />
         </View>
-      </Pressable>
+      </ScalePressable>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: colors.primarySoft, paddingHorizontal: 16, paddingVertical: 10 }}>
         <Coins size={22} color={colors.primary} />
         <AppText variant="h3" style={{ flex: 1 }}>

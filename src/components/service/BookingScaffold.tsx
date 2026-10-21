@@ -4,6 +4,7 @@ import { AppHeader } from "@/components/core/AppHeader";
 import { PrimaryButton } from "@/components/core/Buttons";
 import { ScreenContainer } from "@/components/core/ScreenContainer";
 import { colors } from "@/theme/colors";
+import { Appear } from "@/components/core/Motion";
 
 /** Estrutura comum dos passos do pedido: marca, "x de y" e "Continuar" fixo no fundo. */
 export function BookingScaffold({
@@ -40,7 +41,7 @@ export function BookingScaffold({
         />
       }
     >
-      {children}
+      <Appear style={{ gap: 18 }}>{children}</Appear>
     </ScreenContainer>
   );
 }

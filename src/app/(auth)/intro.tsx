@@ -3,7 +3,7 @@ import { ScrollView, useWindowDimensions, View, type NativeScrollEvent, type Nat
 import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ArrowRight } from "lucide-react-native";
-import { AppText, DotsIndicator, PrimaryButton, TextButton } from "@/components/kit";
+import { Appear, AppText, DotsIndicator, PrimaryButton, TextButton } from "@/components/kit";
 import { illustrations } from "@/mocks/assets";
 import { useSessionStore } from "@/stores/useSessionStore";
 import { swap } from "@/features/navigation";
@@ -41,14 +41,14 @@ export default function IntroScreen() {
             <View style={{ flex: 1.25 }}>
               <Image source={slide.image} style={{ flex: 1 }} contentFit="cover" contentPosition="top" accessibilityLabel="" />
             </View>
-            <View style={{ flex: 0.75, paddingHorizontal: 28, paddingTop: 20, alignItems: "center", gap: 12 }}>
+            <Appear key={i === page ? `on-${i}` : `off-${i}`} style={{ flex: 0.75, paddingHorizontal: 28, paddingTop: 20, alignItems: "center", gap: 12 }}>
               <AppText variant="h1" align="center" accessibilityRole="header" style={{ fontSize: 32, lineHeight: 38 }}>
                 {slide.title}
               </AppText>
               <AppText variant="body" color={colors.text} align="center" style={{ fontSize: 17, lineHeight: 25 }}>
                 {slide.text}
               </AppText>
-            </View>
+            </Appear>
           </View>
         ))}
       </ScrollView>

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { View } from "react-native";
-import { AppText, EmptyState, ErrorState, LoadingState, ScreenContainer, SegmentedTabs, TransactionRow } from "@/components/kit";
+import { AppText, EmptyState, ErrorState, LoadingState, ScreenContainer, SegmentedTabs, TransactionRow, Appear } from "@/components/kit";
 import { ProviderHeader } from "@/components/partner/ProviderHeader";
 import { useTransactions } from "@/services/queries";
 import { dayGroupLabel } from "@/utils/date";
@@ -46,8 +46,10 @@ export default function TransactionsScreen() {
               <AppText variant="label" color={colors.text} style={{ marginTop: 6 }}>
                 {g.label}
               </AppText>
-              {g.items.map((t) => (
-                <TransactionRow key={t.id} transaction={t} />
+              {g.items.map((t, i) => (
+                <Appear key={`${filter}-${t.id}`} index={i} from="left">
+                  <TransactionRow transaction={t} />
+                </Appear>
               ))}
             </View>
           ))

@@ -3,7 +3,7 @@ import { Pressable, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { Bell, CalendarDays, ChartColumn, ChevronDown, FileText, Landmark, List, Settings, Upload, Wallet } from "lucide-react-native";
-import { AppText, BrandLogo, Card, EarningsChart, ErrorState, IconButton, IconCircle, InfoNote, LoadingState, PrimaryButton, ProviderMetric, ScreenContainer, SecondaryButton, SheetModal, Skeleton, TextField } from "@/components/kit";
+import { AppText, BrandLogo, Card, EarningsChart, ErrorState, IconButton, IconCircle, InfoNote, LoadingState, PrimaryButton, ProviderMetric, ScreenContainer, SecondaryButton, SheetModal, Skeleton, TextField, AnimatedAmount } from "@/components/kit";
 import { notifyProvider, ProviderSummaryCard } from "@/components/partner/ProviderHeader";
 import { withdrawSchema } from "@/features/provider/schemas";
 import { bankAccount } from "@/mocks/finance";
@@ -89,9 +89,7 @@ export default function EarningsScreen() {
                 </IconCircle>
                 <View accessible accessibilityLabel={`Saldo disponível: ${formatKz(balance)}`}>
                   <AppText variant="body">Saldo disponível</AppText>
-                  <AppText weight="extrabold" style={{ fontSize: 32, lineHeight: 40 }}>
-                    {formatKz(balance)}
-                  </AppText>
+                  <AnimatedAmount value={balance} weight="extrabold" style={{ fontSize: 32, lineHeight: 40 }} />
                 </View>
               </View>
               <PrimaryButton size="md" label="Pedir levantamento" icon={<Upload size={20} color={colors.white} />} disabled={balance < 1000} onPress={() => { setAmount(balance); withdrawSheet.current?.present(); }} />

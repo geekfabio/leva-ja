@@ -17,6 +17,7 @@ import {
   ScreenContainer,
   SecondaryButton,
   VehicleImage,
+  Appear,
 } from "@/components/kit";
 import { avatarFor } from "@/mocks/people";
 import { useSessionStore } from "@/stores/useSessionStore";
@@ -91,40 +92,52 @@ export default function AccountScreen() {
               </View>
             </View>
           </Card>
-          <ListRow
-            icon={<History {...icon} />}
-            title="Histórico de serviços"
-            onPress={() => go("/trips")}
-          />
-          <ListRow
-            icon={<MapPin {...icon} />}
-            title="Endereços guardados"
-            onPress={() => go("/addresses")}
-          />
-          <ListRow
-            icon={<CreditCard {...icon} />}
-            title="Métodos de pagamento"
-            onPress={() => go("/payment-methods")}
-          />
-          <ListRow
-            icon={<Settings {...icon} />}
-            title="Definições"
-            onPress={() => go("/settings")}
-          />
-          <ListRow
-            icon={<CircleHelp {...icon} />}
-            title="Ajuda e suporte"
-            onPress={() => go("/help")}
-          />
-          <ListRow
-            icon={<ArrowLeftRight {...icon} />}
-            title="Mudar para prestador"
-            subtitle="Abre a área profissional (demonstração)"
-            onPress={() => {
-              useSessionStore.getState().setRole("provider");
-              enterApp("provider");
-            }}
-          />
+          <Appear index={0} delay={120}>
+            <ListRow
+              icon={<History {...icon} />}
+              title="Histórico de serviços"
+              onPress={() => go("/trips")}
+            />
+          </Appear>
+          <Appear index={1} delay={120}>
+            <ListRow
+              icon={<MapPin {...icon} />}
+              title="Endereços guardados"
+              onPress={() => go("/addresses")}
+            />
+          </Appear>
+          <Appear index={2} delay={120}>
+            <ListRow
+              icon={<CreditCard {...icon} />}
+              title="Métodos de pagamento"
+              onPress={() => go("/payment-methods")}
+            />
+          </Appear>
+          <Appear index={3} delay={120}>
+            <ListRow
+              icon={<Settings {...icon} />}
+              title="Definições"
+              onPress={() => go("/settings")}
+            />
+          </Appear>
+          <Appear index={4} delay={120}>
+            <ListRow
+              icon={<CircleHelp {...icon} />}
+              title="Ajuda e suporte"
+              onPress={() => go("/help")}
+            />
+          </Appear>
+          <Appear index={5} delay={120}>
+            <ListRow
+              icon={<ArrowLeftRight {...icon} />}
+              title="Mudar para prestador"
+              subtitle="Abre a área profissional (demonstração)"
+              onPress={() => {
+                useSessionStore.getState().setRole("provider");
+                enterApp("provider");
+              }}
+            />
+          </Appear>
         </View>
       </ScreenContainer>
     </View>

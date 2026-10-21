@@ -37,3 +37,4 @@ export { ProviderMetric } from "./partner/ProviderMetric";
 export { DocumentStatus, AccountStatusCard } from "./partner/DocumentStatus";
 export { EarningsChart } from "./partner/EarningsChart";
 export { TransactionRow } from "./partner/TransactionRow";
+export { Appear, ScalePressable, AnimatedAmount, useMotionEnabled, usePressScale, useCountUp, useBump, motion } from "./core/Motion";

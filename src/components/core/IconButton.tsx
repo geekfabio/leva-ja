@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
-import { Pressable, View } from "react-native";
+import {View} from "react-native";
 import { colors, shadow } from "@/theme/colors";
+import { ScalePressable } from "./Motion";
 
 type Props = {
   icon: ReactNode;
@@ -20,11 +21,12 @@ export function IconButton({ icon, label, onPress, variant = "plain", size = 44,
     inverse: "rgba(255,255,255,0.14)",
   }[variant];
   return (
-    <Pressable
+    <ScalePressable
       accessibilityRole="button"
       accessibilityLabel={label}
       onPress={onPress}
       hitSlop={8}
+      scaleTo={0.88}
       style={({ pressed }) => [
         {
           width: size,
@@ -54,6 +56,6 @@ export function IconButton({ icon, label, onPress, variant = "plain", size = 44,
           }}
         />
       ) : null}
-    </Pressable>
+    </ScalePressable>
   );
 }

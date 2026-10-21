@@ -1,9 +1,10 @@
 import { ReactNode } from "react";
-import { Pressable, View } from "react-native";
+import {View} from "react-native";
 import { ChevronRight } from "lucide-react-native";
 import { colors, radius, shadow } from "@/theme/colors";
 import { AppText } from "@/components/core/AppText";
 import { IconCircle } from "@/components/core/Card";
+import { ScalePressable } from "@/components/core/Motion";
 
 /** Métrica do prestador (ref. 38: "Esta semana", "Hoje", "Serviços concluídos"). */
 export function ProviderMetric({ icon, label, value, onPress }: { icon: ReactNode; label: string; value: string; onPress?: () => void }) {
@@ -23,8 +24,8 @@ export function ProviderMetric({ icon, label, value, onPress }: { icon: ReactNod
   );
   if (!onPress) return <View style={{ flex: 1 }} accessible accessibilityLabel={`${label}: ${value}`}>{content}</View>;
   return (
-    <Pressable style={{ flex: 1 }} accessibilityRole="button" accessibilityLabel={`${label}: ${value}`} onPress={onPress}>
+    <ScalePressable style={{ flex: 1 }} accessibilityRole="button" accessibilityLabel={`${label}: ${value}`} onPress={onPress}>
       {content}
-    </Pressable>
+    </ScalePressable>
   );
 }

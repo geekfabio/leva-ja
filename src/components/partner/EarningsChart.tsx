@@ -1,4 +1,22 @@
+import { useEffect } from "react";
 import { View } from "react-native";
+import Animated, { useAnimatedStyle, useSharedValue, withDelay, withSpring } from "react-native-reanimated";
+import { useMotionEnabled } from "@/components/core/Motion";
+
+/** Barra que cresce a partir da base, em sequência. */
+function Bar({ ratio, index, highlight }: { ratio: number; index: number; highlight: boolean }) {
+  const enabled = useMotionEnabled();
+  const h = useSharedValue(enabled ? 0 : ratio);
+  useEffect(() => {
+    h.value = enabled ? withDelay(index * 60, withSpring(ratio, { damping: 14, stiffness: 120 })) : ratio;
+  }, [ratio, index, enabled, h]);
+  const style = useAnimatedStyle(() => ({ height: `${Math.max(0, h.value) * 100}%` }));
+  return (
+    <View style={{ flex: 1, height: "100%", justifyContent: "flex-end" }}>
+      <Animated.View style={[{ borderTopLeftRadius: 4, borderTopRightRadius: 4, backgroundColor: highlight ? colors.accent : "#3DB46F" }, style]} />
+    </View>
+  );
+}
 import { colors } from "@/theme/colors";
 import { AppText } from "@/components/core/AppText";
 import { formatNumber } from "@/utils/format";
@@ -25,16 +43,7 @@ export function EarningsChart({ values, labels, height = 160 }: { values: number
       <View style={{ flex: 1 }}>
         <View style={{ height: height - 22, flexDirection: "row", alignItems: "flex-end", gap: 10, borderBottomWidth: 1, borderColor: colors.border }}>
           {values.map((v, i) => (
-            <View
-              key={labels[i]}
-              style={{
-                flex: 1,
-                height: `${(v / top) * 100}%`,
-                borderTopLeftRadius: 4,
-                borderTopRightRadius: 4,
-                backgroundColor: i === best ? colors.accent : "#3DB46F",
-              }}
-            />
+            <Bar key={labels[i]} ratio={v / top} index={i} highlight={i === best} />
           ))}
         </View>
         <View style={{ flexDirection: "row", gap: 10, marginTop: 6 }}>

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import Animated, { FadeInLeft, FadeInRight, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withTiming } from "react-native-reanimated";
 import { FlatList, KeyboardAvoidingView, Platform, Pressable, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
@@ -15,6 +16,32 @@ import { AppText } from "@/components/core/AppText";
 import { Avatar } from "@/components/core/Avatar";
 import { IconButton } from "@/components/core/IconButton";
 import { ChoiceChip } from "@/components/core/SelectionCard";
+import { useMotionEnabled } from "@/components/core/Motion";
+
+function TypingDot({ index }: { index: number }) {
+  const y = useSharedValue(0);
+  useEffect(() => {
+    y.value = withDelay(index * 140, withRepeat(withSequence(withTiming(-4, { duration: 260 }), withTiming(0, { duration: 260 })), -1, false));
+  }, [index, y]);
+  const style = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }] }));
+  return <Animated.View style={[{ width: 7, height: 7, borderRadius: 4, backgroundColor: colors.muted }, style]} />;
+}
+
+/** Bolha "a escrever…" com três pontos a saltar. */
+function TypingBubble({ name }: { name: string }) {
+  const enabled = useMotionEnabled();
+  return (
+    <Animated.View
+      entering={enabled ? FadeInLeft.duration(200) : undefined}
+      accessible
+      accessibilityLabel={`${name} está a escrever`}
+      accessibilityLiveRegion="polite"
+      style={{ alignSelf: "flex-start", flexDirection: "row", gap: 5, backgroundColor: "#ECEFED", borderRadius: radius.lg, borderBottomLeftRadius: 4, paddingHorizontal: 16, paddingVertical: 14 }}
+    >
+      {enabled ? [0, 1, 2].map((i) => <TypingDot key={i} index={i} />) : <AppText variant="caption" color={colors.muted}>a escrever…</AppText>}
+    </Animated.View>
+  );
+}
 
 type Me = ChatMessage["from"];
 
@@ -41,6 +68,8 @@ export function ChatThread({
   const typing = useChatStore((s) => !!s.typing[threadId]);
   const [text, setText] = useState("");
   const list = useRef<FlatList<ChatMessage>>(null);
+  const mountedAt = useRef(new Date().toISOString());
+  const motionOn = useMotionEnabled();
 
   useEffect(() => {
     useChatStore.getState().ensureThread(threadId, seed);
@@ -80,8 +109,11 @@ export function ChatThread({
           contentContainerStyle={{ padding: 16, gap: 12 }}
           renderItem={({ item }) => {
             const mine = item.from === me;
+            // Só as mensagens novas entram animadas; o histórico aparece de imediato.
+            const animate = motionOn && item.at > mountedAt.current;
             return (
-              <View
+              <Animated.View
+                entering={animate ? (mine ? FadeInRight : FadeInLeft).springify().damping(16) : undefined}
                 accessible
                 accessibilityLabel={`${mine ? "Tu" : counterpart.name}, ${formatTime(item.at)}: ${item.text}`}
                 style={{
@@ -105,16 +137,10 @@ export function ChatThread({
                   </AppText>
                   {mine ? <CheckCheck size={14} color="#D3EFDF" /> : null}
                 </View>
-              </View>
+              </Animated.View>
             );
           }}
-          ListFooterComponent={
-            typing ? (
-              <AppText variant="caption" color={colors.muted} accessibilityLiveRegion="polite">
-                {counterpart.name.split(" ")[0]} está a escrever…
-              </AppText>
-            ) : null
-          }
+          ListFooterComponent={typing ? <TypingBubble name={counterpart.name.split(" ")[0] ?? counterpart.name} /> : null}
         />
         <View style={{ flexDirection: "row", gap: 8, paddingHorizontal: 16, paddingBottom: 8, flexWrap: "wrap" }}>
           {quickReplies[me].map((q) => (

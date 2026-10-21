@@ -1,4 +1,4 @@
-import { Pressable, View } from "react-native";
+import {View} from "react-native";
 import { AlertCircle, CarFront, ChevronRight, IdCard, ShieldCheck, UserRound } from "lucide-react-native";
 import type { DocumentState, ProviderDocument } from "@/types/domain";
 import { formatDate } from "@/utils/date";
@@ -6,6 +6,7 @@ import { colors, radius, shadow } from "@/theme/colors";
 import { AppText } from "@/components/core/AppText";
 import { IconCircle } from "@/components/core/Card";
 import { StatusBadge } from "@/components/service/StatusBadge";
+import { ScalePressable } from "@/components/core/Motion";
 
 const stateCopy: Record<DocumentState, { label: string; tone: "success" | "warning" | "danger" | "info" }> = {
   verified: { label: "Verificado", tone: "success" },
@@ -21,7 +22,7 @@ export function DocumentStatus({ document, onPress, selected }: { document: Prov
   const Icon = icons[document.icon];
   const state = stateCopy[document.state];
   return (
-    <Pressable
+    <ScalePressable
       accessibilityRole="button"
       accessibilityLabel={`${document.title}, ${state.label}, válido até ${formatDate(document.validUntil)}`}
       accessibilityState={{ selected }}
@@ -53,7 +54,7 @@ export function DocumentStatus({ document, onPress, selected }: { document: Prov
         </View>
       </View>
       <ChevronRight size={20} color={colors.text} />
-    </Pressable>
+    </ScalePressable>
   );
 }
 

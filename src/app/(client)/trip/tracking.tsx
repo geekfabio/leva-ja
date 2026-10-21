@@ -1,7 +1,7 @@
 import { View } from "react-native";
 import { router } from "expo-router";
 import { ArrowLeft, LocateFixed } from "lucide-react-native";
-import { AppText, ContactActions, IconButton, ProviderCard, ServiceTimeline, TextButton } from "@/components/kit";
+import { AppText, ContactActions, IconButton, ProviderCard, ServiceTimeline, TextButton, Appear } from "@/components/kit";
 import { MapSheetLayout } from "@/components/service/MapSheetLayout";
 import { NoActiveRequest } from "@/components/service/NoActiveRequest";
 import { clientAutoAdvance } from "@/features/service/stateMachine";
@@ -47,14 +47,16 @@ export default function TrackingScreen() {
       }
     >
       <ProviderCard provider={provider} />
-      <View accessibilityLiveRegion="polite">
+      <Appear key={`step-${step}`} from="fade" style={{ gap: 0 }}>
+        <View accessibilityLiveRegion="polite">
         <AppText variant="h1" accessibilityRole="header">
           {step === 2 ? "Quase a chegar" : "A caminho de ti"}
         </AppText>
         <AppText variant="title" color={colors.primary}>
           Chega em {eta} min
         </AppText>
-      </View>
+        </View>
+      </Appear>
       <ServiceTimeline kind={request.kind} steps={["Pedido aceite", "A caminho de ti", "A chegar", "No local"]} current={step} />
       <ContactActions
         unread={unread}

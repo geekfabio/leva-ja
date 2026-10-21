@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { View } from "react-native";
 import { FileUp } from "lucide-react-native";
-import { AccountStatusCard, AppText, DocumentStatus, PrimaryButton, ScreenContainer } from "@/components/kit";
+import { AccountStatusCard, AppText, DocumentStatus, PrimaryButton, ScreenContainer, Appear } from "@/components/kit";
 import { ProviderHeader, ProviderSummaryCard } from "@/components/partner/ProviderHeader";
 import { useProviderStore } from "@/stores/useProviderStore";
 import { toast } from "@/lib/toast";
@@ -26,8 +26,10 @@ export default function DocumentsScreen() {
         <AppText variant="caption" color={colors.muted}>
           Toca num documento para o seleccionar e actualizar.
         </AppText>
-        {documents.map((d) => (
-          <DocumentStatus key={d.id} document={d} selected={d.id === selected} onPress={() => setSelected(d.id)} />
+        {documents.map((d, i) => (
+          <Appear key={d.id} index={i}>
+            <DocumentStatus document={d} selected={d.id === selected} onPress={() => setSelected(d.id)} />
+          </Appear>
         ))}
       </ScreenContainer>
     </View>

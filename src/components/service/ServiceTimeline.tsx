@@ -1,9 +1,40 @@
+import { useEffect } from "react";
 import { View } from "react-native";
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from "react-native-reanimated";
 import { Check } from "lucide-react-native";
 import { colors } from "@/theme/colors";
 import { AppText } from "@/components/core/AppText";
 import { ServiceIcon } from "./ServiceIcon";
 import type { ServiceKind } from "@/types/domain";
+import { motion, useMotionEnabled } from "@/components/core/Motion";
+
+/** Segmento da linha que se preenche quando o passo anterior conclui. */
+function Connector({ filled, hidden }: { filled: boolean; hidden: boolean }) {
+  const enabled = useMotionEnabled();
+  const fill = useSharedValue(filled ? 1 : 0);
+  useEffect(() => {
+    fill.value = enabled ? withTiming(filled ? 1 : 0, { duration: motion.slow, easing: motion.easeOut }) : filled ? 1 : 0;
+  }, [filled, enabled, fill]);
+  const style = useAnimatedStyle(() => ({ width: `${fill.value * 100}%` }));
+  if (hidden) return <View style={{ flex: 1 }} />;
+  return (
+    <View style={{ flex: 1, height: 3, backgroundColor: colors.border }}>
+      <Animated.View style={[{ height: 3, backgroundColor: colors.accent }, style]} />
+    </View>
+  );
+}
+
+/** Halo pulsante à volta do passo activo. */
+function Halo() {
+  const enabled = useMotionEnabled();
+  const t = useSharedValue(0);
+  useEffect(() => {
+    if (enabled) t.value = withRepeat(withTiming(1, { duration: 1400, easing: Easing.out(Easing.quad) }), -1, false);
+  }, [enabled, t]);
+  const style = useAnimatedStyle(() => ({ opacity: 0.45 * (1 - t.value), transform: [{ scale: 1 + t.value * 0.6 }] }));
+  if (!enabled) return null;
+  return <Animated.View pointerEvents="none" style={[{ position: "absolute", width: 34, height: 34, borderRadius: 17, backgroundColor: colors.accent }, style]} />;
+}
 
 /**
  * Progresso horizontal do serviço (ref. 23, 28, 36). `current` é o índice do
@@ -23,7 +54,7 @@ export function ServiceTimeline({ steps, current, kind }: { steps: string[]; cur
         return (
           <View key={step} style={{ flex: 1, alignItems: "center", gap: 6 }}>
             <View style={{ flexDirection: "row", alignItems: "center", alignSelf: "stretch", height: 36 }}>
-              <View style={{ flex: 1, height: 3, backgroundColor: index === 0 ? "transparent" : index <= current ? colors.accent : colors.border }} />
+              <Connector hidden={index === 0} filled={index <= current} />
               <View
                 style={{
                   width: active ? 34 : 22,
@@ -36,6 +67,7 @@ export function ServiceTimeline({ steps, current, kind }: { steps: string[]; cur
                   justifyContent: "center",
                 }}
               >
+                {active ? <Halo /> : null}
                 {done ? <Check size={14} color={colors.white} strokeWidth={3} /> : null}
                 {active ? (
                   kind ? (
@@ -47,7 +79,7 @@ export function ServiceTimeline({ steps, current, kind }: { steps: string[]; cur
                   )
                 ) : null}
               </View>
-              <View style={{ flex: 1, height: 3, backgroundColor: index === steps.length - 1 ? "transparent" : index < current ? colors.accent : colors.border }} />
+              <Connector hidden={index === steps.length - 1} filled={index < current} />
             </View>
             <AppText variant="tiny" weight={active ? "bold" : "medium"} color={active ? colors.primary : colors.muted} align="center">
               {step}

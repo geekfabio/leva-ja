@@ -3,7 +3,7 @@ import { View } from "react-native";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { router } from "expo-router";
 import { ArrowLeft, Clock3, FileText, LocateFixed, Phone } from "lucide-react-native";
-import { AppText, Card, IconButton, PriceSummary, PrimaryButton, ProviderCard, RouteTimeline, SecondaryButton, ServiceTimeline, SheetModal } from "@/components/kit";
+import { AppText, Card, IconButton, PriceSummary, PrimaryButton, ProviderCard, RouteTimeline, SecondaryButton, ServiceTimeline, SheetModal, Appear } from "@/components/kit";
 import { ContactSheet } from "@/components/service/ContactSheet";
 import { MapSheetLayout } from "@/components/service/MapSheetLayout";
 import { NoActiveRequest } from "@/components/service/NoActiveRequest";
@@ -56,6 +56,7 @@ export default function InTransitScreen() {
         </View>
       }
     >
+      <Appear key={request.status} from="fade" style={{ gap: 4 }}>
       <View style={{ gap: 4 }} accessibilityLiveRegion="polite">
         <AppText variant="h1" accessibilityRole="header">
           {moving ? "Em transporte" : "A preparar o transporte"}
@@ -73,6 +74,7 @@ export default function InTransitScreen() {
           </AppText>
         </View>
       </View>
+      </Appear>
       <ServiceTimeline steps={["Recolha", "Em transporte", "Entrega"]} current={moving ? 1 : 0} />
       <Card>
         <ProviderCard provider={provider} layout="rating" onPress={() => contact.current?.present()} />
