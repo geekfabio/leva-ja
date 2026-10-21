@@ -21,7 +21,7 @@ Fluxo de entrada: **splash → onboarding → escolha de perfil → login**. Os 
 | Prestador | Escolhe «Sou prestador» e entra | `joao.manuel@levaja.ao` + qualquer palavra-passe com 6+ caracteres |
 | Registo / recuperação | «Criar conta» ou «Esqueci-me da palavra-passe» | Código de confirmação `123456` |
 
-Atalhos: a rota `/demo` abre a nova experiência já autenticada como cliente ou prestador. No perfil de cada área existe «Mudar para prestador/cliente».
+Atalho: no perfil de cada área existe «Mudar para prestador/cliente».
 
 ### Verificações
 
@@ -44,14 +44,13 @@ src/
     (auth)/               02–10 Onboarding, perfil, login, registo, recuperação, email, localização
     (client)/             11–33 Separadores do cliente, pedido (booking/), acompanhamento (trip/), conta e suporte
     (provider)/partner/   34–46 Separadores do prestador, pedido, serviço activo, proposta, comprovativo, gestão
-    legacy/, request/, transport/, order/, provider/, admin/, demo …   Protótipo anterior (mantido)
   components/
     kit.ts                Ponto de entrada da biblioteca de componentes
     core/                 Texto, botões, ScreenContainer, AppHeader, BottomAction, campos, estados, folhas, diálogos
     service/              ServiceCard, StatusBadge, PriceSummary, ServiceTimeline, ContactActions, OrderCard, DeliveryProof, chat, chamada
     partner/              ProviderMetric, DocumentStatus, EarningsChart, TransactionRow, cabeçalhos do prestador
     map/                  MapPreview (react-native-maps no nativo, SVG na web/testes)
-    ui/, orders/, provider/, admin/ …   Componentes do protótipo anterior
+    ui/AppToast.tsx       Aspecto dos toasts
   data/                   Padrão Repository: contratos, implementação mock, implementação HTTP e contentor
   features/               Lógica de negócio: máquina de estados, preços, catálogo, esquemas Zod, simulação
   mocks/                  Sementes de demonstração (só usadas por data/mock)
@@ -171,21 +170,12 @@ Todas respeitam «reduzir movimento» do sistema e a opção em Definições →
 - Verde de acção `#0A8743` com texto branco (contraste 4,6:1); o verde vivo das referências `#12A150` é usado só em elementos sem texto.
 - Na web a área da app fica limitada a 520 px.
 
-## Protótipo anterior
+## Protótipo anterior (removido)
 
-Os ecrãs do protótipo anterior continuam disponíveis e sem alterações funcionais: separadores antigos em `/legacy`, fluxos `request/`, `transport/`, `order/`, área de parceiro em `/provider/*`, administração em `/admin` e o centro de demonstrações `/demo`. Os separadores antigos passaram de `/` para `/legacy` para libertar a raiz para o splash.
-
-| Área anterior | Rota | Dados mockados |
-| --- | --- | --- |
-| Cliente | `/phone` | `+244 912 345 678` · OTP `123456` |
-| Parceiro | `/provider/login` | `+244 923 456 789` · OTP `123456` |
-| Administração | `/admin/login` | `admin@levaja.ao` · OTP `123456` |
-
-O `/demo` mantém os cenários de apresentação anteriores (reboque a caminho, pedido novo, falha de pagamento, disputa). Documentação: [redesign de transportes](docs/transport-redesign.md) e [sistema visual anterior](docs/design-system.md).
+O protótipo anterior (separadores `/legacy`, fluxos `request/`, `transport/`, `order/`, parceiro em `/provider/*`, administração em `/admin`, `/demo`, `/ui-kit`) e as rotas de e-commerce (`cart`, `checkout`, `category`, `merchant`, `product`, `search`) foram removidos. Continuam no histórico git, antes do commit «chore: remover protótipo anterior».
 
 ## Limites conhecidos
 
 - Os dados mockados vivem em memória (`MockDatabase`) e voltam ao início ao recarregar a app.
 - O armazenamento seguro mock também é em memória: a sessão é retomada enquanto a app estiver aberta (ex.: voltar ao splash), não depois de a fechar. Para persistir de verdade no dispositivo, usar `EXPO_PUBLIC_SECURE_STORAGE=device`.
-- `@shopify/flash-list` (usado só pelo protótipo anterior) está numa versão abaixo da recomendada pelo Expo 54.
 - A revisão visual foi feita no browser (Playwright, 390 × 844); as builds Android e iOS foram exportadas mas não testadas em dispositivo — ver [design-qa.md](design-qa.md).
