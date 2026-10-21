@@ -3,9 +3,9 @@ import { router, useLocalSearchParams } from "expo-router";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ArrowLeft, Bell, Coins, FileText, Info, MapPin, MessageSquareText, Phone, Send, UserRound } from "lucide-react-native";
+import { ArrowLeft, Coins, FileText, Info, MapPin, MessageSquareText, Phone, Send, UserRound } from "lucide-react-native";
 import { AppText, Avatar, BrandLogo, Card, Divider, EmptyState, IconButton, IconCircle, InfoNote, PrimaryButton, ScreenContainer, SecondaryButton, ServiceIcon, StatusBadge, TextField, VehicleImage } from "@/components/kit";
-import { notifyProvider } from "@/components/partner/ProviderHeader";
+import { NotificationBell } from "@/components/partner/ProviderHeader";
 import { serviceTitle } from "@/features/booking/catalog";
 import { proposalSchema, type ProposalForm } from "@/features/provider/schemas";
 import { avatarFor, currentProvider, findClient } from "@/mocks/people";
@@ -33,7 +33,7 @@ export default function ProposalScreen() {
         <View style={{ flex: 1 }}>
           <BrandLogo inverse size="sm" tagline="Parceiro" />
         </View>
-        <IconButton label="Notificações" icon={<Bell size={22} color={colors.white} />} onPress={notifyProvider} />
+        <NotificationBell inverse />
         <Avatar name={currentProvider.name} initials={currentProvider.initials} photo={avatarFor[currentProvider.id]} size={40} verified />
       </View>
     </SafeAreaView>

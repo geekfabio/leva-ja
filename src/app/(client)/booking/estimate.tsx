@@ -3,8 +3,8 @@ import { Pressable, View } from "react-native";
 import { useMutation } from "@tanstack/react-query";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { ArrowRight, Info, Package, ShieldCheck, UserRound } from "lucide-react-native";
-import { AppHeader, AppText, BrandLogo, Card, Divider, ErrorState, InfoNote, MapPreview, PriceSummary, PrimaryButton, RouteSummary, ScreenContainer, SheetModal, VehicleImage, AnimatedAmount } from "@/components/kit";
-import { serviceTitle } from "@/features/booking/catalog";
+import { AppHeader, AppText, BrandLogo, Card, Divider, EmptyState, InfoNote, MapPreview, PriceSummary, PrimaryButton, RouteSummary, ScreenContainer, SheetModal, VehicleImage, AnimatedAmount } from "@/components/kit";
+import { bookingSteps, serviceTitle } from "@/features/booking/catalog";
 import { estimatePrice, needsProposal, recommendVehicle } from "@/features/booking/pricing";
 import { draftIssues } from "@/features/booking/validation";
 import { roadDistanceKm } from "@/mocks/places";
@@ -42,7 +42,12 @@ export default function EstimateStep() {
   if (issues.length || !draft.origin || !draft.destination)
     return (
       <ScreenContainer header={<AppHeader title="O teu pedido" />}>
-        <ErrorState title="Faltam dados no pedido" description={issues[0] ?? "Indica a recolha e o destino."} />
+        <EmptyState
+          title="Faltam dados no pedido"
+          description={issues[0] ?? "Indica a recolha e o destino."}
+          actionLabel={!draft.origin || !draft.destination ? "Escolher trajecto" : "Rever pedido"}
+          onAction={() => swap(!draft.origin || !draft.destination ? "/booking/route" : `/booking/${bookingSteps[draft.kind][0]}`)}
+        />
       </ScreenContainer>
     );
 

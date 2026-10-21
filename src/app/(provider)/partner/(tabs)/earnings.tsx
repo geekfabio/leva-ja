@@ -2,9 +2,9 @@ import { useRef, useState } from "react";
 import { Pressable, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
-import { Bell, CalendarDays, ChartColumn, ChevronDown, FileText, Landmark, List, Settings, Upload, Wallet } from "lucide-react-native";
+import { CalendarDays, ChartColumn, ChevronDown, FileText, Landmark, List, Settings, Upload, Wallet } from "lucide-react-native";
 import { AppText, BrandLogo, Card, EarningsChart, ErrorState, IconButton, IconCircle, InfoNote, LoadingState, PrimaryButton, ProviderMetric, ScreenContainer, SecondaryButton, SheetModal, Skeleton, TextField, AnimatedAmount } from "@/components/kit";
-import { notifyProvider, ProviderSummaryCard } from "@/components/partner/ProviderHeader";
+import { NotificationBell, ProviderSummaryCard } from "@/components/partner/ProviderHeader";
 import { withdrawSchema } from "@/features/provider/schemas";
 import { bankAccount } from "@/mocks/finance";
 import { useFinanceSummary } from "@/services/queries";
@@ -51,7 +51,7 @@ export default function EarningsScreen() {
         <View style={{ flex: 1 }}>
           <BrandLogo size="md" tagline="Serviços de reboque, carga e mudanças em Luanda" />
         </View>
-        <IconButton label="Notificações" icon={<Bell size={24} color={colors.ink} />} onPress={notifyProvider} />
+        <NotificationBell />
         <IconButton label="Definições" icon={<Settings size={24} color={colors.ink} />} onPress={() => go("/settings")} />
       </SafeAreaView>
       <ScreenContainer edges={[]} gap={12} refreshing={isRefetching} onRefresh={refetch} contentStyle={{ paddingTop: 10 }}>

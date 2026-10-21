@@ -26,8 +26,8 @@ export const places = {
   valodia: place(
     "valodia",
     "Maianga",
-    -8.825,
-    13.243,
+    -8.834,
+    13.258,
     "Avenida Comandante Valódia",
   ),
   missao: place("missao", "Sambizanga", -8.806, 13.246, "Rua da Missão"),

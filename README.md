@@ -112,7 +112,7 @@ A arquitectura e o plano para trocar mocks por API estão em [docs/arquitectura.
 | 45 | Propor valor | `/partner/proposal/[id]` |
 | 46 | Comprovativo de entrega | `/partner/proof/[id]` |
 
-Ecrãs de apoio: `/trips` (as minhas viagens), `/addresses`, `/payment-methods`, `/edit-profile`, `/partner/chat/[id]`, `/partner/call/[id]`.
+Ecrãs de apoio: `/trips` (as minhas viagens), `/alerts` (notificações do cliente e do prestador), `/addresses`, `/payment-methods`, `/edit-profile`, `/settings/password`, `/partner/chat/[id]`, `/partner/call/[id]`.
 
 ## Funcionalidades mockadas
 

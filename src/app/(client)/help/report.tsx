@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { View } from "react-native";
 import { useMutation } from "@tanstack/react-query";
 import { router } from "expo-router";
@@ -15,7 +15,9 @@ const reasons = ["Atraso do prestador", "Carga danificada", "Valor cobrado incor
 export default function ReportScreen() {
   const userId = useSessionStore((s) => s.user.id);
   const role = useSessionStore((s) => s.role);
-  const requests = useServiceStore((s) => s.requests.filter((r) => (role === "provider" ? !!r.providerId : r.clientId === userId)).slice(0, 5));
+  // Seleccionar a lista inteira e filtrar fora do selector: um array novo por render provoca um ciclo infinito no Zustand.
+  const all = useServiceStore((s) => s.requests);
+  const requests = useMemo(() => all.filter((r) => (role === "provider" ? !!r.providerId : r.clientId === userId)).slice(0, 5), [all, role, userId]);
   const [selected, setSelected] = useState(requests[0]?.id);
   const [reason, setReason] = useState<string>();
   const [note, setNote] = useState("");

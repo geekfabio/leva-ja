@@ -10,9 +10,15 @@ import { AppText } from "@/components/core/AppText";
 import { Avatar } from "@/components/core/Avatar";
 import { IconButton } from "@/components/core/IconButton";
 import { VehicleImage } from "@/components/service/Media";
-import { toast } from "@/lib/toast";
+import { useNotifications } from "@/features/notifications/useNotifications";
 
-const notify = () => toast.info({ title: "Sem novos alertas", message: "As notificações são simuladas nesta fase." });
+const notify = () => router.push("/alerts" as never);
+
+/** Sino com indicação de notificações por ler. */
+export function NotificationBell({ inverse = false }: { inverse?: boolean }) {
+  const { unread } = useNotifications("provider");
+  return <IconButton label={unread ? `Notificações, ${unread} por ler` : "Notificações"} badge={unread > 0} icon={<Bell size={24} color={inverse ? colors.white : colors.ink} />} onPress={notify} />;
+}
 
 /** Cabeçalho verde-escuro com o prestador e a viatura (ref. 39, 40, 43, 45). */
 export function ProviderHeader({ title, back, right, onPress }: { title?: string; back?: boolean; right?: ReactNode; onPress?: () => void }) {
@@ -43,12 +49,12 @@ export function ProviderHeader({ title, back, right, onPress }: { title?: string
             </View>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
               <Car size={14} color="#D3EFDF" />
-              <AppText variant="caption" color="#D3EFDF">
+              <AppText variant="caption" color="#D3EFDF" numberOfLines={1} style={{ flexShrink: 1 }}>
                 {vehicle.brand} {vehicle.model} • {vehicle.plate}
               </AppText>
             </View>
           </View>
-          {right ?? <IconButton label="Notificações" icon={<Bell size={24} color={colors.white} />} onPress={notify} />}
+          {right ?? <NotificationBell inverse />}
           {onPress ? <ChevronRight size={22} color={colors.white} /> : null}
         </Pressable>
       )}

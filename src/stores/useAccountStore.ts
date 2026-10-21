@@ -18,6 +18,9 @@ type AccountState = {
   addresses: SavedAddress[];
   paymentMethods: PaymentMethod[];
   preferences: Preferences;
+  /** Notificações já vistas (ids gerados em features/notifications). */
+  readNotifications: string[];
+  markNotificationsRead: (ids: string[]) => void;
   addAddress: (address: Omit<SavedAddress, "id">) => void;
   removeAddress: (id: string) => void;
   setDefaultPayment: (id: string) => void;
@@ -37,6 +40,8 @@ export const useAccountStore = create<AccountState>((set) => ({
     autoAdvance: true,
     simulateNetworkErrors: false,
   },
+  readNotifications: [],
+  markNotificationsRead: (ids) => set((s) => ({ readNotifications: [...new Set([...s.readNotifications, ...ids])] })),
   addAddress: (address) => set((s) => ({ addresses: [...s.addresses, { ...address, id: `addr-${Date.now()}` }] })),
   removeAddress: (id) => set((s) => ({ addresses: s.addresses.filter((a) => a.id !== id) })),
   setDefaultPayment: (id) => set((s) => ({ paymentMethods: s.paymentMethods.map((p) => ({ ...p, isDefault: p.id === id })) })),

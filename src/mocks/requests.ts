@@ -94,7 +94,7 @@ const nearbyRequests: ServiceRequest[] = [
   buildRequest({
     id: "req-near-3",
     kind: "small_move",
-    origin: places.maianga,
+    origin: places.samba,
     destination: places.kilamba,
     clientId: "cli-manuel",
     createdAt: daysAgo(0, "14:26"),

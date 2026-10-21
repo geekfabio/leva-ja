@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useState } from "react";
-import { Pressable, StyleSheet, type PressableProps, type StyleProp, type ViewStyle } from "react-native";
+import { Platform, Pressable, StyleSheet, type PressableProps, type StyleProp, type ViewStyle } from "react-native";
 import Animated, {
   Easing,
   FadeIn,
@@ -61,13 +61,14 @@ type AppearProps = {
 export function Appear({ children, index = 0, delay = 0, from = "up", style }: AppearProps) {
   const enabled = useMotionEnabled();
   const preset = presets[from];
-  const entering = enabled
+  const base = enabled
     ? preset
         .duration(from === "pop" ? 260 : motion.base)
         .delay(delay + Math.min(index, 8) * motion.stagger)
-        .easing(motion.easeOut)
         .reduceMotion(ReduceMotion.System)
     : undefined;
+  // A web só suporta as curvas por omissão dos presets; no nativo usa-se a curva da app.
+  const entering = base && Platform.OS !== "web" ? base.easing(motion.easeOut) : base;
   return (
     <Animated.View entering={entering} style={style}>
       {children}

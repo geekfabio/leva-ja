@@ -13,7 +13,7 @@ import { useSessionStore } from "@/stores/useSessionStore";
 import { useRequest, useServiceStore } from "@/stores/useServiceStore";
 import { go } from "@/features/navigation";
 import { colors, radius } from "@/theme/colors";
-import { toast } from "@/lib/toast";
+import { useNotifications } from "@/features/notifications/useNotifications";
 
 const nearbyProviders: MapMarker[] = [
   { id: "me", kind: "user", coords: places.maianga.coords },
@@ -31,6 +31,7 @@ export default function ClientHome() {
   const snapPoints = useMemo(() => ["60%", "92%"], []);
   const recent = (data ?? []).filter((r) => !isActiveStatus(r.status)).slice(0, 3);
   const firstName = user.name.split(" ")[0];
+  const { unread } = useNotifications("client");
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -41,7 +42,7 @@ export default function ClientHome() {
             <BrandLogo size="sm" tagline="Reboque • Carga • Mudança" />
           </View>
           <View style={{ flexDirection: "row", gap: 10 }}>
-            <IconButton variant="floating" label="Notificações" badge icon={<Bell size={22} color={colors.ink} />} onPress={() => toast.info({ title: "Sem novidades", message: "As notificações são simuladas nesta fase." })} />
+            <IconButton variant="floating" label={unread ? `Notificações, ${unread} por ler` : "Notificações"} badge={unread > 0} icon={<Bell size={22} color={colors.ink} />} onPress={() => go("/alerts")} />
             <IconButton variant="floating" label="Perfil" icon={<UserRound size={22} color={colors.ink} />} onPress={() => go("/account")} />
           </View>
         </SafeAreaView>

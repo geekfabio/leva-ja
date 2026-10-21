@@ -45,6 +45,9 @@ function TypingBubble({ name }: { name: string }) {
 
 type Me = ChatMessage["from"];
 
+/** Referência estável para conversas ainda não criadas (evita re-renders em ciclo). */
+const NO_MESSAGES: ChatMessage[] = [];
+
 /**
  * Conversa simulada (ref. 24): mensagens locais, resposta automática do outro
  * lado e indicação "a escrever…". Não há envio real nem anexos.
@@ -64,7 +67,7 @@ export function ChatThread({
   onCall?: () => void;
   seed?: "service" | "support";
 }) {
-  const messages = useChatStore((s) => s.threads[threadId] ?? []);
+  const messages = useChatStore((s) => s.threads[threadId] ?? NO_MESSAGES);
   const typing = useChatStore((s) => !!s.typing[threadId]);
   const [text, setText] = useState("");
   const list = useRef<FlatList<ChatMessage>>(null);

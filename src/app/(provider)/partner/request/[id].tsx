@@ -10,7 +10,7 @@ import { needsProposal } from "@/features/booking/pricing";
 import { currentProvider, findClient } from "@/mocks/people";
 import { useProviderStore } from "@/stores/useProviderStore";
 import { useRequest, useServiceStore } from "@/stores/useServiceStore";
-import { formatFloor, formatKm, formatKz } from "@/utils/format";
+import { formatFloor, formatKm } from "@/utils/format";
 import { swap } from "@/features/navigation";
 import { toast } from "@/lib/toast";
 import { colors, radius } from "@/theme/colors";

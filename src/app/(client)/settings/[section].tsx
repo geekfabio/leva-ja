@@ -3,6 +3,7 @@ import { useLocalSearchParams } from "expo-router";
 import { AppHeader, AppText, InfoNote, ScreenContainer, SelectionCard, ToggleRow } from "@/components/kit";
 import { useAccountStore, type Preferences } from "@/stores/useAccountStore";
 import { toast } from "@/lib/toast";
+import { go } from "@/features/navigation";
 import { colors } from "@/theme/colors";
 
 const titles: Record<string, string> = {
@@ -34,7 +35,7 @@ export default function SettingsSection() {
         <>
           <ToggleRow title="Partilhar estado da viagem" description="Permite partilhar o link de acompanhamento." value={prefs.privacy.shareTripStatus} onChange={toggle("privacy", "shareTripStatus")} />
           <ToggleRow title="Dados de utilização" description="Ajuda-nos a melhorar a app com estatísticas anónimas." value={prefs.privacy.analytics} onChange={toggle("privacy", "analytics")} />
-          <SelectionCard title="Alterar palavra-passe" description="Recebes um código por email (simulado)." selected={false} indicator="none" onPress={() => toast.info({ title: "Código enviado", message: "Usa 123456 para confirmar (demonstração)." })} />
+          <SelectionCard title="Alterar palavra-passe" description="Define uma nova palavra-passe para a tua conta." selected={false} indicator="none" onPress={() => go("/settings/password")} />
           <SelectionCard title="Apagar conta" description="Disponível quando houver backend." selected={false} indicator="none" onPress={() => toast.info("Funcionalidade indisponível nesta fase")} />
         </>
       ) : null}

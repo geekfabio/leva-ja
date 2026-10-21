@@ -1,5 +1,13 @@
 # Design QA
 
+## Verificação de rotas — 21 de Outubro de 2026
+
+- Verificação estática: todas as navegações do código (`go`, `swap`, `router.*`, `href`) apontam para rotas existentes.
+- Rastreio das 130 rotas (nova app e protótipo anterior) na exportação web com Playwright: 0 erros de página, 0 erros e 0 avisos de consola, nenhuma rota "não encontrada" ou ecrã em branco.
+- Corrigido: ciclo infinito em `/help/report` (selector Zustand a criar arrays novos) e o mesmo risco no chat; erro `reading 'top'` do Reanimated na web ao substituir um ecrã durante a entrada (ex.: `/register-security` sem dados); avisos de curvas de animação não suportadas na web; estimativa sem dados sem saída; grelha de fotos a quebrar; marcadores sobrepostos no painel do prestador; textos cortados nas métricas e no cabeçalho do prestador.
+- Ecrãs em falta criados: notificações (`/alerts`, com contagem por ler nos sinos) e alterar palavra-passe (`/settings/password`).
+- `npm test`: 58 testes, incluindo regressões destes erros.
+
 ## Animações — 21 de Outubro de 2026
 
 - Primitivas de movimento (`Appear`, `ScalePressable`, `AnimatedAmount`, `useBump`) aplicadas ao kit e aos ecrãs; respeitam reduzir movimento (sistema e preferência da app).

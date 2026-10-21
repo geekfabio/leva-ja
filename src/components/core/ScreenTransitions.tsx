@@ -1,6 +1,6 @@
 import { ReactElement } from "react";
 import { Platform } from "react-native";
-import Animated, { Easing, FadeIn, FadeInDown, Keyframe, ReduceMotion } from "react-native-reanimated";
+import Animated, { FadeIn, FadeInDown, FadeInRight, ReduceMotion } from "react-native-reanimated";
 import type { NativeStackNavigationOptions } from "@react-navigation/native-stack";
 import type { BottomTabNavigationOptions } from "@react-navigation/bottom-tabs";
 import { colors } from "@/theme/colors";
@@ -49,15 +49,12 @@ export function useTabOptions(): BottomTabNavigationOptions {
 }
 
 // Na web a pilha nativa não anima: cada ecrã novo entra com uma animação equivalente.
-const webPush = new Keyframe({
-  0: { opacity: 0, transform: [{ translateX: 48 }] },
-  100: { opacity: 1, transform: [{ translateX: 0 }], easing: Easing.out(Easing.cubic) },
-});
-
+// Só presets do Reanimated: keyframes e curvas personalizadas não são suportados na web
+// e falham quando o ecrã é substituído logo ao abrir (ex.: <Redirect>).
 const webEntering = {
-  push: webPush.duration(DURATION).reduceMotion(ReduceMotion.System),
+  push: FadeInRight.duration(DURATION).reduceMotion(ReduceMotion.System),
   fade: FadeIn.duration(DURATION).reduceMotion(ReduceMotion.System),
-  modal: FadeInDown.duration(DURATION).easing(Easing.out(Easing.cubic)).reduceMotion(ReduceMotion.System),
+  modal: FadeInDown.duration(DURATION).reduceMotion(ReduceMotion.System),
 };
 
 function WebScreen({ kind, children }: { kind: TransitionKind; children: ReactElement }) {

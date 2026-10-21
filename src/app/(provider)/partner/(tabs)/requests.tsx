@@ -2,10 +2,10 @@ import { useRef, useState } from "react";
 import { View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
-import { Bell, Settings, SlidersHorizontal } from "lucide-react-native";
+import { Settings, SlidersHorizontal } from "lucide-react-native";
 import { AppText, BrandLogo, ChoiceChip, EmptyState, ErrorState, IconButton, LoadingState, OrderCard, PrimaryButton, ScreenContainer, SegmentedTabs, SheetModal, SelectionCard, ServiceIcon, Appear } from "@/components/kit";
 import { AvailabilityToggle } from "@/components/partner/AvailabilityToggle";
-import { notifyProvider, ProviderSummaryCard } from "@/components/partner/ProviderHeader";
+import { NotificationBell, ProviderSummaryCard } from "@/components/partner/ProviderHeader";
 import { serviceTitle } from "@/features/booking/catalog";
 import { statusLabel } from "@/features/service/stateMachine";
 import { distanceFromProvider } from "@/services/api/services";
@@ -43,7 +43,7 @@ export default function ProviderRequests() {
         <View style={{ flex: 1 }}>
           <BrandLogo size="md" tagline="Reboque · Carga · Mudanças" />
         </View>
-        <IconButton label="Notificações" icon={<Bell size={24} color={colors.ink} />} onPress={notifyProvider} />
+        <NotificationBell />
         <IconButton label="Definições" icon={<Settings size={24} color={colors.ink} />} onPress={() => go("/settings")} />
       </SafeAreaView>
       <ScreenContainer edges={[]} gap={12} refreshing={nearby.isRefetching} onRefresh={() => { nearby.refetch(); mine.refetch(); }} contentStyle={{ paddingTop: 10 }}>

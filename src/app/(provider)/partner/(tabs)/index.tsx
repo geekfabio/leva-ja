@@ -29,7 +29,8 @@ export default function ProviderDashboard() {
   const list = online ? (nearby.data ?? []) : [];
   const markers: MapMarker[] = [
     { id: "me", kind: "user", coords: places.maculusso.coords },
-    ...list.slice(0, 4).map(({ request, distanceKm }) => ({
+    // Só os pedidos a menos de 6 km, para o mapa não afastar demasiado e sobrepor marcadores.
+    ...list.filter((n) => n.distanceKm <= 6).slice(0, 4).map(({ request, distanceKm }) => ({
       id: request.id,
       kind: "request" as const,
       coords: request.origin.coords,

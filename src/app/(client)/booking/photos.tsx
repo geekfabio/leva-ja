@@ -37,14 +37,14 @@ export default function PhotosStep() {
         </IconCircle>
         <PrimaryButton size="md" label="Adicionar fotos" onPress={addPhoto} accessibilityHint="Adiciona uma foto de exemplo (câmara simulada)" />
       </View>
-      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
         {photos.map((photo) => (
-          <View key={photo.id} style={{ width: "31.5%" }}>
+          <View key={photo.id} style={{ width: "31%" }}>
             <PhotoTile photo={photo} size="flex" onRemove={() => remove(photo.id)} />
           </View>
         ))}
         {Array.from({ length: slots }, (_, i) => (
-          <View key={i} style={{ width: "31.5%" }}>
+          <View key={i} style={{ width: "31%" }}>
             <AddPhotoTile onPress={addPhoto} />
           </View>
         ))}
