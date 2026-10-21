@@ -144,6 +144,7 @@ A estimativa (`features/booking/pricing.ts`) soma base, distância e extras, arr
 
 Primitivas em `src/components/core/Motion.tsx` (Reanimated 4), com durações e molas partilhadas (`motion`):
 
+- **Troca de ecrãs** (`src/components/core/ScreenTransitions.tsx`): avançar num fluxo desliza da direita, com gesto de voltar; mudar de área (splash, acesso, cliente, prestador) e os ecrãs do acompanhamento esbatem; SOS e detalhes sobem do fundo; separadores deslizam e esbatem ("shift"). Na web, onde a pilha nativa não anima, cada ecrã novo entra com uma animação equivalente.
 - **Entradas:** `Appear` faz deslizar e aparecer blocos e itens de lista em sequência (passos do pedido, folhas do acompanhamento, listas de serviços, pedidos, transacções, documentos, perfil e ajuda).
 - **Toque:** `ScalePressable` encolhe ligeiramente botões, cartões, opções e ícones ao toque.
 - **Valores:** `AnimatedAmount` conta até ao valor (estimativa, total a pagar, ganho, saldo); `useBump` faz saltar contadores (pisos, ajudantes, segundos finais).

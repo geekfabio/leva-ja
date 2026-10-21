@@ -1,16 +1,25 @@
 import { Stack } from "expo-router";
+import { useScreenTransition, useStackOptions, webScreenLayout, type TransitionKind } from "@/components/core/ScreenTransitions";
+
+/** Ecrãs trocados pela mudança de estado do serviço: esbatem em vez de deslizar. */
+const statusScreens = ["trip/matching", "trip/found", "trip/arrived", "trip/in-transit", "trip/payment", "trip/receipt"];
+const modalScreens = ["trip/call", "sos"];
+const kindFor = (route: string): TransitionKind => (statusScreens.includes(route) || route === "trip/call" ? "fade" : route === "sos" ? "modal" : "push");
+const screenLayout = webScreenLayout(kindFor);
 
 /** Área do cliente: separadores, formulário de pedido, acompanhamento e conta. */
 export default function ClientLayout() {
+  const options = useStackOptions("push");
+  const fade = useScreenTransition("fade");
+  const modal = useScreenTransition("modal");
   return (
-    <Stack screenOptions={{ headerShown: false, animation: "slide_from_right" }}>
+    <Stack screenOptions={options} screenLayout={screenLayout}>
       <Stack.Screen name="(tabs)" />
-      {/* Ecrãs trocados pela mudança de estado do serviço: transição suave em vez de deslizar. */}
-      {["trip/matching", "trip/found", "trip/arrived", "trip/in-transit", "trip/payment", "trip/receipt"].map((name) => (
-        <Stack.Screen key={name} name={name} options={{ animation: "fade_from_bottom" }} />
+      {statusScreens.map((name) => (
+        <Stack.Screen key={name} name={name} options={fade} />
       ))}
-      <Stack.Screen name="trip/call" options={{ animation: "fade", presentation: "fullScreenModal" }} />
-      <Stack.Screen name="sos" options={{ presentation: "modal" }} />
+      <Stack.Screen name={modalScreens[0]} options={{ ...fade, presentation: "fullScreenModal", gestureEnabled: false }} />
+      <Stack.Screen name={modalScreens[1]} options={{ ...modal, presentation: "modal" }} />
     </Stack>
   );
 }

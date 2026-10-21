@@ -1,5 +1,12 @@
-import { Stack } from 'expo-router';
+import {
+  useStackOptions,
+  webScreenLayout,
+} from "@/components/core/ScreenTransitions";
+import { Stack } from "expo-router";
+
+const screenLayout = webScreenLayout("push");
 
 export default function SettingsLayout() {
-  return <Stack screenOptions={{ headerShown: false, animation: 'slide_from_right' }} />;
+  const options = useStackOptions("push");
+  return <Stack screenOptions={options} screenLayout={screenLayout} />;
 }
