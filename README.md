@@ -12,6 +12,8 @@ Aplicação mobile de transporte de cargas leves e pesadas, mudanças de casa, r
 
 Detalhes e limites: [redesign de transportes](docs/transport-redesign.md).
 
+Referências de todas as telas mobile criadas: [guia visual UI/UX](docs/ui-reference.md).
+
 ## Fluxo actual
 
 1. Entrada como cliente ou parceiro
