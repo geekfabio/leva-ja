@@ -120,7 +120,7 @@ export default function MovingStep() {
         <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
           <LayoutGrid size={16} color={colors.muted} />
           <AppText variant="caption" color={colors.muted}>
-            Para casas completas escolhe "Mudança de casa".
+            Para casas completas escolhe «Mudança de casa».
           </AppText>
         </View>
       )}

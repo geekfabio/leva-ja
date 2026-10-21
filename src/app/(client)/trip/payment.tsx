@@ -271,7 +271,7 @@ export default function PaymentScreen() {
           ))}
         </Card>
         <InfoNote>
-          Nenhum pagamento real é feito nesta fase. Toca em "Já paguei" para
+          Nenhum pagamento real é feito nesta fase. Toca em «Já paguei» para
           simular a confirmação.
         </InfoNote>
         <PrimaryButton
