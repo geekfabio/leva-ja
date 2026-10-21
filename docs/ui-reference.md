@@ -78,6 +78,23 @@ O prestador possui uma app operacional própria. O seu estado de disponibilidade
 
 <img src="assets/ui-reference/34-provider-dashboard.jpg" width="220" alt="Painel do prestador"> <img src="assets/ui-reference/35-provider-new-request.jpg" width="220" alt="Novo pedido para prestador"> <img src="assets/ui-reference/36-provider-active-service.jpg" width="220" alt="Serviço em curso para prestador">
 
+## 6. Gestão operacional do prestador
+
+| # | Ecrã | Finalidade |
+| --- | --- | --- |
+| 37 | Pedidos | Consultar, filtrar e abrir pedidos próximos. |
+| 38–39 | Ganhos e transacções | Acompanhar saldo, desempenho e levantamentos. |
+| 40 | Histórico | Consultar serviços concluídos, avaliações e valor recebido. |
+| 41–44 | Perfil operacional | Gerir perfil, viatura, documentos, zonas e serviços aceites. |
+| 45 | Proposta | Ajustar e justificar o valor de um serviço complexo. |
+| 46 | Comprovativo de entrega | Registar fotografias, assinatura e condição da entrega. |
+
+<img src="assets/ui-reference/37-provider-requests.jpg" width="220" alt="Pedidos do prestador"> <img src="assets/ui-reference/38-provider-earnings.jpg" width="220" alt="Ganhos do prestador"> <img src="assets/ui-reference/39-provider-transactions.jpg" width="220" alt="Transacções do prestador"> <img src="assets/ui-reference/40-provider-history.jpg" width="220" alt="Histórico do prestador">
+
+<img src="assets/ui-reference/41-provider-profile.jpg" width="220" alt="Perfil do prestador"> <img src="assets/ui-reference/42-provider-vehicle.jpg" width="220" alt="Viatura do prestador"> <img src="assets/ui-reference/43-provider-documents.jpg" width="220" alt="Documentos do prestador"> <img src="assets/ui-reference/44-provider-zones-services.jpg" width="220" alt="Zonas e serviços do prestador">
+
+<img src="assets/ui-reference/45-provider-price-proposal.jpg" width="220" alt="Proposta de preço"> <img src="assets/ui-reference/46-provider-delivery-proof.jpg" width="220" alt="Comprovativo de entrega">
+
 ## Mapeamento para implementação
 
 | Domínio | Componentes reutilizáveis |
@@ -85,6 +102,6 @@ O prestador possui uma app operacional própria. O seu estado de disponibilidade
 | Pedido | `ScreenHeader`, `SelectionCard`, `AppInput`, `BottomAction`, `ServiceSummary`, `PriceSummary` |
 | Acompanhamento | `ServiceTimeline`, `ContactActions`, `StatusBadge`, mapa e folhas inferiores |
 | Conta | `ListRow`, `AppCard`, `IconButton`, `StateMessage` |
-| Prestador | `ProviderNav`, `ProviderMetric`, `OrderCard`, `ProofRow`, `ServiceTimeline` |
+| Prestador | `ProviderNav`, `ProviderMetric`, `OrderCard`, `EarningsChart`, `VehicleCard`, `DocumentStatus`, `DeliveryProof`, `ServiceTimeline` |
 
 Os nomes e valores apresentados nas imagens são mockados. Para a fase de backend, substituir mapas, fotografias, coordenadas, prestadores, preços e métodos de pagamento por dados validados pelo serviço.
