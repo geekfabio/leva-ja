@@ -1,9 +1,10 @@
 import type { ChatMessage, Coordinates, HelpTopic, PaymentMethod, Photo, Place, ServiceRequest, ServiceStatus, Transaction, Vehicle, Zone } from "@/types/domain";
 import type { Repositories } from "../repositories";
+import type { Session } from "../repositories/AuthRepository";
 import type { ChatEvent } from "../repositories/ChatRepository";
 import type { ProviderState } from "../repositories/ProviderRepository";
 import { roadDistanceKm } from "@/utils/geo";
-import { call, http } from "./client";
+import { call, http, setAuthToken } from "./client";
 
 /**
  * Implementação REST dos repositórios. Os endpoints seguem a convenção proposta
@@ -15,17 +16,27 @@ const poll = <T>(load: () => Promise<T>, listener: (value: T) => void, ms = 5000
   return () => clearInterval(timer);
 };
 
+/** Guarda o token no cliente HTTP para os pedidos seguintes. */
+const authenticated = async (request: Promise<Session>) => {
+  const session = await request;
+  setAuthToken(session.token);
+  return session;
+};
+
 export function createHttpRepositories(): Repositories {
   return {
     auth: {
-      login: (email, password, role) => call(http.post("/auth/login", { email, password, role })),
+      login: (email, password, role) => authenticated(call(http.post("/auth/login", { email, password, role }))),
       register: (input) => call(http.post("/auth/register", input)),
       requestRecovery: (email) => call(http.post("/auth/recover", { email })),
-      verifyCode: (email, code, purpose) => call(http.post("/auth/verify", { email, code, purpose })),
+      verifyCode: (email, code, purpose) => authenticated(call(http.post("/auth/verify", { email, code, purpose }))),
       resendCode: (email) => call(http.post("/auth/resend", { email })),
+      restore: (token) =>
+        authenticated(call<Omit<Session, "token">>(http.get("/auth/me", { headers: { Authorization: `Bearer ${token}` } })).then((me) => ({ token, ...me }))),
       updateProfile: (clientId, data) => call(http.patch(`/clients/${clientId}`, data)),
       changePassword: (current, next) => call(http.post("/auth/password", { current, next })),
-      logout: () => call(http.post("/auth/logout")),
+      logout: (token) =>
+        call<void>(http.post("/auth/logout", null, { headers: { Authorization: `Bearer ${token}` } })).finally(() => setAuthToken(null)),
     },
     requests: {
       list: (query) => call(http.get<ServiceRequest[]>("/requests", { params: query })),

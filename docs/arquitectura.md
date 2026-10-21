@@ -34,8 +34,13 @@ src/data/
     runtime.ts             latência, falhas de rede simuladas, cópias defensivas, efeitos "do servidor"
     events.ts              emissor para o tempo real simulado
     Mock*Repository.ts     uma classe por contrato
+  storage/                 armazenamento seguro no dispositivo
+    SecureStorage.ts       contrato (espelha o expo-secure-store) e regras de chave/tamanho
+    MockSecureStorage.ts   SecureStore simulado em memória (por omissão)
+    DeviceSecureStorage.ts expo-secure-store (EXPO_PUBLIC_SECURE_STORAGE=device; não existe na web)
+    SessionVault.ts        guarda { token, role } e o fim do onboarding; descarta dados corrompidos
   http/                    implementação REST (esqueleto)
-    client.ts              axios + conversão de erros HTTP em RepositoryError
+    client.ts              axios, token Bearer num interceptor, conversão de erros HTTP em RepositoryError
     HttpRepositories.ts    endpoints propostos para cada método; subscribe por polling até haver WebSocket
 ```
 
@@ -49,11 +54,12 @@ src/data/
 
 ## Fluxo de dados
 
-1. `DataBootstrap` (`src/providers`) hidrata as stores a partir dos repositórios e subscreve `requests.subscribe` e `providers.subscribe`. Volta a carregar quando o utilizador ou o prestador da sessão mudam.
-2. Os ecrãs lêem a cache das stores (`useRequest`, `useMyProvider`…) ou consultas TanStack Query; as stores invalidam as consultas sempre que mudam.
-3. As acções (`useServiceStore.getState().accept(...)`) chamam o repositório, guardam o resultado e devolvem `true/false`.
-4. A área do prestador só abre depois de o `ProviderRepository` devolver o perfil (porta no layout `(provider)`).
-5. `useClientSimulation` faz avançar estados que, com backend, chegariam por push; usa as mesmas acções da store com actor `system`.
+1. No arranque, `DataBootstrap` chama `useSessionStore.restore()`: lê o `SessionVault` e valida o token com `auth.restore`. Um token recusado (`unauthorized`) é apagado; sem rede, fica guardado. O splash espera por isto antes de decidir para onde ir. Login e confirmação de código guardam a sessão; terminar sessão apaga-a e invalida o token.
+2. `DataBootstrap` (`src/providers`) hidrata as stores a partir dos repositórios e subscreve `requests.subscribe` e `providers.subscribe`. Volta a carregar quando o utilizador ou o prestador da sessão mudam.
+3. Os ecrãs lêem a cache das stores (`useRequest`, `useMyProvider`…) ou consultas TanStack Query; as stores invalidam as consultas sempre que mudam.
+4. As acções (`useServiceStore.getState().accept(...)`) chamam o repositório, guardam o resultado e devolvem `true/false`.
+5. A área do prestador só abre depois de o `ProviderRepository` devolver o perfil (porta no layout `(provider)`).
+6. `useClientSimulation` faz avançar estados que, com backend, chegariam por push; usa as mesmas acções da store com actor `system`.
 
 ## Mudar de mocks para a API
 
@@ -62,7 +68,7 @@ src/data/
 3. Validar a implementação com a suite de contrato (`src/data/__tests__/repositories.contract.test.ts`), chamando `contract("http", ...)` contra um servidor de testes.
 4. Substituir o polling de `subscribe` por WebSocket ou push quando existir.
 5. Ligar `MediaRepository` a `expo-image-picker` e a um endpoint de upload; `Photo.asset` passa a URL (o `imageSource` já aceita URLs).
-6. Guardar o token em `expo-secure-store` num interceptor de `src/data/http/client.ts`.
+6. Definir `EXPO_PUBLIC_SECURE_STORAGE=device` para a sessão ficar no Keychain/Keystore (o token já é enviado como `Bearer` pelo interceptor de `src/data/http/client.ts`).
 
 Em modo `http`, não existe sessão de demonstração (`demoIdentity`) e «Repor dados de demonstração» desaparece das definições.
 
@@ -70,4 +76,6 @@ Em modo `http`, não existe sessão de demonstração (`demoIdentity`) e «Repor
 
 - `src/data/__tests__/repositories.contract.test.ts` — comportamento esperado de qualquer implementação.
 - `src/stores/__tests__/service-lifecycle.test.ts` — stores sobre os repositórios, do pedido ao levantamento.
+- `src/data/__tests__/secure-storage.test.ts` — SecureStore mock e `SessionVault`.
+- `src/stores/__tests__/session-persistence.test.ts` — guardar, retomar e terminar a sessão.
 - `jest.setup.ts` põe a latência dos mocks a zero.

@@ -58,6 +58,17 @@ function contract(name: string, make: () => Repositories) {
       expect(session.user.phone).toBe("+244 923 456 789");
     });
 
+    it("autenticação: o token retoma a sessão até ao logout", async () => {
+      const session = await repos.auth.login("joao@levaja.ao", "segredo12", "provider");
+      expect(session.token).toBeTruthy();
+      const restored = await repos.auth.restore(session.token);
+      expect(restored.user.id).toBe(session.user.id);
+      expect(restored.providerId).toBe(session.providerId);
+      await repos.auth.logout(session.token);
+      await expect(repos.auth.restore(session.token)).rejects.toMatchObject({ code: "unauthorized" });
+      await expect(repos.auth.restore("token-inventado")).rejects.toMatchObject({ code: "unauthorized" });
+    });
+
     it("suporte e localização", async () => {
       expect((await repos.support.searchHelp("recibo")).length).toBeGreaterThan(0);
       await expect(repos.support.createTicket({ requestId: "x", reason: "Outro", description: "curto" })).rejects.toMatchObject({ code: "validation" });

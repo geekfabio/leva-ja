@@ -10,18 +10,34 @@ import { colors } from "@/theme/colors";
 
 const DURATION = 1800;
 
-/** 01 · Splash: marca enquanto a sessão (mock) arranca. */
+/** Resolve quando a sessão guardada no armazenamento seguro já foi lida. */
+const sessionRestored = () =>
+  new Promise<void>((resolve) => {
+    if (useSessionStore.getState().restored) return resolve();
+    const unsubscribe = useSessionStore.subscribe((s) => {
+      if (!s.restored) return;
+      unsubscribe();
+      resolve();
+    });
+  });
+
+/** 01 · Splash: marca enquanto a sessão guardada é retomada. */
 export default function SplashScreen() {
   const progress = useSharedValue(0);
   useEffect(() => {
     progress.value = withTiming(1, { duration: DURATION, easing: Easing.inOut(Easing.quad) });
-    const timer = setTimeout(() => {
+    let cancelled = false;
+    const minimum = new Promise((resolve) => setTimeout(resolve, DURATION + 150));
+    Promise.all([minimum, sessionRestored()]).then(() => {
+      if (cancelled) return;
       const { hasOnboarded, authenticated, role } = useSessionStore.getState();
       if (!hasOnboarded) swap("/intro");
       else if (authenticated && role) swap(homeFor(role));
       else swap("/profile-select");
-    }, DURATION + 150);
-    return () => clearTimeout(timer);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [progress]);
   const bar = useAnimatedStyle(() => ({ width: `${progress.value * 100}%` }));
 

@@ -69,6 +69,8 @@ Os ecrãs e as stores nunca importam mocks: falam com repositórios (`src/data`)
 - **mock** (por omissão): base de dados em memória semeada a partir de `src/mocks`, com latência, erros de domínio, falhas de rede simuladas e tempo real por subscrição;
 - **http**: esqueleto REST com os endpoints propostos, activado com `EXPO_PUBLIC_DATA_SOURCE=http` e `EXPO_PUBLIC_API_URL`.
 
+A sessão (token e perfil) e o fim do onboarding ficam no **armazenamento seguro** (`SecureStorage` + `SessionVault`), retomados no splash. Por omissão é um SecureStore simulado em memória; com `EXPO_PUBLIC_SECURE_STORAGE=device` passa a usar o `expo-secure-store` (Keychain/Keystore) no Android e iOS.
+
 Detalhes, regras e passos para ligar a API em [docs/arquitectura.md](docs/arquitectura.md).
 
 ## Mapa de ecrãs
@@ -183,6 +185,7 @@ O `/demo` mantém os cenários de apresentação anteriores (reboque a caminho, 
 
 ## Limites conhecidos
 
-- Sem persistência: os dados mockados vivem em memória (Zustand).
+- Os dados mockados vivem em memória (`MockDatabase`) e voltam ao início ao recarregar a app.
+- O armazenamento seguro mock também é em memória: a sessão é retomada enquanto a app estiver aberta (ex.: voltar ao splash), não depois de a fechar. Para persistir de verdade no dispositivo, usar `EXPO_PUBLIC_SECURE_STORAGE=device`.
 - `@shopify/flash-list` (usado só pelo protótipo anterior) está numa versão abaixo da recomendada pelo Expo 54.
 - A revisão visual foi feita no browser (Playwright, 390 × 844); as builds Android e iOS foram exportadas mas não testadas em dispositivo — ver [design-qa.md](design-qa.md).

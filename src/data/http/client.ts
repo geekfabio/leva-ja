@@ -1,10 +1,22 @@
 import { create, isAxiosError } from "axios";
 import { RepositoryError } from "../repositories/types";
 
-/** Cliente HTTP da API Leva Já. O token de sessão será injectado num interceptor. */
+/** Cliente HTTP da API Leva Já. */
 export const http = create({
   baseURL: process.env.EXPO_PUBLIC_API_URL ?? "https://api.leva-ja.ao",
   timeout: 10_000,
+});
+
+let authToken: string | null = null;
+
+/** Token da sessão actual (vem do login ou da sessão guardada no armazenamento seguro). */
+export function setAuthToken(token: string | null) {
+  authToken = token;
+}
+
+http.interceptors.request.use((config) => {
+  if (authToken && !config.headers.Authorization) config.headers.Authorization = `Bearer ${authToken}`;
+  return config;
 });
 
 /** Converte erros HTTP em erros de domínio, com a mesma forma que os mocks devolvem. */

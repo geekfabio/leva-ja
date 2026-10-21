@@ -14,6 +14,11 @@ export function DataBootstrap({ children }: PropsWithChildren) {
   const userId = useSessionStore((s) => s.user.id);
   const providerId = useSessionStore((s) => s.providerId);
 
+  // Retoma a sessão guardada no armazenamento seguro (uma vez, no arranque).
+  useEffect(() => {
+    useSessionStore.getState().restore();
+  }, []);
+
   useEffect(() => {
     useServiceStore.getState().hydrate();
     return repositories().requests.subscribe((request) => useServiceStore.getState().upsert(request));

@@ -1,5 +1,6 @@
 import type { ChatMessage, Client, PaymentMethod, Provider, SavedAddress, ServiceRequest } from "@/types/domain";
 import type { ProviderState } from "../repositories/ProviderRepository";
+import type { Session } from "../repositories/AuthRepository";
 import { clients, providers } from "@/mocks/people";
 import { seedRequests } from "@/mocks/requests";
 import { initialBalance, initialTransactions, bankAccount } from "@/mocks/finance";
@@ -24,6 +25,8 @@ export class MockDatabase {
   paymentMethods = new Map<string, PaymentMethod[]>();
   pending = new Map<string, PendingAccount>();
   tickets: { code: string; requestId: string; reason: string; description: string }[] = [];
+  /** Tokens emitidos. Não são apagados por `reset()`: repor os dados não termina a sessão. */
+  sessions = new Map<string, Omit<Session, "token">>();
 
   constructor() {
     this.seed();
