@@ -6,11 +6,11 @@ import { mockRoute, regionFor } from "@/utils/geo";
 import { MarkerView } from "./MarkerView";
 import type { MapPreviewProps } from "./types";
 
-const ANGOLA_REGION = {
-  latitude: -12.3,
-  longitude: 17.7,
-  latitudeDelta: 14,
-  longitudeDelta: 13,
+const LUANDA_REGION = {
+  latitude: -8.8383,
+  longitude: 13.2344,
+  latitudeDelta: 0.28,
+  longitudeDelta: 0.28,
 };
 
 /**
@@ -37,7 +37,7 @@ export function NativeMap({
     [markers, routePoints, zones],
   );
   const region = useMemo(
-    () => points.length ? regionFor(points) : ANGOLA_REGION,
+    () => points.length ? regionFor(points) : LUANDA_REGION,
     [points],
   );
   const focusKey = useMemo(
