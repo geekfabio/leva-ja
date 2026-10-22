@@ -1,5 +1,29 @@
 # Design QA
 
+## Verificação de rotas — 21 de Outubro de 2026
+
+- Verificação estática: todas as navegações do código (`go`, `swap`, `router.*`, `href`) apontam para rotas existentes.
+- Rastreio das 130 rotas (nova app e protótipo anterior) na exportação web com Playwright: 0 erros de página, 0 erros e 0 avisos de consola, nenhuma rota "não encontrada" ou ecrã em branco.
+- Corrigido: ciclo infinito em `/help/report` (selector Zustand a criar arrays novos) e o mesmo risco no chat; erro `reading 'top'` do Reanimated na web ao substituir um ecrã durante a entrada (ex.: `/register-security` sem dados); avisos de curvas de animação não suportadas na web; estimativa sem dados sem saída; grelha de fotos a quebrar; marcadores sobrepostos no painel do prestador; textos cortados nas métricas e no cabeçalho do prestador.
+- Ecrãs em falta criados: notificações (`/alerts`, com contagem por ler nos sinos) e alterar palavra-passe (`/settings/password`).
+- `npm test`: 58 testes, incluindo regressões destes erros.
+
+## Animações — 21 de Outubro de 2026
+
+- Primitivas de movimento (`Appear`, `ScalePressable`, `AnimatedAmount`, `useBump`) aplicadas ao kit e aos ecrãs; respeitam reduzir movimento (sistema e preferência da app).
+- `npm run typecheck`, `npm run lint` e `npm test` (55 testes) passaram; exportação web revista no Chromium sem alterações de layout.
+- As capturas estáticas não validam a fluidez: falta rever a cadência a 60 fps num dispositivo Android e iOS.
+
+## Nova experiência a partir das 46 referências — 21 de Outubro de 2026
+
+- 46 referências implementadas (rotas no README), com componentes partilhados em `src/components/kit.ts`.
+- `npm run typecheck`: passou.
+- `npm run lint`: sem erros (avisos só em ficheiros do protótipo anterior).
+- `npm test`: 9 suites, 53 testes — máquina de estados, preços, esquemas Zod, formatação, ciclo de vida cliente/prestador, kit e fluxos de login e reboque.
+- `npx expo export --platform web` e `--platform android --platform ios`: bundles gerados sem erros. Não é uma instalação em dispositivo.
+- Revisão visual no Chromium (Playwright, 390 × 844) da exportação web: acesso, pedido de carga e de mudança de casa (com proposta), acompanhamento completo até à avaliação, conta, definições, ajuda, SOS, e área do prestador do painel ao comprovativo, ganhos, levantamento e transacções. Corrigidos durante a revisão: rótulos truncados, cabeçalhos verdes cortados, redireccionamento por ecrãs em segundo plano na pilha e acções de proposta fora do ecrã.
+- Não verificado: aparência e gestos em Android/iOS reais (mapa nativo, folhas inferiores, assinatura, teclado). O mapa da web é a versão ilustrativa em SVG.
+
 ## Cargo and moving redesign — 11 October 2026
 
 - Added light freight, heavy freight and home moving to the customer and partner flows, sharing request data through completion.

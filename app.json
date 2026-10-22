@@ -8,9 +8,11 @@
     "splash": {
       "image": "./assets/brand/leva-ja-mark.png",
       "resizeMode": "contain",
-      "backgroundColor": "#132A21"
+      "backgroundColor": "#053420"
     },
-    "web": { "favicon": "./assets/icons/favicon.png" },
+    "web": {
+      "favicon": "./assets/icons/favicon.png"
+    },
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -18,9 +20,13 @@
       "expo-router",
       "expo-secure-store",
       "expo-location",
-      "expo-notifications"
+      "expo-notifications",
+      "expo-font",
+      "expo-asset"
     ],
-    "experiments": { "typedRoutes": true },
+    "experiments": {
+      "typedRoutes": true
+    },
     "android": {
       "package": "ao.leva.app",
       "adaptiveIcon": {
@@ -28,6 +34,8 @@
         "backgroundColor": "#34D186"
       }
     },
-    "ios": { "bundleIdentifier": "ao.leva.app" }
+    "ios": {
+      "bundleIdentifier": "ao.leva.app"
+    }
   }
 }

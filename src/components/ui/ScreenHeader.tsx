@@ -20,7 +20,7 @@ export function ScreenHeader({
           label="Voltar"
           icon={<ChevronLeft size={22} color="#132A21" />}
           onPress={() =>
-            router.canGoBack() ? router.back() : router.replace("/")
+            router.canGoBack() ? router.back() : router.replace("/legacy")
           }
         />
         <View className="flex-1">
