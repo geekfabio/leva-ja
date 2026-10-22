@@ -8,7 +8,7 @@ import { AvailabilityToggle } from "@/components/partner/AvailabilityToggle";
 import { serviceTitle } from "@/features/booking/catalog";
 import { statusLabel } from "@/features/service/stateMachine";
 import { usePendingProposal, useProviderActiveRequest } from "@/features/provider/useProviderActive";
-import { useFinanceSummary, useNearbyRequests } from "@/services/queries";
+import { useCurrentLocation, useFinanceSummary, useNearbyRequests } from "@/services/queries";
 import { useProviderStore } from "@/stores/useProviderStore";
 import { formatKz } from "@/utils/format";
 import { go } from "@/features/navigation";
@@ -20,6 +20,7 @@ import { useMyProvider } from "@/features/provider/useProvider";
 export default function ProviderDashboard() {
   const online = useProviderStore((s) => s.online);
   const me = useMyProvider();
+  const { data: currentLocation, refetch: refreshLocation, isFetching: locating } = useCurrentLocation();
   const vehicle = me.vehicle;
   const nearby = useNearbyRequests();
   const finance = useFinanceSummary();
@@ -28,7 +29,7 @@ export default function ProviderDashboard() {
   const snapPoints = useMemo(() => ["62%", "92%"], []);
   const list = online ? (nearby.data ?? []) : [];
   const markers: MapMarker[] = [
-    { id: "me", kind: "user", coords: me.coords },
+    { id: "me", kind: "user", coords: currentLocation?.coords ?? me.coords },
     // Só os pedidos a menos de 6 km, para o mapa não afastar demasiado e sobrepor marcadores.
     ...list.filter((n) => n.distanceKm <= 6).slice(0, 4).map(({ request, distanceKm }) => ({
       id: request.id,
@@ -42,10 +43,13 @@ export default function ProviderDashboard() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <View style={{ height: "44%" }}>
-        <MapPreview height="100%" markers={markers} accessibilityLabel="Mapa com pedidos próximos (simulado)" />
-        <SafeAreaView edges={["top"]} style={{ position: "absolute", right: 16, top: 4, gap: 10 }}>
-          <IconButton variant="floating" label="Centrar na minha posição" icon={<LocateFixed size={22} color={colors.ink} />} onPress={() => toast.info("Posição simulada: Maculusso")} />
-          <IconButton variant="floating" label="Navegação" icon={<Navigation size={22} color={colors.ink} />} onPress={() => (active ? go(`/partner/active/${active.id}`) : toast.info("Sem serviço activo para navegar"))} />
+        <MapPreview height="100%" markers={markers} accessibilityLabel="Mapa OpenStreetMap com pedidos próximos" />
+        <SafeAreaView edges={["top"]} pointerEvents="box-none" style={{ position: "absolute", left: 16, right: 16, top: 4, flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" }}>
+          <AvailabilityToggle variant="status" />
+          <View style={{ gap: 10 }}>
+            <IconButton variant="floating" label="Centrar na minha posição" icon={<LocateFixed size={22} color={colors.ink} />} onPress={() => { if (!locating) refreshLocation(); }} />
+            <IconButton variant="floating" label="Navegação" icon={<Navigation size={22} color={colors.ink} />} onPress={() => (active ? go(`/partner/active/${active.id}`) : toast.info("Sem serviço activo para navegar"))} />
+          </View>
         </SafeAreaView>
       </View>
       <BottomSheet index={0} snapPoints={snapPoints} enableDynamicSizing={false} backgroundStyle={{ borderRadius: 28, backgroundColor: colors.background }} handleIndicatorStyle={{ backgroundColor: colors.borderStrong, width: 44 }}>
@@ -60,7 +64,6 @@ export default function ProviderDashboard() {
                 {online ? "Estás disponível" : "Estás indisponível"}
               </AppText>
             </View>
-            <AvailabilityToggle />
           </View>
           {active ? (
             <PrimaryButton label={`${serviceTitle[active.kind]} · ${statusLabel[active.status]}`} icon={<Radio size={20} color={colors.white} />} trailingIcon={<ChevronRight size={20} color={colors.white} />} onPress={() => go(`/partner/active/${active.id}`)} accessibilityHint="Abre o serviço em curso" />

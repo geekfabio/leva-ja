@@ -1,27 +1,42 @@
-import { useMemo } from "react";
-import MapView, { Circle, Marker, Polyline, PROVIDER_DEFAULT } from "react-native-maps";
+import { useEffect, useMemo, useRef } from "react";
+import { Platform } from "react-native";
+import MapView, { Circle, Marker, Polyline, PROVIDER_DEFAULT, UrlTile } from "react-native-maps";
 import { colors } from "@/theme/colors";
 import { mockRoute, regionFor } from "@/utils/geo";
-import { useAreas } from "@/services/queries";
+import { useDrivingRoute } from "@/services/routing";
 import { MarkerView } from "./MarkerView";
 import type { MapPreviewProps } from "./types";
 
 /**
- * Mapa nativo (react-native-maps) com dados mockados: marcadores, trajecto
- * simulado e zonas. Não usa GPS real nem serviços de rotas.
+ * Mapa nativo interactivo com tiles OpenStreetMap e trajectos OSRM.
+ * Marcadores e zonas continuam a aceitar os dados mockados da demonstração.
  */
-export function NativeMap({ markers = [], route, zones = [], static: isStatic, onZonePress }: MapPreviewProps) {
-  const { data: placeList = [] } = useAreas();
-  const routePoints = useMemo(() => (route ? mockRoute(route.from, route.to) : []), [route]);
+const ANGOLA_REGION = { latitude: -12.3, longitude: 17.6, latitudeDelta: 15.5, longitudeDelta: 15.5 };
+const osmTileUrl = process.env.EXPO_PUBLIC_OSM_TILE_URL || "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
+
+export function NativeMap({ markers = [], route, zones = [], static: isStatic, onZonePress, onMapPress }: MapPreviewProps) {
+  const mapRef = useRef<MapView>(null);
+  const routeInput = useMemo(() => (route ? [route.from, ...(route.via ?? []), route.to] : []), [route]);
+  const calculated = useDrivingRoute(routeInput, !!route && !route.coordinates?.length);
+  const routePoints = useMemo(
+    () => route?.coordinates ?? calculated.data?.coordinates ?? (route ? mockRoute(route.from, route.to) : []),
+    [route, calculated.data?.coordinates],
+  );
   const region = useMemo(() => {
     const pts = [...markers.map((m) => m.coords), ...routePoints, ...zones.map((z) => z.coords)];
-    return regionFor(pts.length ? pts : placeList.map((p) => p.coords));
-  }, [markers, routePoints, zones, placeList]);
+    return pts.length ? regionFor(pts) : ANGOLA_REGION;
+  }, [markers, routePoints, zones]);
+
+  useEffect(() => {
+    if (markers.length || routePoints.length || zones.length) mapRef.current?.animateToRegion(region, 500);
+  }, [region, markers.length, routePoints.length, zones.length]);
 
   return (
     <MapView
+      ref={mapRef}
       style={{ flex: 1 }}
       provider={PROVIDER_DEFAULT}
+      mapType={Platform.OS === "android" ? "none" : "standard"}
       initialRegion={region}
       region={isStatic ? region : undefined}
       scrollEnabled={!isStatic}
@@ -33,7 +48,9 @@ export function NativeMap({ markers = [], route, zones = [], static: isStatic, o
       showsUserLocation={false}
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
+      onPress={(event) => onMapPress?.(event.nativeEvent.coordinate)}
     >
+      <UrlTile urlTemplate={osmTileUrl} maximumZ={19} flipY={false} />
       {zones.map((zone) => (
         <Circle
           key={zone.id}

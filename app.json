@@ -19,7 +19,12 @@
     "plugins": [
       "expo-router",
       "expo-secure-store",
-      "expo-location",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "A Leva Já usa a tua localização para definir a recolha e calcular o trajecto do serviço."
+        }
+      ],
       "expo-notifications",
       "expo-font",
       "expo-asset"
@@ -35,7 +40,10 @@
       }
     },
     "ios": {
-      "bundleIdentifier": "ao.leva.app"
+      "bundleIdentifier": "ao.leva.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "A Leva Já usa a tua localização para definir a recolha e calcular o trajecto do serviço."
+      }
     }
   }
 }

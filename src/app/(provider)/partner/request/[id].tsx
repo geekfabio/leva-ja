@@ -9,7 +9,7 @@ import { describeLoad } from "@/features/booking/factory";
 import { needsProposal } from "@/features/booking/pricing";
 import { useProviderStore } from "@/stores/useProviderStore";
 import { useRequest, useServiceStore } from "@/stores/useServiceStore";
-import { formatFloor, formatKm } from "@/utils/format";
+import { formatDuration, formatFloor, formatKm } from "@/utils/format";
 import { swap } from "@/features/navigation";
 import { toast } from "@/lib/toast";
 import { colors, radius } from "@/theme/colors";
@@ -65,7 +65,7 @@ export default function NewRequestScreen() {
     <MapSheetLayout
       mapRatio={0.36}
       map={{
-        route: { from: request.origin.coords, to: request.destination.coords },
+        route: { from: request.origin.coords, via: request.stops.map((stop) => stop.coords), to: request.destination.coords, coordinates: request.routePlan?.coordinates },
         markers: [
           { id: "o", kind: "origin", coords: request.origin.coords, label: request.origin.area },
           { id: "d", kind: "destination", coords: request.destination.coords, label: request.destination.area },
@@ -101,7 +101,7 @@ export default function NewRequestScreen() {
           {request.origin.area} → {request.destination.area}
         </AppText>
         <AppText variant="caption" color={colors.muted}>
-          {formatKm(request.distanceKm)} · {request.origin.label}
+          {formatKm(request.distanceKm)} · {formatDuration(request.durationMin)} · {request.origin.label}
         </AppText>
       </InfoRow>
       <InfoRow icon={<VehicleImage art="pickup" width={90} height={54} />}>

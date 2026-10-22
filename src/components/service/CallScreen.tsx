@@ -4,7 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import Svg, { Circle, Path } from "react-native-svg";
 import { router } from "expo-router";
-import { Grid3x3, MicOff, Mic, PhoneOff, Volume2 } from "lucide-react-native";
+import { MicOff, Mic, PhoneOff, Volume2 } from "lucide-react-native";
 import { colors } from "@/theme/colors";
 import { AppText } from "@/components/core/AppText";
 import { Avatar } from "@/components/core/Avatar";
@@ -29,7 +29,6 @@ export function CallScreen({ name, subtitle, initials, photo, from, to }: { name
   const [seconds, setSeconds] = useState(0);
   const [muted, setMuted] = useState(false);
   const [speaker, setSpeaker] = useState(true);
-  const [keypad, setKeypad] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setState("connected"), 2200);
     return () => clearTimeout(t);
@@ -84,21 +83,9 @@ export function CallScreen({ name, subtitle, initials, photo, from, to }: { name
             {state === "connected" ? time : " "}
           </AppText>
         </View>
-        {keypad ? (
-          <View style={{ flexDirection: "row", flexWrap: "wrap", width: 240, justifyContent: "center", gap: 12 }}>
-            {"123456789*0#".split("").map((k) => (
-              <View key={k} style={{ width: 64, height: 48, borderRadius: 12, backgroundColor: "rgba(255,255,255,0.1)", alignItems: "center", justifyContent: "center" }}>
-                <AppText variant="h3" color={colors.white}>
-                  {k}
-                </AppText>
-              </View>
-            ))}
-          </View>
-        ) : null}
         <View style={{ alignSelf: "stretch", gap: 28 }}>
-          <View style={{ flexDirection: "row", justifyContent: "space-around" }}>
+          <View style={{ flexDirection: "row", justifyContent: "center", gap: 56 }}>
             <CallToggle label="Silenciar" active={muted} onPress={() => setMuted((v) => !v)} icon={muted ? <MicOff size={30} color={colors.white} /> : <Mic size={30} color={colors.white} />} />
-            <CallToggle label="Teclado" active={keypad} onPress={() => setKeypad((v) => !v)} icon={<Grid3x3 size={30} color={colors.white} />} />
             <CallToggle label="Altifalante" active={speaker} onPress={() => setSpeaker((v) => !v)} icon={<Volume2 size={30} color={colors.white} />} />
           </View>
           <Pressable

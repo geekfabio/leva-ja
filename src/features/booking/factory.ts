@@ -6,6 +6,7 @@ import type {
   ServiceKind,
   ServiceRequest,
   ServiceStatus,
+  RoutePlan,
   TowDetails,
 } from "@/types/domain";
 import { estimateMinutes, roadDistanceKm } from "@/utils/geo";
@@ -34,11 +35,12 @@ export type RequestInput = {
   rating?: number;
   review?: string;
   paymentMethod?: ServiceRequest["paymentMethod"];
+  routePlan?: RoutePlan;
 };
 
 /** Cria um pedido completo (distância, preço, ganho e cronologia) a partir dos dados do formulário. */
 export function buildRequest(input: RequestInput): ServiceRequest {
-  const distanceKm = roadDistanceKm(input.origin, input.destination);
+  const distanceKm = input.routePlan?.distanceKm ?? roadDistanceKm(input.origin, input.destination);
   const price = estimatePrice({
     kind: input.kind,
     distanceKm,
@@ -62,7 +64,8 @@ export function buildRequest(input: RequestInput): ServiceRequest {
     destination: input.destination,
     stops: input.stops ?? [],
     distanceKm,
-    durationMin: estimateMinutes(distanceKm),
+    durationMin: input.routePlan?.durationMin ?? estimateMinutes(distanceKm),
+    routePlan: input.routePlan,
     createdAt,
     scheduledFor: input.scheduledFor,
     tow: input.tow,

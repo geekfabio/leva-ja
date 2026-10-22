@@ -145,9 +145,18 @@ A estimativa (`features/booking/pricing.ts`) soma base, distância e extras, arr
 
 **Imagens.** As ilustrações, fotos de carga/entrega, a Hilux e os retratos de João Manuel e Armando Manuel são recortes das próprias referências (`assets/illustrations`, `assets/photos`, `assets/avatars`); as viaturas 3D vêm de `assets/vehicles/fleet-3d.png`, separadas em ficheiros individuais.
 
-## Mapa
+## Mapa e rotas
 
-`MapPreview` usa `react-native-maps` no Android e iOS, com marcadores, trajecto simulado e zonas mockadas. Na web, nos testes ou com `EXPO_PUBLIC_MOCK_MAP=1` usa um mapa ilustrativo em SVG, sem rede. No Android, uma build de produção precisa de uma chave Google Maps (`android.config.googleMaps.apiKey` no `app.json`); sem ela os marcadores aparecem sobre um fundo vazio — usa `EXPO_PUBLIC_MOCK_MAP=1` nesse caso.
+No Android e iOS, `MapPreview` usa `react-native-maps` com tiles OpenStreetMap, zoom e deslocação. O cliente pode marcar recolha/destino directamente no mapa ou usar o GPS do telemóvel; o prestador também usa a posição GPS no painel e na aproximação à recolha. A rota automóvel mais rápida vem do OSRM, incluindo geometria sobre as estradas, distância e duração. Se o serviço estiver indisponível, a app mantém uma estimativa local identificada como mock.
+
+Na web, nos testes ou com `EXPO_PUBLIC_MOCK_MAP=1`, usa-se o mapa ilustrativo em SVG. Os serviços públicos predefinidos servem apenas para desenvolvimento/demonstração. Em produção, configurar infraestrutura própria ou um fornecedor com SLA e política de utilização adequada:
+
+```bash
+EXPO_PUBLIC_OSM_TILE_URL=https://tiles.exemplo.ao/{z}/{x}/{y}.png
+EXPO_PUBLIC_ROUTING_URL=https://osrm.exemplo.ao
+```
+
+A atribuição `© OpenStreetMap contributors` permanece visível no mapa nativo.
 
 ## Animações
 

@@ -11,10 +11,11 @@ import { repositories } from "@/data";
 import { useBookingStore } from "@/stores/useBookingStore";
 import { useServiceStore } from "@/stores/useServiceStore";
 import { useSessionStore } from "@/stores/useSessionStore";
-import { formatKz } from "@/utils/format";
+import { formatDuration, formatKz } from "@/utils/format";
 import { swap } from "@/features/navigation";
 import { toast } from "@/lib/toast";
 import { colors } from "@/theme/colors";
+import { estimateMinutes } from "@/utils/geo";
 
 /** 20 · Estimativa e confirmação do pedido. */
 export default function EstimateStep() {
@@ -22,7 +23,7 @@ export default function EstimateStep() {
   const clientId = useSessionStore((s) => s.user.id);
   const detail = useRef<BottomSheetModal>(null);
   const issues = useMemo(() => draftIssues(draft), [draft]);
-  const distanceKm = draft.origin && draft.destination ? repositories().locations.distanceKm(draft.origin, draft.destination) : 0;
+  const distanceKm = draft.routePlan?.distanceKm ?? (draft.origin && draft.destination ? repositories().locations.distanceKm(draft.origin, draft.destination) : 0);
   const input = { kind: draft.kind, distanceKm, tow: draft.tow, cargo: draft.cargo, moving: draft.moving };
   const price = estimatePrice(input);
   const vehicle = recommendVehicle(input);
@@ -68,7 +69,7 @@ export default function EstimateStep() {
         <MapPreview
           height={170}
           static
-          route={{ from: draft.origin.coords, to: draft.destination.coords }}
+          route={{ from: draft.origin.coords, via: draft.stops.map((stop) => stop.coords), to: draft.destination.coords, coordinates: draft.routePlan?.coordinates }}
           markers={[
             { id: "o", kind: "origin", coords: draft.origin.coords, label: draft.origin.area },
             { id: "d", kind: "destination", coords: draft.destination.coords, label: draft.destination.area },
@@ -76,6 +77,9 @@ export default function EstimateStep() {
         />
         <View style={{ padding: 14 }}>
           <RouteSummary origin={draft.origin} destination={draft.destination} distanceKm={distanceKm} />
+          <AppText variant="caption" color={colors.muted} style={{ marginTop: 4 }}>
+            Duração estimada: {formatDuration(draft.routePlan?.durationMin ?? estimateMinutes(distanceKm))}
+          </AppText>
         </View>
       </Card>
       <Card style={{ gap: 6 }}>

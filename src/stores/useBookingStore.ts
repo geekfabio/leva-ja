@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { CargoDetails, MovingDetails, Photo, Place, ServiceKind, TowDetails } from "@/types/domain";
+import type { CargoDetails, MovingDetails, Photo, Place, RoutePlan, ServiceKind, TowDetails } from "@/types/domain";
 
 export type BookingDraft = {
   kind: ServiceKind;
@@ -10,6 +10,7 @@ export type BookingDraft = {
   origin: Place | null;
   destination: Place | null;
   stops: Place[];
+  routePlan: RoutePlan | null;
   photos: Photo[];
   instructions: string;
 };
@@ -41,6 +42,7 @@ const emptyDraft = (kind: ServiceKind, variant?: "goods"): BookingDraft => ({
   origin: null,
   destination: null,
   stops: [],
+  routePlan: null,
   photos: [],
   instructions: "",
 });

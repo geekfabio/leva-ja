@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View } from "react-native";
+import { Text, View } from "react-native";
 import { PulseRings } from "./PulseRings";
 import { MockMapCanvas } from "./MockMapCanvas";
 import { NativeMap } from "./NativeMap";
@@ -25,6 +25,11 @@ export function MapPreview(props: MapPreviewProps) {
       onLayout={(e) => setSize(e.nativeEvent.layout)}
     >
       <Map {...props} />
+      {native ? (
+        <View pointerEvents="none" style={{ position: "absolute", right: 5, bottom: 4, backgroundColor: "rgba(255,255,255,0.86)", borderRadius: 3, paddingHorizontal: 4, paddingVertical: 2 }}>
+          <Text style={{ color: "#334139", fontSize: 9 }}>© OpenStreetMap contributors</Text>
+        </View>
+      ) : null}
       {/* No mapa nativo a região centra-se na recolha, por isso o radar fica ao centro. */}
       {native && props.pulse && size.width ? <PulseRings x={size.width / 2} y={size.height / 2} /> : null}
     </View>

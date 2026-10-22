@@ -39,11 +39,11 @@ const KM_PER_DEG = 111;
  * Mapa ilustrativo em SVG (sem tiles nem rede). Usado na web, nos testes e quando
  * EXPO_PUBLIC_MOCK_MAP=1. Projecção equirectangular simples sobre Luanda.
  */
-export function MockMapCanvas({ markers = [], route, zones = [], pulse, onZonePress }: MapPreviewProps) {
+export function MockMapCanvas({ markers = [], route, zones = [], pulse, onZonePress, onMapPress, static: isStatic }: MapPreviewProps) {
   // Nomes dos bairros vêm do LocationRepository (como camada de etiquetas do mapa).
   const { data: placeList = [] } = useAreas();
   const [size, setSize] = useState({ width: 0, height: 0 });
-  const routePoints = useMemo(() => (route ? mockRoute(route.from, route.to) : []), [route]);
+  const routePoints = useMemo(() => route?.coordinates ?? (route ? mockRoute(route.from, route.to) : []), [route]);
 
   const bounds = useMemo(() => {
     const pts = [
@@ -83,7 +83,18 @@ export function MockMapCanvas({ markers = [], route, zones = [], pulse, onZonePr
   const pulseCenter = pulse ? markers.find((m) => m.kind === "origin" || m.kind === "user") : undefined;
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.mapLand, overflow: "hidden" }} onLayout={(e) => setSize(e.nativeEvent.layout)}>
+    <View
+      style={{ flex: 1, backgroundColor: colors.mapLand, overflow: "hidden" }}
+      onLayout={(e) => setSize(e.nativeEvent.layout)}
+      onTouchEnd={(event) => {
+        if (!onMapPress || isStatic || !size.width || !size.height) return;
+        const { locationX, locationY } = event.nativeEvent;
+        onMapPress({
+          latitude: bounds.maxLat - (locationY / size.height) * (bounds.maxLat - bounds.minLat),
+          longitude: bounds.minLon + (locationX / size.width) * (bounds.maxLon - bounds.minLon),
+        });
+      }}
+    >
       {size.width > 0 ? (
         <>
           <Svg width={size.width} height={size.height} accessible={false}>

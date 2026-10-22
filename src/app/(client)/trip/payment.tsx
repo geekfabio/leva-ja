@@ -177,7 +177,9 @@ export default function PaymentScreen() {
               static
               route={{
                 from: request.origin.coords,
+                via: request.stops.map((stop) => stop.coords),
                 to: request.destination.coords,
+                coordinates: request.routePlan?.coordinates,
               }}
               markers={[
                 {

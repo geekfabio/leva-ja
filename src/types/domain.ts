@@ -6,6 +6,14 @@ export type Role = "client" | "provider";
 
 export type Coordinates = { latitude: number; longitude: number };
 
+/** Trajecto calculado por um motor rodoviário (OSRM) ou pelo fallback offline. */
+export type RoutePlan = {
+  coordinates: Coordinates[];
+  distanceKm: number;
+  durationMin: number;
+  source: "osrm" | "mock";
+};
+
 export type Place = {
   id: string;
   label: string;
@@ -167,6 +175,8 @@ export type ServiceRequest = {
   stops: Place[];
   distanceKm: number;
   durationMin: number;
+  /** Geometria da estrada escolhida; pedidos antigos podem não a ter. */
+  routePlan?: RoutePlan;
   createdAt: string;
   scheduledFor?: string;
   tow?: TowDetails;

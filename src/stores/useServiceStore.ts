@@ -87,6 +87,7 @@ export const useServiceStore = create<ServiceState>((set, get) => {
             origin: draft.origin!,
             destination: draft.destination!,
             stops: draft.stops,
+            routePlan: draft.routePlan ?? undefined,
             clientId,
             tow: draft.kind === "tow" ? (draft.tow as ServiceRequest["tow"]) : undefined,
             cargo: draft.kind === "cargo" ? (draft.cargo as ServiceRequest["cargo"]) : undefined,
