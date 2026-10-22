@@ -10,6 +10,7 @@ import { approachStart, mockRoute, pointAlong } from "@/utils/geo";
 import { unreadCount, useChatStore } from "@/stores/useChatStore";
 import { go } from "@/features/navigation";
 import { toast } from "@/lib/toast";
+import { useDrivingRoute } from "@/services/routing";
 import { colors } from "@/theme/colors";
 
 const ETA_MIN = 8;
@@ -22,8 +23,10 @@ export default function TrackingScreen() {
   const progress = useStageProgress(request, "en_route", clientAutoAdvance.en_route!.afterMs);
   const unread = useChatStore((s) => unreadCount(request ? s.threads[request.id] : undefined, "client"));
   const provider = request?.provider;
+  const routeStart = request ? approachStart(request.origin.coords) : undefined;
+  const drivingRoute = useDrivingRoute(routeStart, request?.origin.coords);
   if (!request || !provider) return <NoActiveRequest />;
-  const route = mockRoute(approachStart(request.origin.coords), request.origin.coords);
+  const route = drivingRoute.data?.coordinates ?? mockRoute(routeStart!, request.origin.coords);
   const position = request.status === "en_route" ? pointAlong(route, progress) : approachStart(request.origin.coords);
   const eta = request.status === "en_route" ? Math.max(1, Math.round(ETA_MIN * (1 - progress))) : ETA_MIN;
   const step = request.status === "assigned" ? 0 : eta <= 2 ? 2 : 1;
@@ -32,7 +35,7 @@ export default function TrackingScreen() {
     <MapSheetLayout
       mapRatio={0.55}
       map={{
-        route: { from: approachStart(request.origin.coords), to: request.origin.coords },
+        route: { from: routeStart!, to: request.origin.coords, coordinates: drivingRoute.data?.coordinates },
         markers: [
           { id: "v", kind: "vehicle", coords: position, icon: request.kind === "tow" ? "tow" : "cargo" },
           { id: "o", kind: "destination", coords: request.origin.coords, label: request.origin.area },

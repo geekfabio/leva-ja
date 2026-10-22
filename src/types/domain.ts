@@ -167,6 +167,8 @@ export type ServiceRequest = {
   stops: Place[];
   distanceKm: number;
   durationMin: number;
+  /** Geometria da rota automóvel devolvida pelo serviço de routing. */
+  routeGeometry?: Coordinates[];
   createdAt: string;
   scheduledFor?: string;
   tow?: TowDetails;

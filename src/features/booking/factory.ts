@@ -20,6 +20,9 @@ export type RequestInput = {
   origin: Place;
   destination: Place;
   stops?: Place[];
+  routeDistanceKm?: number;
+  routeDurationMin?: number;
+  routeGeometry?: ServiceRequest["routeGeometry"];
   clientId: string;
   providerId?: string;
   status?: ServiceStatus;
@@ -38,7 +41,7 @@ export type RequestInput = {
 
 /** Cria um pedido completo (distância, preço, ganho e cronologia) a partir dos dados do formulário. */
 export function buildRequest(input: RequestInput): ServiceRequest {
-  const distanceKm = roadDistanceKm(input.origin, input.destination);
+  const distanceKm = input.routeDistanceKm && input.routeDistanceKm > 0 ? input.routeDistanceKm : roadDistanceKm(input.origin, input.destination);
   const price = estimatePrice({
     kind: input.kind,
     distanceKm,
@@ -62,7 +65,8 @@ export function buildRequest(input: RequestInput): ServiceRequest {
     destination: input.destination,
     stops: input.stops ?? [],
     distanceKm,
-    durationMin: estimateMinutes(distanceKm),
+    durationMin: input.routeDurationMin && input.routeDurationMin > 0 ? input.routeDurationMin : estimateMinutes(distanceKm),
+    routeGeometry: input.routeGeometry,
     createdAt,
     scheduledFor: input.scheduledFor,
     tow: input.tow,

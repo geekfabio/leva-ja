@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { CargoDetails, MovingDetails, Photo, Place, ServiceKind, TowDetails } from "@/types/domain";
+import type { CargoDetails, Coordinates, MovingDetails, Photo, Place, ServiceKind, TowDetails } from "@/types/domain";
 
 export type BookingDraft = {
   kind: ServiceKind;
@@ -10,6 +10,10 @@ export type BookingDraft = {
   origin: Place | null;
   destination: Place | null;
   stops: Place[];
+  /** Dados da rota automóvel calculada antes de confirmar o pedido. */
+  routeDistanceKm?: number;
+  routeDurationMin?: number;
+  routeGeometry?: Coordinates[];
   photos: Photo[];
   instructions: string;
 };

@@ -65,7 +65,7 @@ export default function NewRequestScreen() {
     <MapSheetLayout
       mapRatio={0.36}
       map={{
-        route: { from: request.origin.coords, to: request.destination.coords },
+        route: { from: request.origin.coords, to: request.destination.coords, coordinates: request.routeGeometry },
         markers: [
           { id: "o", kind: "origin", coords: request.origin.coords, label: request.origin.area },
           { id: "d", kind: "destination", coords: request.destination.coords, label: request.destination.area },

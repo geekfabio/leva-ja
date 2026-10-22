@@ -83,7 +83,7 @@ export default function ActiveServiceScreen() {
     <MapSheetLayout
       mapRatio={0.46}
       map={{
-        route: going ? { from: start, to: request.origin.coords } : { from: request.origin.coords, to: request.destination.coords },
+        route: going ? { from: start, to: request.origin.coords } : { from: request.origin.coords, to: request.destination.coords, coordinates: request.routeGeometry },
         markers: going
           ? [
               { id: "v", kind: "vehicle", coords: start, icon: request.kind === "tow" ? "tow" : "cargo" },

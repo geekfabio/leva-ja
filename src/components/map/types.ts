@@ -15,8 +15,8 @@ export type MapZone = { id: string; coords: Coordinates; radiusKm: number; label
 export type MapPreviewProps = {
   height?: number | `${number}%`;
   markers?: MapMarker[];
-  /** Desenha o trajecto entre estes dois pontos. */
-  route?: { from: Coordinates; to: Coordinates };
+  /** Desenha o trajecto entre estes dois pontos. `coordinates` vem do serviço de routing quando disponível. */
+  route?: { from: Coordinates; to: Coordinates; coordinates?: Coordinates[] };
   zones?: MapZone[];
   /** Pulsação de procura à volta do primeiro marcador de origem. */
   pulse?: boolean;
@@ -25,4 +25,8 @@ export type MapPreviewProps = {
   static?: boolean;
   accessibilityLabel?: string;
   onZonePress?: (id: string) => void;
+  /** Coordenada tocada pelo utilizador num mapa interactivo. */
+  onMapPress?: (coords: Coordinates) => void;
+  /** Mostra o ponto azul de GPS no dispositivo quando a permissão foi concedida. */
+  showsUserLocation?: boolean;
 };

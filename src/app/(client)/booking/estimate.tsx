@@ -22,7 +22,7 @@ export default function EstimateStep() {
   const clientId = useSessionStore((s) => s.user.id);
   const detail = useRef<BottomSheetModal>(null);
   const issues = useMemo(() => draftIssues(draft), [draft]);
-  const distanceKm = draft.origin && draft.destination ? repositories().locations.distanceKm(draft.origin, draft.destination) : 0;
+  const distanceKm = draft.routeDistanceKm ?? (draft.origin && draft.destination ? repositories().locations.distanceKm(draft.origin, draft.destination) : 0);
   const input = { kind: draft.kind, distanceKm, tow: draft.tow, cargo: draft.cargo, moving: draft.moving };
   const price = estimatePrice(input);
   const vehicle = recommendVehicle(input);
@@ -68,7 +68,7 @@ export default function EstimateStep() {
         <MapPreview
           height={170}
           static
-          route={{ from: draft.origin.coords, to: draft.destination.coords }}
+          route={{ from: draft.origin.coords, to: draft.destination.coords, coordinates: draft.routeGeometry }}
           markers={[
             { id: "o", kind: "origin", coords: draft.origin.coords, label: draft.origin.area },
             { id: "d", kind: "destination", coords: draft.destination.coords, label: draft.destination.area },
