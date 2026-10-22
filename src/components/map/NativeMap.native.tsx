@@ -3,7 +3,6 @@ import MapView, { Circle, Marker, Polyline, PROVIDER_DEFAULT, UrlTile } from "re
 import { Text, View } from "react-native";
 import { colors } from "@/theme/colors";
 import { mockRoute, regionFor } from "@/utils/geo";
-import { useAreas } from "@/services/queries";
 import { MarkerView } from "./MarkerView";
 import type { MapPreviewProps } from "./types";
 
@@ -29,7 +28,6 @@ export function NativeMap({
 }: MapPreviewProps) {
   const mapRef = useRef<MapView>(null);
   const focusedKey = useRef("");
-  const { data: placeList = [] } = useAreas();
   const routePoints = useMemo(
     () => route?.coordinates?.length ? route.coordinates : route ? mockRoute(route.from, route.to) : [],
     [route],
