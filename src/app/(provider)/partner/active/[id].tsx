@@ -16,6 +16,8 @@ import { toast } from "@/lib/toast";
 import { colors } from "@/theme/colors";
 import { clientOf } from "@/features/service/people";
 import { useMyProvider } from "@/features/provider/useProvider";
+import { useDeviceLocation } from "@/features/location/useDeviceLocation";
+import { useDrivingRoute } from "@/services/routing";
 
 const subtitleFor: Record<string, (to: string, from: string) => string> = {
   assigned: (_, from) => `A aguardar deslocação para ${from}`,
@@ -33,6 +35,8 @@ export default function ActiveServiceScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const request = useRequest(id);
   const me = useMyProvider();
+  const { place: deviceLocation } = useDeviceLocation();
+  const pickupRoute = useDrivingRoute(deviceLocation?.coords ?? me.coords, request?.origin.coords);
   const vehicle = me.vehicle;
   const unread = useChatStore((s) => unreadCount(id ? s.threads[id] : undefined, "provider"));
   const more = useRef<BottomSheetModal>(null);
@@ -46,7 +50,7 @@ export default function ActiveServiceScreen() {
   const action = providerAction[request.status];
   const step = ["assigned", "en_route", "arrived"].includes(request.status) ? 0 : request.status === "pickup_confirmed" ? 1 : request.status === "in_transit" ? 1 : 2;
   const going = ["assigned", "en_route"].includes(request.status);
-  const start = me.coords;
+  const start = deviceLocation?.coords ?? me.coords;
   const steps = going ? ["Pedido aceite", "A caminho", "No local"] : ["Recolha concluída", "Em transporte", "Confirmar entrega"];
   const stepIndex = going ? (request.status === "assigned" ? 0 : 1) : step === 0 ? 0 : step;
   const eta = going ? 8 : Math.round(request.durationMin / 2);
@@ -83,7 +87,8 @@ export default function ActiveServiceScreen() {
     <MapSheetLayout
       mapRatio={0.46}
       map={{
-        route: going ? { from: start, to: request.origin.coords } : { from: request.origin.coords, to: request.destination.coords, coordinates: request.routeGeometry },
+        route: going ? { from: start, to: request.origin.coords, coordinates: pickupRoute.data?.coordinates } : { from: request.origin.coords, to: request.destination.coords, coordinates: request.routeGeometry },
+        showsUserLocation: Boolean(deviceLocation),
         markers: going
           ? [
               { id: "v", kind: "vehicle", coords: start, icon: request.kind === "tow" ? "tow" : "cargo" },
