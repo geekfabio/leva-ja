@@ -9,7 +9,7 @@ import { VehicleImage } from "./Media";
 import { ScalePressable } from "@/components/core/Motion";
 
 const artFor = (provider: Provider) =>
-  ({ pickup: "pickup", tow_truck: "tow", van: "van", truck: "box" } as const)[provider.vehicle.vehicleClass];
+  ({ tuk_tuk: "tuk_tuk", pickup: "pickup", tow_truck: "tow", van: "van", truck: "box" } as const)[provider.vehicle.vehicleClass];
 
 /** Prestador com avaliação e viatura (ref. 22, 23, 28). */
 export function ProviderCard({

@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Package, PersonStanding } from "lucide-react-native";
 import { AppText, Card, ChoiceChip, SelectField, SelectionCard, TextField, ToggleRow, VehicleImage } from "@/components/kit";
 import { BookingScaffold } from "@/components/service/BookingScaffold";
-import { cargoTypeOptions, cargoVehicleOptions, volumeOptions, weightOptions } from "@/features/booking/catalog";
+import { cargoTypeOptions, cargoVehicleOptions, goodsVehicleOptions, volumeOptions, weightOptions } from "@/features/booking/catalog";
 import { cargoSchema, type CargoForm } from "@/features/booking/schemas";
 import { useBookingStep } from "@/features/booking/useBookingFlow";
 import { illustrations } from "@/theme/images";
@@ -31,6 +31,7 @@ export default function CargoStep() {
     defaultValues: draft.cargo as CargoForm,
   });
   const cargoType = watch("cargoType");
+  const vehicleOptions = draft.variant === "goods" ? goodsVehicleOptions : cargoVehicleOptions;
   const submit = handleSubmit((values) => {
     useBookingStore.getState().patchCargo(values);
     next();
@@ -121,7 +122,7 @@ export default function CargoStep() {
                 Viatura
               </AppText>
               <View accessibilityRole="radiogroup" style={{ flexDirection: "row", gap: 8 }}>
-                {cargoVehicleOptions.map((option) => (
+                {vehicleOptions.map((option) => (
                   <SelectionCard
                     key={option.value}
                     layout="tile"

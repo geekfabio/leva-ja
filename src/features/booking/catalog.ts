@@ -26,7 +26,7 @@ export type ServiceDefinition = {
   shortTitle: string;
   description: string;
   icon: "tow" | "pickup" | "van" | "house" | "package";
-  art: "tow" | "pickup" | "van" | "box" | "heavy";
+  art: "tow" | "tuk_tuk" | "pickup" | "van" | "box" | "heavy";
 };
 
 export const serviceCatalog: ServiceDefinition[] = [
@@ -67,9 +67,9 @@ export const serviceCatalog: ServiceDefinition[] = [
     variant: "goods",
     title: "Entrega de mercadoria",
     shortTitle: "Mercadoria",
-    description: "Recolha e entrega de produtos em Luanda e arredores.",
+    description: "Entregas ágeis por tuk-tuk, pickup ou carrinha em Luanda.",
     icon: "package",
-    art: "van",
+    art: "tuk_tuk",
   },
 ];
 
@@ -135,10 +135,17 @@ export const volumeOptions: { value: VolumeSize; label: string; hint: string }[]
   { value: "large", label: "Grande", hint: "Mais de 3 m³" },
 ];
 
-export const cargoVehicleOptions: { value: Exclude<VehicleClass, "tow_truck">; label: string; hint: string; art: "pickup" | "van" | "heavy" }[] = [
+export const cargoVehicleOptions: { value: Exclude<VehicleClass, "tow_truck" | "tuk_tuk">; label: string; hint: string; art: "pickup" | "van" | "heavy" }[] = [
   { value: "pickup", label: "Pickup", hint: "Até 500 kg", art: "pickup" },
   { value: "van", label: "Carrinha", hint: "Até 1 200 kg", art: "van" },
   { value: "truck", label: "Camião", hint: "Até 3 t", art: "heavy" },
+];
+
+/** Opções de pequena logística para a variante «Entrega de mercadoria». */
+export const goodsVehicleOptions: { value: "tuk_tuk" | "pickup" | "van"; label: string; hint: string; art: "tuk_tuk" | "pickup" | "van" }[] = [
+  { value: "tuk_tuk", label: "Tuk-tuk", hint: "Até 100 kg", art: "tuk_tuk" },
+  { value: "pickup", label: "Pickup", hint: "Até 500 kg", art: "pickup" },
+  { value: "van", label: "Carrinha", hint: "Até 1 200 kg", art: "van" },
 ];
 
 export const propertyOptions: { value: PropertyType; label: string }[] = [

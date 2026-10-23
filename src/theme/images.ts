@@ -17,6 +17,7 @@ export type PhotoAssetKey = keyof typeof photoAssets;
 
 export const vehicleArt = {
   tow: require("../../assets/vehicles/tow.png"),
+  tuk_tuk: require("../../assets/vehicles/tuk-tuk.png"),
   pickup: require("../../assets/vehicles/pickup.png"),
   van: require("../../assets/vehicles/van.png"),
   box: require("../../assets/vehicles/box.png"),

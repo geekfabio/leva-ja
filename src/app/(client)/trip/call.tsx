@@ -12,7 +12,7 @@ export default function ClientCallScreen() {
       name={provider.name}
       initials={provider.initials}
       photo={provider.avatar}
-      subtitle={`${provider.vehicle.vehicleClass === "pickup" ? "Pickup " : ""}${provider.vehicle.brand} ${provider.vehicle.model}`}
+      subtitle={`${provider.vehicle.vehicleClass === "pickup" ? "Pickup " : provider.vehicle.vehicleClass === "tuk_tuk" ? "Tuk-tuk " : ""}${provider.vehicle.brand} ${provider.vehicle.model}`}
       from={request.origin.area}
       to={request.destination.area}
     />

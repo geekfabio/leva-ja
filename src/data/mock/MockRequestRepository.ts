@@ -11,9 +11,14 @@ import { db, type MockDatabase } from "./database";
 import { Emitter } from "./events";
 import { simulate } from "./runtime";
 
-/** Prestador que a simulação atribui a cada tipo de serviço. */
-export const simulatedProviderFor = (kind: ServiceRequest["kind"]) =>
-  kind === "tow" ? "prv-paulo" : kind === "house_move" ? "prv-teresa" : "prv-joao";
+/** Prestador que a simulação atribui a cada serviço, incluindo entregas leves por tuk-tuk. */
+export const simulatedProviderFor = (input: Pick<ServiceRequest, "kind" | "cargo"> | ServiceRequest["kind"]) => {
+  const request = typeof input === "string" ? { kind: input } : input;
+  if (request.kind === "tow") return "prv-paulo";
+  if (request.kind === "house_move") return "prv-teresa";
+  if (request.kind === "cargo" && request.cargo?.vehicleClass === "tuk_tuk") return "prv-mateus";
+  return "prv-joao";
+};
 
 const now = () => new Date().toISOString();
 
@@ -80,7 +85,7 @@ export class MockRequestRepository implements RequestRepository {
       if (!canTransition(r.status, to)) throw new RepositoryError("invalid_transition", `Não é possível passar de ${r.status} para ${to}.`);
       const expected = transitionActor[to];
       if (actor !== "system" && expected && expected !== actor) throw new RepositoryError("forbidden", "Esta acção pertence ao outro interveniente.");
-      return this.save({ ...this.advance(r, to), providerId: to === "assigned" ? (r.providerId ?? simulatedProviderFor(r.kind)) : r.providerId });
+      return this.save({ ...this.advance(r, to), providerId: to === "assigned" ? (r.providerId ?? simulatedProviderFor(r)) : r.providerId });
     });
   }
 

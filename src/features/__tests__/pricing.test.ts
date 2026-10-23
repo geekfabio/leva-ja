@@ -35,4 +35,11 @@ describe("estimativa de preço", () => {
     expect(needsProposal("house_move")).toBe(true);
     expect(needsProposal("cargo")).toBe(false);
   });
+
+  it("recomenda tuk-tuk e preço mais leve para entregas pequenas", () => {
+    const tukTuk = estimatePrice({ kind: "cargo", distanceKm: 5, cargo: { weight: "upto100", volume: "small", vehicleClass: "tuk_tuk", helper: false } });
+    const pickup = estimatePrice({ kind: "cargo", distanceKm: 5, cargo: { weight: "upto100", volume: "small", vehicleClass: "pickup", helper: false } });
+    expect(recommendVehicle({ kind: "cargo", distanceKm: 5, cargo: { vehicleClass: "tuk_tuk" } }).art).toBe("tuk_tuk");
+    expect(tukTuk.total).toBeLessThan(pickup.total);
+  });
 });
