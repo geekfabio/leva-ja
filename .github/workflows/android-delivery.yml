@@ -1,0 +1,62 @@
+name: Android delivery
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: Perfil de build EAS
+        required: true
+        type: choice
+        default: test-apk
+        options:
+          - test-apk
+          - beta
+          - production
+      submit_to_play:
+        description: Submeter AAB à Google Play (beta ou production)
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validar aplicação
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint -- --quiet
+      - run: npm test -- --runInBand
+
+  build:
+    name: Criar ${{ inputs.profile }}
+    needs: validate
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.profile }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: expo/expo-github-action@v8
+        with:
+          expo-version: latest
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - name: Criar build Android no EAS
+        env:
+          GOOGLE_MAPS_ANDROID_API_KEY: ${{ secrets.GOOGLE_MAPS_ANDROID_API_KEY }}
+        run: eas build --platform android --profile "${{ inputs.profile }}" --non-interactive --wait
+      - name: Preparar credencial da Google Play
+        if: ${{ inputs.submit_to_play && (inputs.profile == 'beta' || inputs.profile == 'production') }}
+        env:
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON_BASE64: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON_BASE64 }}
+        run: printf '%s' "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON_BASE64" | base64 --decode > google-service-account.json
+      - name: Submeter à Google Play
+        if: ${{ inputs.submit_to_play && (inputs.profile == 'beta' || inputs.profile == 'production') }}
+        run: eas submit --platform android --profile "${{ inputs.profile }}" --latest --non-interactive
