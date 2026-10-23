@@ -34,7 +34,7 @@ export const cargoSchema = z.object({
   description: z.string().trim().max(200, "Máximo de 200 caracteres.").default(""),
   weight: z.enum(["upto100", "101to300", "301to500", "over500"]),
   volume: z.enum(["small", "medium", "large"]),
-  vehicleClass: z.enum(["pickup", "van", "truck"]),
+  vehicleClass: z.enum(["tuk_tuk", "pickup", "van", "truck"]),
   helper: z.boolean(),
 }).superRefine((value, ctx) => {
   if (value.weight === "over500" && value.vehicleClass === "pickup")
@@ -42,6 +42,12 @@ export const cargoSchema = z.object({
       code: z.ZodIssueCode.custom,
       path: ["vehicleClass"],
       message: "Mais de 500 kg exige carrinha ou camião.",
+    });
+  if (value.vehicleClass === "tuk_tuk" && (value.weight !== "upto100" || value.volume !== "small"))
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["vehicleClass"],
+      message: "O tuk-tuk é indicado para entregas pequenas até 100 kg e 1 m³.",
     });
   if (value.cargoType === "other" && value.description.length < 3)
     ctx.addIssue({
