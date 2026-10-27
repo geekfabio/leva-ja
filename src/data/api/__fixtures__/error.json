@@ -1,0 +1,6 @@
+{
+  "error": {
+    "code": "invalid_transition",
+    "message": "Este pedido já não pode ser cancelado."
+  }
+}

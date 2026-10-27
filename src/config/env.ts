@@ -8,7 +8,7 @@ import { z } from "zod";
 const schema = z
   .object({
     dataSource: z.enum(["mock", "http"]).default("mock"),
-    apiUrl: z.string().url("EXPO_PUBLIC_API_URL tem de ser um URL (ex.: https://api.angoleva.ao/v1 ou mock://local).").optional(),
+    apiUrl: z.string().url("EXPO_PUBLIC_API_URL tem de ser um URL (ex.: https://api.angoleva.ao/v1).").optional(),
     apiTimeoutMs: z.coerce.number().int().positive().default(10_000),
     pollIntervalMs: z.coerce.number().int().min(1_000).default(5_000),
     secureStorage: z.enum(["mock", "device"]).default("mock"),
@@ -39,6 +39,3 @@ export const env = parseEnv({
   pollIntervalMs: process.env.EXPO_PUBLIC_POLL_INTERVAL_MS,
   secureStorage: process.env.EXPO_PUBLIC_SECURE_STORAGE,
 });
-
-/** A API simulada (`mock://…`) corre dentro da app, sobre a base mock, mas passa por toda a camada HTTP. */
-export const usesSimulatedApi = env.dataSource === "http" && (env.apiUrl?.startsWith("mock:") ?? false);

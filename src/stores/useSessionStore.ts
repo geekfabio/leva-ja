@@ -63,7 +63,7 @@ export const useSessionStore = create<SessionState>((set, get) => {
     hasOnboarded: false,
     role: null,
     authenticated: false,
-    token: null,
+    token: demoIdentity?.token ?? null,
     user: demoIdentity?.user ?? GUEST,
     providerId: demoIdentity?.providerId ?? null,
     pendingRegistration: null,

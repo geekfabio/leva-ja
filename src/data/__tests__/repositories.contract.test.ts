@@ -1,7 +1,7 @@
 import type { Repositories } from "@/data";
 import { RepositoryError } from "@/data";
 import { http } from "@/data/http/client";
-import { createHttpRepositories } from "@/data/http/HttpRepositories";
+import { createApiRepositories } from "@/data/api/ApiRepositories";
 import { createMockRepositories } from "@/data/mock";
 import { MockDatabase } from "@/data/mock/database";
 import { createMockServer } from "@/data/mock/server";
@@ -83,6 +83,21 @@ function contract(name: string, make: () => Promise<Repositories>) {
       await expect(repos.auth.restore("token-inventado")).rejects.toMatchObject({ code: "unauthorized" });
     });
 
+    it("chat: a mensagem enviada fica na conversa e a resposta chega em tempo real", async () => {
+      const thread = "support-client";
+      const before = await repos.chat.messages(thread, "support");
+      const replies: string[] = [];
+      const off = repos.chat.subscribe(thread, (event) => {
+        if (event.type === "message" && event.message.from === "support") replies.push(event.message.text);
+      });
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      const sent = await repos.chat.send(thread, "client", "Preciso de ajuda com o recibo");
+      expect(sent).toMatchObject({ from: "client", text: "Preciso de ajuda com o recibo" });
+      await eventually(() => replies.length > 0);
+      off();
+      expect(await repos.chat.messages(thread, "support")).toHaveLength(before.length + 2);
+    });
+
     it("suporte e localização", async () => {
       expect((await repos.support.searchHelp("recibo")).length).toBeGreaterThan(0);
       await expect(repos.support.createTicket({ requestId: "x", reason: "Outro", description: "curto" })).rejects.toMatchObject({ code: "validation" });
@@ -91,11 +106,22 @@ function contract(name: string, make: () => Promise<Repositories>) {
   });
 }
 
-contract("mock", async () => createMockRepositories(new MockDatabase()));
+// Serviços mock: as regras de negócio do "backend" simulado.
+contract("serviços mock", async () => createMockRepositories(new MockDatabase()));
 
-contract("http (API simulada)", async () => {
+// O que a app usa: repositórios da API sobre a API simulada (formato da API, tempo real por socket).
+contract("API simulada (socket)", async () => {
+  const server = createMockServer(new MockDatabase());
+  http.defaults.adapter = server.adapter;
+  const repos = createApiRepositories({ realtime: server.socket });
+  await repos.auth.login("armando@email.com", "segredo12", "client");
+  return repos;
+});
+
+// Igual, mas com o tempo real por polling (como com a API REST real hoje).
+contract("API simulada (polling)", async () => {
   http.defaults.adapter = createMockServer(new MockDatabase()).adapter;
-  const repos = createHttpRepositories({ pollIntervalMs: 5 });
+  const repos = createApiRepositories({ pollIntervalMs: 5 });
   await repos.auth.login("armando@email.com", "segredo12", "client");
   return repos;
 });

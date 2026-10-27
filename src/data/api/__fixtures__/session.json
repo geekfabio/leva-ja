@@ -1,0 +1,15 @@
+{
+  "data": {
+    "access_token": "eyJhbGciOiJIUzI1NiJ9.exemplo.assinatura",
+    "token_type": "Bearer",
+    "user": {
+      "id": "cli-armando",
+      "full_name": "Armando Manuel",
+      "email": "armando@email.com",
+      "phone": "+244 923 456 789",
+      "rating": 4.8,
+      "avatar_url": null
+    },
+    "provider_id": null
+  }
+}

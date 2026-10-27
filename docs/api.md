@@ -1,78 +1,153 @@
 # API AngoLeva — contrato esperado pela app
 
-Este documento descreve a API REST que a app consome. A implementação do lado da app está em `src/data/http/HttpRepositories.ts`. A API simulada (`src/data/mock/server.ts`) responde a estes endpoints e serve de **especificação executável**: se o backend se comportar como ela, a app funciona sem alterações.
+Este documento descreve a API REST que a app consome, no formato exacto de fio.
 
-Os tipos referidos (`ServiceRequest`, `Provider`, `ChatMessage`…) estão em `src/types/domain.ts` e nos contratos de `src/data/repositories/`.
+| O quê | Onde |
+| --- | --- |
+| Esquemas do JSON (Zod; validam cada resposta) | `src/data/api/dto.ts` |
+| Tradução JSON ↔ modelo da app | `src/data/api/mappers.ts` |
+| Chamadas da app | `src/data/api/ApiRepositories.ts` |
+| Exemplos reais de respostas | `src/data/api/__fixtures__/*.json` |
+| API simulada (backend da fase mock) | `src/data/mock/server.ts` |
+
+A API simulada responde a todos estes endpoints neste formato. Por omissão, a app já recebe os dados mockados assim e passa pelo mesmo caminho que vai usar com o backend real. É uma **especificação executável**: se o backend se comportar como ela, a app funciona sem alterações.
 
 ## Convenções
 
 | Tema | Regra |
 | --- | --- |
 | URL base | `EXPO_PUBLIC_API_URL`, por exemplo `https://api.angoleva.ao/v1`. |
-| Formato | JSON em UTF-8. As datas vêm em ISO 8601 (UTC) e os valores em kwanzas inteiros. |
-| Autenticação | `Authorization: Bearer <token>` em todos os endpoints, menos nos de `/auth` marcados como públicos. |
-| Cabeçalhos enviados | `Accept-Language: pt-PT`, `X-Client: angoleva-app/<android\|ios\|web>`, `X-Request-Id` (único por pedido, para cruzar registos). |
-| Erros | Corpo `{ "message": "texto para o utilizador em pt-PT", "code": "opcional" }`. A app mostra a `message`. |
-| Respostas sem corpo | `204 No Content`. |
-| Pedidos dentro de pedidos | Cada `ServiceRequest` devolvido inclui os objectos `client` e `provider` (quando há prestador). |
+| Nomes | Campos em `snake_case`. Coordenadas em `lat`/`lng`. Valores monetários em kwanzas inteiros, com sufixo `_kz`. |
+| Datas | ISO 8601 em UTC (`2026-10-27T09:15:00Z`). |
+| Ausências | Campos opcionais vêm sempre presentes, com `null`. |
+| Respostas | Um recurso vem em `{ "data": {...} }`. Uma lista vem em `{ "data": [...], "meta": { "count": n } }`. Sem corpo: `204 No Content`. |
+| Erros | `{ "error": { "code": "invalid_transition", "message": "texto em pt-PT", "details"?: {...} } }`. A app mostra a `message`. |
+| Autenticação | `Authorization: Bearer <access_token>` em todos os endpoints, menos nos marcados como públicos. |
+| Cabeçalhos enviados | `Accept-Language: pt-PT`, `X-Client: angoleva-app/<android\|ios\|web>`, `X-Request-Id` (único por pedido). |
+| Validação | A app valida cada resposta. Uma resposta fora do contrato vira erro `server` («Resposta inesperada do servidor») e não chega ao ecrã. Em desenvolvimento, a consola mostra o campo que falhou. |
 
 ### Estados HTTP e erros na app
 
 | HTTP | `RepositoryError.code` | Quando |
 | --- | --- | --- |
-| 400, 422 | `validation` | Dados inválidos (campos, valores fora de limites, saldo insuficiente…). |
+| 400, 422 | `validation` | Corpo fora do contrato ou regra violada (saldo insuficiente, cobertura vazia…). |
 | 401 | `unauthorized` | Credenciais erradas, ou token expirado ou revogado. Se o pedido levava token, a app termina a sessão e abre o login. |
-| 403 | `forbidden` | O utilizador não pode fazer a operação (ex.: transição feita pelo actor errado, prestador offline). |
-| 404 | `not_found` | Recurso inexistente. |
+| 403 | `forbidden` | Operação não permitida (actor errado numa transição, prestador offline). |
+| 404 | `not_found` | Recurso ou endpoint inexistente. |
 | 409 | `invalid_transition` | Transição fora da máquina de estados do pedido. |
 | 429, 5xx | `server` | Limite de pedidos ou erro do servidor. |
 | sem resposta | `network` | Sem ligação ou tempo esgotado (`EXPO_PUBLIC_API_TIMEOUT_MS`). Os GET são repetidos uma vez, tal como os 502, 503 e 504. |
 
-### Tempo real
+## Objectos
 
-Até existir WebSocket, a app faz polling a cada `EXPO_PUBLIC_POLL_INTERVAL_MS`:
+Os esquemas completos estão em `src/data/api/dto.ts`. Há um exemplo de cada um dos principais em `src/data/api/__fixtures__/`.
 
-- **`GET …/changes?since=<cursor>`** devolve `{ "items": [...], "cursor": "<opaco>" }`.
-  - Sem `since`, devolve `items: []` e o cursor actual (é o ponto de partida).
-  - Com `since`, devolve as alterações posteriores, cada uma uma só vez.
-  - O cursor é opaco para a app: pode ser um número de sequência, um timestamp ou um id.
-- **Estado do prestador:** a app lê `GET /providers/:id/state` em ciclo e só actualiza quando a resposta muda.
+**`Client`**
+```json
+{ "id": "cli-armando", "full_name": "Armando Manuel", "email": "armando@email.com", "phone": "+244 923 456 789", "rating": 4.8, "avatar_url": null }
+```
+
+**`Provider`**
+```json
+{
+  "id": "prv-paulo", "full_name": "Paulo Domingos", "phone": "+244 912 000 222", "rating": 4.9, "reviews_count": 212,
+  "verified": true, "avatar_url": null, "location": { "lat": -8.8147, "lng": 13.2302 },
+  "vehicle": { "id": "veh-paulo", "brand": "Isuzu", "model": "NPR Reboque", "plate": "LD-12-34-AB", "color": "Branco",
+               "class": "tow_truck", "category_label": "Reboque plataforma", "capacity_kg": 3500, "year": 2021 }
+}
+```
+
+**`Place`**
+```json
+{ "id": "plc-maianga", "label": "Largo da Maianga", "district": "Maianga", "city": "Luanda", "lat": -8.8256, "lng": 13.2311 }
+```
+
+**`ServiceRequest`:** ver o exemplo completo em `__fixtures__/service-request.json`. Campos principais:
+
+| Grupo | Campos |
+| --- | --- |
+| Identificação | `id`, `code` (`AL-…`), `service_type` (`tow` \| `cargo` \| `small_move` \| `house_move`), `status` |
+| Pessoas | `client_id`, `provider_id`, e os objectos `client` e `provider` incluídos |
+| Trajecto | `pickup`, `dropoff`, `stops` (`Place`), `distance_km`, `duration_min`, `created_at`, `scheduled_for` |
+| Detalhes por serviço | `tow_details`, `cargo_details`, `moving_details` (só o do tipo do pedido; os outros a `null`) |
+| Fotografias e instruções | `photos`, `pickup_photos` (`{ id, url, caption }`), `instructions` |
+| Preço | `pricing` `{ base_kz, distance_kz, extras_kz, platform_fee_kz, total_kz }`, `provider_earning_kz`, `proposal` `{ amount_kz, reason, status }` |
+| Pagamento e fecho | `payment_method`, `rating`, `review`, `proof` `{ photos, signed_by, good_condition, notes, delivered_at }`, `cancel_reason` |
+| Histórico | `timeline` `[{ status, at }]` |
+
+**`ProviderState`**
+```json
+{
+  "profile": { "...": "Provider" }, "online": true,
+  "coverage": { "zone_ids": ["zone-luanda"], "service_types": ["tow", "cargo"] },
+  "documents": [{ "id": "doc-license", "title": "Carta de condução", "kind": "license", "valid_until": "2027-05-01", "status": "verified" }],
+  "wallet": { "balance_kz": 48500, "transactions": [{ "id": "tx-1", "type": "earning", "title": "Reboque · Maianga", "amount_kz": 11050,
+              "created_at": "2026-10-27T10:00:00Z", "status": "completed", "service_type": "tow" }],
+              "payout_account": { "bank": "BAI", "iban": "AO06 …", "holder": "João Manuel" } },
+  "declined_request_ids": []
+}
+```
+
+**`ChatMessage`**
+```json
+{ "id": "m-1", "thread_id": "req-30120", "sender": "provider", "body": "Estou a 5 minutos.", "sent_at": "2026-10-27T09:20:00Z", "read": false }
+```
+
+## Tempo real
+
+Há três tópicos, e cada mensagem traz JSON no formato acima:
+
+| Tópico | Mensagem |
+| --- | --- |
+| `requests` | `ServiceRequest` alterado |
+| `providers/<id>` | `ProviderState` |
+| `threads/<id>` | `{ "type": "message", "message": ChatMessage }` ou `{ "type": "typing", "sender": "provider", "typing": true }` |
+
+**Transportes** (`src/data/api/realtime.ts`):
+
+- **Polling** (API REST de hoje, a cada `EXPO_PUBLIC_POLL_INTERVAL_MS`):
+  - `GET /requests/changes?since=<cursor>` e `GET /threads/:id/changes?since=<cursor>` devolvem `{ "data": [...], "meta": { "cursor": "<opaco>" } }`.
+    - Sem `since`, `data` vem vazio e o cursor é o actual (é o ponto de partida).
+    - Com `since`, vêm as alterações posteriores, cada uma uma só vez.
+  - O estado do prestador é lido de `GET /providers/:id/state` e só é publicado quando muda.
+  - Por polling não há «a escrever…».
+- **WebSocket** (a fazer no backend): os mesmos tópicos e mensagens. A API simulada já se comporta assim (`server.socket`), incluindo «a escrever…».
 
 ## Autenticação
 
 | Método | Caminho | Corpo | Resposta |
 | --- | --- | --- | --- |
-| POST | `/auth/login` (público) | `{ email, password, role: "client"\|"provider" }` | `Session` = `{ token, user: Client, providerId? }` |
-| POST | `/auth/register` (público) | `{ name, email, phone, password }` | 204; envia o código por email |
+| POST | `/auth/login` (público) | `{ email, password, role: "client"\|"provider" }` | `{ data: Session }` |
+| POST | `/auth/register` (público) | `{ full_name, email, phone, password }` | 204; envia o código por email |
 | POST | `/auth/recover` (público) | `{ email }` | 204 |
-| POST | `/auth/verify` (público) | `{ email, code, purpose: "register"\|"recover" }` | `Session` |
+| POST | `/auth/verify` (público) | `{ email, code, purpose: "register"\|"recover" }` | `{ data: Session }` |
 | POST | `/auth/resend` (público) | `{ email }` | 204 |
-| GET | `/auth/me` | — | `{ user: Client, providerId? }` (retoma a sessão guardada) |
-| POST | `/auth/password` | `{ current, next }` | 204 |
+| GET | `/auth/me` | — | `{ data: { user: Client, provider_id } }` (retoma a sessão guardada) |
+| POST | `/auth/password` | `{ current_password, new_password }` | 204 |
 | POST | `/auth/logout` | — | 204; invalida o token |
-| PATCH | `/clients/:id` | `{ name?, email?, phone? }` | `Client` |
+| PATCH | `/clients/:id` | `{ full_name?, email?, phone? }` | `{ data: Client }` |
 
-O token é guardado no armazenamento seguro do dispositivo (`EXPO_PUBLIC_SECURE_STORAGE=device`).
+`Session` = `{ access_token, token_type: "Bearer", user: Client, provider_id: string | null }` (ver `__fixtures__/session.json`). O token fica no armazenamento seguro do dispositivo.
 
 ## Pedidos de serviço
 
 | Método | Caminho | Corpo / parâmetros | Resposta |
 | --- | --- | --- | --- |
-| GET | `/requests` | `?clientId=&providerId=&status[]=` | `ServiceRequest[]` |
-| GET | `/requests/changes` | `?since=` | `ChangesPage<ServiceRequest>` |
+| GET | `/requests` | `?client_id=&provider_id=&status=searching,assigned` | lista de `ServiceRequest` |
+| GET | `/requests/changes` | `?since=` | alterações (ver «Tempo real») |
 | GET | `/requests/:id` | — | `ServiceRequest` |
-| POST | `/requests` | `RequestInput` sem `id` e sem `status` (ver `features/booking/factory.ts`) | `201 ServiceRequest` (`status: "searching"`) |
-| POST | `/requests/:id/transitions` | `{ to: ServiceStatus, actor: "client"\|"provider"\|"system" }` | `ServiceRequest` |
-| POST | `/requests/:id/accept` | `{ providerId }` | `ServiceRequest` |
+| POST | `/requests` | `{ service_type, client_id, pickup, dropoff, stops, scheduled_for, tow_details, cargo_details, moving_details, photos, instructions, payment_method }` | `201`, `ServiceRequest` em `searching` (o servidor calcula a distância, o preço e o código) |
+| POST | `/requests/:id/transitions` | `{ to, actor: "client"\|"provider"\|"system" }` | `ServiceRequest` |
+| POST | `/requests/:id/accept` | `{ provider_id }` | `ServiceRequest` |
 | POST | `/requests/:id/cancel` | `{ reason }` | `ServiceRequest` |
-| POST | `/requests/:id/proposal` | `{ providerId, amount, reason }` | `ServiceRequest` |
-| POST | `/requests/:id/proposal/answer` | `{ accepted: boolean }` | `ServiceRequest` |
-| POST | `/requests/:id/pickup-photos` | `{ photos: Photo[] }` | `ServiceRequest` |
-| POST | `/requests/:id/proof` | `{ photos, signedBy, goodCondition, notes? }` | `ServiceRequest` (`delivered`; credita o ganho) |
-| POST | `/requests/:id/payment` | `{ method: "bank_reference"\|"card"\|"cash" }` | `ServiceRequest` (`paid`) |
-| POST | `/requests/:id/rating` | `{ rating: 1–5, review? }` | `ServiceRequest` (`rated`) |
+| POST | `/requests/:id/proposal` | `{ provider_id, amount_kz, reason }` | `ServiceRequest` |
+| POST | `/requests/:id/proposal/answer` | `{ accepted }` | `ServiceRequest` |
+| POST | `/requests/:id/pickup-photos` | `{ photos: [{ id, url, caption }] }` | `ServiceRequest` |
+| POST | `/requests/:id/proof` | `{ photos, signed_by, good_condition, notes }` | `ServiceRequest` (`delivered`; credita o ganho) |
+| POST | `/requests/:id/payment` | `{ payment_method: "bank_reference"\|"card"\|"cash" }` | `ServiceRequest` (`paid`) |
+| POST | `/requests/:id/rating` | `{ rating: 1–5, review }` | `ServiceRequest` (`rated`) |
 
-**Regras que o servidor tem de garantir** (hoje estão na implementação mock):
+**Regras que o servidor tem de garantir** (hoje estão nos serviços mock, `src/data/mock/Mock*Repository.ts`):
 
 - **Máquina de estados:** `searching → assigned → en_route → arrived → pickup_confirmed → in_transit → delivered → paid → rated`.
   - Cancelar só é possível em `searching`, `assigned`, `en_route` e `arrived`.
@@ -88,64 +163,64 @@ O token é guardado no armazenamento seguro do dispositivo (`EXPO_PUBLIC_SECURE_
 
 | Método | Caminho | Corpo | Resposta |
 | --- | --- | --- | --- |
-| GET | `/providers/:id/state` | — | `ProviderState` = `{ profile, online, coverage, documents, wallet, declined }` |
-| GET | `/providers/:id/nearby-requests` | — | `{ request: ServiceRequest, distanceKm }[]`: pedidos em `searching` compatíveis com a cobertura e não recusados |
+| GET | `/providers/:id/state` | — | `ProviderState` |
+| GET | `/providers/:id/nearby-requests` | — | lista de `{ request: ServiceRequest, distance_km }`: pedidos em `searching` compatíveis com a cobertura e não recusados |
 | PUT | `/providers/:id/availability` | `{ online }` | 204 |
-| PATCH | `/providers/:id/vehicle` | `Partial<Vehicle>` | `Vehicle` |
-| GET | `/zones` | — | `Zone[]` |
-| PUT | `/providers/:id/coverage` | `{ zones: string[], services: ServiceKind[] }` | `Coverage`; 422 se uma das listas vier vazia |
-| POST | `/providers/:id/documents/:documentId` | — (o ficheiro vai para `/uploads`) | `ProviderDocument` (`pending`; o servidor valida depois) |
-| POST | `/providers/:id/declined` | `{ requestId }` | 204 |
-| POST | `/providers/:id/withdrawals` | `{ amount }` | `Transaction` (`pending`); 422 se o valor for acima do saldo |
-| GET | `/providers/:id/earnings` | — | `{ today, todayCount, week, completed, chart: number[7] }` |
-| GET | `/providers/:id/reviews` | — | `Review[]` |
+| PATCH | `/providers/:id/vehicle` | campos de `vehicle`, sem `id` | `Vehicle` |
+| GET | `/zones` | — | lista de `{ id, name, lat, lng, radius_km }` |
+| PUT | `/providers/:id/coverage` | `{ zone_ids, service_types }` | a cobertura gravada; 422 se uma das listas vier vazia |
+| POST | `/providers/:id/documents/:documentId` | — (o ficheiro vai para `/uploads`) | o documento em `pending`; o servidor valida depois e publica em `providers/<id>` |
+| POST | `/providers/:id/declined` | `{ request_id }` | 204 |
+| POST | `/providers/:id/withdrawals` | `{ amount_kz }` | transacção em `pending`; 422 se o valor for acima do saldo |
+| GET | `/providers/:id/earnings` | — | `{ today_kz, today_count, week_kz, completed_count, last_7_days_kz: number[7] }` |
+| GET | `/providers/:id/reviews` | — | lista de `{ id, request_id, author_name, rating, comment, created_at }` |
 
 ## Localização
 
 | Método | Caminho | Parâmetros | Resposta |
 | --- | --- | --- | --- |
 | GET | `/locations/current` | — | `Place` (no futuro vem do GPS do dispositivo e de geocodificação inversa) |
-| GET | `/locations/search` | `?q=` | `Place[]` |
-| GET | `/locations/areas` | — | `Place[]` (bairros) |
-| GET | `/vehicles/nearby` | `?latitude=&longitude=` | `{ id, coords, kind: "tow"\|"cargo"\|"move" }[]` |
+| GET | `/locations/search` | `?q=` | lista de `Place` |
+| GET | `/locations/areas` | — | lista de `Place` (bairros) |
+| GET | `/vehicles/nearby` | `?lat=&lng=` | lista de `{ id, lat, lng, type: "tow"\|"cargo"\|"move" }` |
 
-A distância por estrada é estimada na app (`utils/geo.ts`). O valor oficial do preço é sempre o que o servidor devolve no pedido.
+A distância por estrada é estimada na app (`utils/geo.ts`) só para pré-visualização. O valor oficial é sempre o que vem no pedido.
 
 ## Chat
 
 | Método | Caminho | Corpo / parâmetros | Resposta |
 | --- | --- | --- | --- |
-| GET | `/threads/:id/messages` | `?kind=service\|support` | `ChatMessage[]` |
-| GET | `/threads/:id/changes` | `?since=` | `ChangesPage<ChatMessage>` |
-| POST | `/threads/:id/messages` | `{ from, text }` | `ChatMessage` |
+| GET | `/threads/:id/messages` | `?kind=service\|support` | lista de `ChatMessage` |
+| GET | `/threads/:id/changes` | `?since=` | alterações (mensagens) |
+| POST | `/threads/:id/messages` | `{ sender, body }` | `201`, `ChatMessage` |
 | POST | `/threads/:id/read` | `{ reader }` | 204 |
 
-`:id` é o id do pedido (conversa cliente↔prestador) ou `support-client` / `support-provider`. O indicador «a escrever…» só aparece quando houver WebSocket.
+`:id` é o id do pedido (conversa cliente↔prestador) ou `support-client` / `support-provider`.
 
 ## Conta do cliente
 
 | Método | Caminho | Corpo | Resposta |
 | --- | --- | --- | --- |
-| GET | `/clients/:id/addresses` | — | `SavedAddress[]` |
-| POST | `/clients/:id/addresses` | `{ label, place, icon }` | `SavedAddress` |
+| GET | `/clients/:id/addresses` | — | lista de `{ id, label, icon: "home"\|"work"\|"pin", place }` |
+| POST | `/clients/:id/addresses` | `{ label, icon, place }` | `201`, a morada criada |
 | DELETE | `/clients/:id/addresses/:addressId` | — | 204 |
-| GET | `/clients/:id/payment-methods` | — | `PaymentMethod[]` |
-| PUT | `/clients/:id/payment-methods/default` | `{ id }` | `PaymentMethod[]` |
-| POST | `/clients/:id/payment-methods` | `{ last4 }` (na integração real: token do processador, nunca o número) | `PaymentMethod` |
+| GET | `/clients/:id/payment-methods` | — | lista de `{ id, type, title, detail, is_default }` |
+| PUT | `/clients/:id/payment-methods/default` | `{ payment_method_id }` | a lista actualizada |
+| POST | `/clients/:id/payment-methods` | `{ type: "card", last4 }` (na integração real: token do processador, nunca o número) | `201`, o método criado |
 
 ## Suporte e segurança
 
 | Método | Caminho | Corpo / parâmetros | Resposta |
 | --- | --- | --- | --- |
-| GET | `/help` | `?q=&category=` | `HelpTopic[]` |
-| GET | `/help/emergency-contacts` | — | `{ id, label, number }[]` |
-| POST | `/tickets` | `{ requestId, reason, description }` (descrição com 10 ou mais caracteres) | `{ code }` (ex.: `OC-1234`) |
-| POST | `/sos` | `{ requestId?, coords }` | 204 |
+| GET | `/help` | `?q=&category=` | lista de `{ id, category, question, answer }` |
+| GET | `/help/emergency-contacts` | — | lista de `{ id, label, phone_number }` |
+| POST | `/tickets` | `{ request_id, reason, description }` (descrição com 10 ou mais caracteres) | `201`, `{ code }` (ex.: `OC-1234`) |
+| POST | `/sos` | `{ request_id, lat, lng }` | 204 |
 
 ## Ainda por integrar
 
-- **Fotografias:** captura com `expo-image-picker` e envio para `POST /uploads`, que devolve o URL. `Photo.asset` passa a URL, e o `imageSource` já aceita URLs. Até lá, em modo HTTP as fotos continuam a ser as de exemplo.
-- **Tempo real por WebSocket:** substitui `…/changes` e activa o «a escrever…».
+- **Fotografias:** captura com `expo-image-picker` e envio para `POST /uploads`, que devolve o `url`. Até lá, os `url` das fotos são chaves de imagens de exemplo empacotadas na app; o `imageSource` aceita as duas formas.
+- **WebSocket:** mesmos tópicos e mensagens que o socket da API simulada.
 - **Notificações push:** registo do token Expo e envio pelo servidor.
 - **Pagamentos reais:** Multicaixa Express, referência bancária e cartão via processador.
 - **Renovação de token** (refresh token). Hoje, um 401 termina a sessão.

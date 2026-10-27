@@ -51,8 +51,8 @@ http.interceptors.response.use(undefined, async (error) => {
   return http.request(config);
 });
 
-/** Formato de erro esperado da API: `{ "message": "…", "code"?: "…" }`. */
-type ApiErrorBody = { message?: string };
+/** Formato de erro da API: `{ "error": { "code": "…", "message": "…" } }` (docs/api.md). */
+type ApiErrorBody = { error?: { message?: string }; message?: string };
 
 /** Converte erros HTTP em erros de domínio, com a mesma forma que os mocks devolvem. */
 export async function call<T>(request: Promise<{ data: T }>): Promise<T> {
@@ -66,7 +66,8 @@ export async function call<T>(request: Promise<{ data: T }>): Promise<T> {
 export function toRepositoryError(error: unknown): unknown {
   if (!isAxiosError(error)) return error;
   const status = error.response?.status;
-  const message = (error.response?.data as ApiErrorBody | undefined)?.message;
+  const body = error.response?.data as ApiErrorBody | undefined;
+  const message = body?.error?.message ?? body?.message;
   if (!status) {
     if (error.code === "ECONNABORTED" || error.code === "ETIMEDOUT") return new RepositoryError("network", "O servidor demorou demasiado a responder. Tenta de novo.");
     return new RepositoryError("network", "Sem ligação ao servidor. Verifica a internet e tenta de novo.");

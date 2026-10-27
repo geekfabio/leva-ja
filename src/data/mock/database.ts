@@ -7,6 +7,7 @@ import { initialBalance, initialTransactions, bankAccount } from "@/mocks/financ
 import { initialDocuments, initialServices, initialZones } from "@/mocks/provider";
 import { initialAddresses, initialPaymentMethods } from "@/mocks/account";
 import { clone } from "./runtime";
+import { DEMO_CLIENT, DEMO_PROVIDER_ID, DEMO_TOKEN } from "./demo";
 
 type ProviderRecord = Omit<ProviderState, "profile">;
 type PendingAccount = { purpose: "register" | "recover"; client?: Client };
@@ -30,6 +31,7 @@ export class MockDatabase {
 
   constructor() {
     this.seed();
+    this.sessions.set(DEMO_TOKEN, { user: clone(DEMO_CLIENT), providerId: DEMO_PROVIDER_ID });
   }
 
   seed() {

@@ -1,7 +1,7 @@
 import { AxiosError, AxiosHeaders, type InternalAxiosRequestConfig } from "axios";
 import { configureMock } from "@/data";
 import { http, onUnauthorized, setAuthToken, toRepositoryError } from "@/data/http/client";
-import { createHttpRepositories } from "@/data/http/HttpRepositories";
+import { createApiRepositories } from "@/data/api/ApiRepositories";
 import { MockDatabase } from "@/data/mock/database";
 import { createMockServer } from "@/data/mock/server";
 import { parseEnv } from "@/config/env";
@@ -36,7 +36,7 @@ describe("cliente HTTP", () => {
   });
 
   it("endpoints protegidos exigem token; o login envia-o nos pedidos seguintes", async () => {
-    const repos = createHttpRepositories();
+    const repos = createApiRepositories();
     await expect(repos.requests.list()).rejects.toMatchObject({ code: "unauthorized" });
     await expect(repos.auth.login("armando@email.com", "123", "client")).rejects.toMatchObject({ code: "unauthorized" });
     await repos.auth.login("armando@email.com", "segredo12", "client");
@@ -44,19 +44,19 @@ describe("cliente HTTP", () => {
   });
 
   it("sem rede, a leitura é repetida uma vez e depois falha com código network", async () => {
-    const repos = createHttpRepositories();
+    const repos = createApiRepositories();
     await repos.auth.login("armando@email.com", "segredo12", "client");
     configureMock({ failNetwork: true });
     await expect(repos.providers.listZones()).rejects.toMatchObject({ code: "network" });
   });
 
   it("o tempo real por polling entrega cada alteração uma vez", async () => {
-    const repos = createHttpRepositories({ pollIntervalMs: 5 });
+    const repos = createApiRepositories({ pollIntervalMs: 5 });
     await repos.auth.login("armando@email.com", "segredo12", "client");
     const [first] = await repos.requests.list({ clientId: "cli-armando", status: ["searching", "assigned", "en_route"] });
     const created = first ?? (await repos.requests.create({ kind: "cargo", origin: { id: "a", label: "A", area: "Ingombota", city: "Luanda", coords: { latitude: -8.81, longitude: 13.23 } }, destination: { id: "b", label: "B", area: "Talatona", city: "Luanda", coords: { latitude: -8.92, longitude: 13.18 } }, clientId: "cli-armando" }));
     const seen: string[] = [];
-    const off = repos.requests.subscribe((r) => seen.push(`${r.id}:${r.status}`));
+    const off = repos.requests.subscribe((r: { id: string; status: string }) => seen.push(`${r.id}:${r.status}`));
     await new Promise((resolve) => setTimeout(resolve, 20));
     await repos.requests.cancel(created.id, "Já não preciso");
     await new Promise((resolve) => setTimeout(resolve, 60));

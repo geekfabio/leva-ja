@@ -1,11 +1,10 @@
 import { Platform } from "react-native";
-import { env, usesSimulatedApi } from "@/config/env";
+import { env } from "@/config/env";
 import type { Repositories } from "./repositories";
-import { http } from "./http/client";
-import { createHttpRepositories } from "./http/HttpRepositories";
-import { createMockRepositories } from "./mock";
+import { createApiRepositories } from "./api/ApiRepositories";
+import { http, setAuthToken } from "./http/client";
 import { createMockServer } from "./mock/server";
-import { DEMO_CLIENT, DEMO_PROVIDER_ID } from "./mock/demo";
+import { DEMO_CLIENT, DEMO_PROVIDER_ID, DEMO_TOKEN } from "./mock/demo";
 import { DeviceSecureStorage } from "./storage/DeviceSecureStorage";
 import { MockSecureStorage } from "./storage/MockSecureStorage";
 import { SessionVault } from "./storage/SessionVault";
@@ -17,14 +16,23 @@ export { configureMock, mockRuntime, resetMockDatabase, simulatedProviderFor } f
 export { onUnauthorized } from "./http/client";
 
 /**
- * Origem dos dados (src/config/env.ts): `mock` por omissão nesta fase, ou `http`
- * para a API em EXPO_PUBLIC_API_URL. Com `mock://…` a API é simulada dentro da app.
+ * Origem dos dados (src/config/env.ts). Em ambos os casos a app usa os mesmos
+ * repositórios da API (`createApiRepositories`): os dados chegam sempre no
+ * formato da API e passam pelos mesmos mappers.
+ * - `mock` (por omissão): API simulada dentro da app, sobre a base mock,
+ *   com tempo real por socket simulado;
+ * - `http`: API real em EXPO_PUBLIC_API_URL, com tempo real por polling.
  */
 export const dataSource = env.dataSource;
 
-if (usesSimulatedApi) http.defaults.adapter = createMockServer().adapter;
+function createRepositories(): Repositories {
+  if (dataSource === "http") return createApiRepositories();
+  const server = createMockServer();
+  http.defaults.adapter = server.adapter;
+  return createApiRepositories({ realtime: server.socket });
+}
 
-let current: Repositories = dataSource === "http" ? createHttpRepositories() : createMockRepositories();
+let current: Repositories = createRepositories();
 
 /** Repositórios activos. Stores e hooks nunca importam mocks directamente. */
 export const repositories = (): Repositories => current;
@@ -34,8 +42,9 @@ export function setRepositories(next: Repositories) {
   current = next;
 }
 
-/** Sessão de demonstração (só com dados mock locais): permite abrir qualquer ecrã sem login. */
-export const demoIdentity = dataSource === "mock" ? { user: DEMO_CLIENT, providerId: DEMO_PROVIDER_ID } : undefined;
+/** Sessão de demonstração (só na API simulada): permite abrir qualquer ecrã sem login. */
+export const demoIdentity = dataSource === "mock" ? { user: DEMO_CLIENT, providerId: DEMO_PROVIDER_ID, token: DEMO_TOKEN } : undefined;
+if (demoIdentity) setAuthToken(demoIdentity.token);
 
 /**
  * Armazenamento seguro: `mock` (memória, por omissão nesta fase) ou `device`

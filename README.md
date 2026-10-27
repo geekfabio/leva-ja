@@ -65,10 +65,10 @@ src/
 
 ### Dados: padrão Repository
 
-Os ecrãs e as stores nunca importam mocks: falam com repositórios (`src/data`). Cada repositório tem um contrato (`AuthRepository`, `RequestRepository`, `ProviderRepository`, `LocationRepository`, `ChatRepository`, `AccountRepository`, `SupportRepository`, `MediaRepository`) e duas implementações:
+Os ecrãs e as stores nunca importam mocks: falam com repositórios (`src/data`). Cada repositório tem um contrato (`AuthRepository`, `RequestRepository`, `ProviderRepository`, `LocationRepository`, `ChatRepository`, `AccountRepository`, `SupportRepository`, `MediaRepository`). A implementação é sempre a da API (`src/data/api`): recebe JSON no formato do backend (`snake_case`, envelopes `{ data }`), valida-o com Zod e converte-o para o domínio com mappers.
 
-- **mock** (por omissão): base de dados em memória semeada a partir de `src/mocks`, com latência, erros de domínio, falhas de rede simuladas e tempo real por subscrição;
-- **http**: cliente REST pronto para a API (token, erros, repetições, sessão expirada, tempo real por polling), activado com `EXPO_PUBLIC_DATA_SOURCE=http` e `EXPO_PUBLIC_API_URL`. Com `EXPO_PUBLIC_API_URL=mock://local`, usa uma API simulada dentro da app.
+- **mock** (por omissão): quem responde é uma **API simulada dentro da app** (`src/data/mock/server.ts`), sobre dados de demonstração. Simula latência, erros, falhas de rede e tempo real por socket.
+- **http**: o backend real em `EXPO_PUBLIC_API_URL` (`EXPO_PUBLIC_DATA_SOURCE=http`), com tempo real por polling até haver WebSocket.
 
 A configuração está em `.env` (copiar de [.env.example](.env.example)). O contrato que o backend tem de cumprir está em [docs/api.md](docs/api.md).
 
