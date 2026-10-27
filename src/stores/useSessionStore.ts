@@ -39,6 +39,8 @@ type SessionState = {
   updateProfile: (data: Partial<Pick<Client, "name" | "email" | "phone">>) => Promise<void>;
   changePassword: (current: string, next: string) => Promise<void>;
   logout: () => Promise<void>;
+  /** A API recusou o token: termina a sessão local, mantém o perfil para o novo login. */
+  expire: () => Promise<void>;
 };
 
 /** Falhar a escrita no armazenamento seguro não impede a sessão em curso. */
@@ -124,6 +126,10 @@ export const useSessionStore = create<SessionState>((set, get) => {
       set({ authenticated: false, role: null, token: null });
       await persist(sessionVault().clear());
       if (token) await repositories().auth.logout(token).catch(() => undefined);
+    },
+    expire: async () => {
+      set({ authenticated: false, token: null });
+      await persist(sessionVault().clear());
     },
   };
 });

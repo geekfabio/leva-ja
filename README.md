@@ -68,7 +68,9 @@ src/
 Os ecrãs e as stores nunca importam mocks: falam com repositórios (`src/data`). Cada repositório tem um contrato (`AuthRepository`, `RequestRepository`, `ProviderRepository`, `LocationRepository`, `ChatRepository`, `AccountRepository`, `SupportRepository`, `MediaRepository`) e duas implementações:
 
 - **mock** (por omissão): base de dados em memória semeada a partir de `src/mocks`, com latência, erros de domínio, falhas de rede simuladas e tempo real por subscrição;
-- **http**: esqueleto REST com os endpoints propostos, activado com `EXPO_PUBLIC_DATA_SOURCE=http` e `EXPO_PUBLIC_API_URL`.
+- **http**: cliente REST pronto para a API (token, erros, repetições, sessão expirada, tempo real por polling), activado com `EXPO_PUBLIC_DATA_SOURCE=http` e `EXPO_PUBLIC_API_URL`. Com `EXPO_PUBLIC_API_URL=mock://local`, usa uma API simulada dentro da app.
+
+A configuração está em `.env` (copiar de [.env.example](.env.example)). O contrato que o backend tem de cumprir está em [docs/api.md](docs/api.md).
 
 A sessão (token e perfil) e o fim do onboarding ficam no **armazenamento seguro** (`SecureStorage` + `SessionVault`), retomados no splash. Por omissão é um SecureStore simulado em memória; com `EXPO_PUBLIC_SECURE_STORAGE=device` passa a usar o `expo-secure-store` (Keychain/Keystore) no Android e iOS.
 

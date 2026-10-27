@@ -1,28 +1,42 @@
 import type { Repositories } from "@/data";
 import { RepositoryError } from "@/data";
+import { http } from "@/data/http/client";
+import { createHttpRepositories } from "@/data/http/HttpRepositories";
 import { createMockRepositories } from "@/data/mock";
 import { MockDatabase } from "@/data/mock/database";
+import { createMockServer } from "@/data/mock/server";
 import { places } from "@/mocks/places";
+
+/** Espera que a condição se cumpra (o tempo real por polling não é imediato). */
+async function eventually(check: () => boolean, timeoutMs = 1000) {
+  const start = Date.now();
+  while (!check()) {
+    if (Date.now() - start > timeoutMs) throw new Error("Condição não cumprida a tempo.");
+    await new Promise((resolve) => setTimeout(resolve, 5));
+  }
+}
 
 /**
  * Testes de contrato: descrevem o comportamento que qualquer implementação dos
- * repositórios deve ter. Hoje correm sobre os mocks; a implementação HTTP pode
- * ser validada com a mesma suite contra um servidor de testes.
+ * repositórios deve ter. Correm sobre os mocks e sobre a implementação HTTP
+ * (com a API simulada); contra um servidor de testes basta outra entrada
+ * `contract(...)` com EXPO_PUBLIC_API_URL a apontar para ele.
  */
-function contract(name: string, make: () => Repositories) {
+function contract(name: string, make: () => Promise<Repositories>) {
   describe(`contrato dos repositórios — ${name}`, () => {
     let repos: Repositories;
-    beforeEach(() => {
-      repos = make();
+    beforeEach(async () => {
+      repos = await make();
     });
 
     it("pedidos: cria, devolve com cliente incluído e notifica subscritores", async () => {
       const seen: string[] = [];
       const off = repos.requests.subscribe((r) => seen.push(r.status));
       const created = await repos.requests.create({ kind: "cargo", origin: places.ingombota, destination: places.talatona, clientId: "cli-armando" });
-      off();
       expect(created.status).toBe("searching");
       expect(created.client?.id).toBe("cli-armando");
+      await eventually(() => seen.length > 0);
+      off();
       expect(seen).toEqual(["searching"]);
       expect((await repos.requests.get(created.id)).id).toBe(created.id);
     });
@@ -77,4 +91,11 @@ function contract(name: string, make: () => Repositories) {
   });
 }
 
-contract("mock", () => createMockRepositories(new MockDatabase()));
+contract("mock", async () => createMockRepositories(new MockDatabase()));
+
+contract("http (API simulada)", async () => {
+  http.defaults.adapter = createMockServer(new MockDatabase()).adapter;
+  const repos = createHttpRepositories({ pollIntervalMs: 5 });
+  await repos.auth.login("armando@email.com", "segredo12", "client");
+  return repos;
+});

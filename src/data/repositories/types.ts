@@ -7,7 +7,9 @@ export type RepositoryErrorCode =
   | "invalid_transition"
   | "forbidden"
   | "validation"
-  | "unauthorized";
+  | "unauthorized"
+  /** Erro do servidor (5xx) ou demasiados pedidos (429). */
+  | "server";
 
 /** Erro de domínio devolvido por qualquer implementação (mock ou HTTP). */
 export class RepositoryError extends Error {

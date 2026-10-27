@@ -17,6 +17,7 @@ Esta fase não tem backend. Os dados de demonstração estão atrás do **padrã
 ## Camada de dados (`src/data`)
 
 ```
+src/config/env.ts         variáveis EXPO_PUBLIC_* validadas (origem dos dados, URL, timeouts, armazenamento)
 src/data/
   index.ts                 contentor: repositories(), setRepositories(), dataSource, demoIdentity
   repositories/            contratos — o que a app precisa, independente da origem
@@ -28,20 +29,21 @@ src/data/
     AccountRepository      endereços e métodos de pagamento
     SupportRepository      ajuda, contactos de emergência, ocorrências, SOS
     MediaRepository        câmara/fotografias
-    types.ts               RepositoryError (network, not_found, invalid_transition, forbidden, validation, unauthorized)
+    types.ts               RepositoryError (network, not_found, invalid_transition, forbidden, validation, unauthorized, server)
   mock/                    implementação de demonstração
     database.ts            MockDatabase em memória, semeada a partir de src/mocks
     runtime.ts             latência, falhas de rede simuladas, cópias defensivas, efeitos "do servidor"
     events.ts              emissor para o tempo real simulado
     Mock*Repository.ts     uma classe por contrato
+    server.ts              API simulada: os endpoints de docs/api.md sobre a MockDatabase (adaptador axios)
   storage/                 armazenamento seguro no dispositivo
     SecureStorage.ts       contrato (espelha o expo-secure-store) e regras de chave/tamanho
     MockSecureStorage.ts   SecureStore simulado em memória (por omissão)
     DeviceSecureStorage.ts expo-secure-store (EXPO_PUBLIC_SECURE_STORAGE=device; não existe na web)
     SessionVault.ts        guarda { token, role } e o fim do onboarding; descarta dados corrompidos
-  http/                    implementação REST (esqueleto)
-    client.ts              axios, token Bearer num interceptor, conversão de erros HTTP em RepositoryError
-    HttpRepositories.ts    endpoints propostos para cada método; subscribe por polling até haver WebSocket
+  http/                    implementação REST
+    client.ts              axios: token Bearer, cabeçalhos, repetição de GET, erros HTTP → RepositoryError, aviso de 401
+    HttpRepositories.ts    um endpoint por método (docs/api.md); subscribe por polling com cursor até haver WebSocket
 ```
 
 **Regras:**
@@ -63,18 +65,43 @@ src/data/
 
 ## Mudar de mocks para a API
 
-1. Completar `src/data/http/HttpRepositories.ts` segundo o contrato real do backend.
-2. Definir `EXPO_PUBLIC_DATA_SOURCE=http` e `EXPO_PUBLIC_API_URL`.
-3. Validar a implementação com a suite de contrato (`src/data/__tests__/repositories.contract.test.ts`), chamando `contract("http", ...)` contra um servidor de testes.
-4. Substituir o polling de `subscribe` por WebSocket ou push quando existir.
-5. Ligar `MediaRepository` a `expo-image-picker` e a um endpoint de upload; `Photo.asset` passa a URL (o `imageSource` já aceita URLs).
-6. Definir `EXPO_PUBLIC_SECURE_STORAGE=device` para a sessão ficar no Keychain/Keystore (o token já é enviado como `Bearer` pelo interceptor de `src/data/http/client.ts`).
+A app já está preparada para a API. O contrato completo (endpoints, erros, autenticação, tempo real) está em [api.md](api.md).
 
-Em modo `http`, não existe sessão de demonstração (`demoIdentity`) e «Repor dados de demonstração» desaparece das definições.
+**Configuração** (`src/config/env.ts`, validada com Zod; modelo em `.env.example`):
+
+| Variável | Valores | Por omissão |
+| --- | --- | --- |
+| `EXPO_PUBLIC_DATA_SOURCE` | `mock` \| `http` | `mock` |
+| `EXPO_PUBLIC_API_URL` | URL da API, ou `mock://local` para a API simulada | — (obrigatória em `http`) |
+| `EXPO_PUBLIC_API_TIMEOUT_MS` | ms | `10000` |
+| `EXPO_PUBLIC_POLL_INTERVAL_MS` | ms (mín. 1000) | `5000` |
+| `EXPO_PUBLIC_SECURE_STORAGE` | `mock` \| `device` | `mock` |
+
+Uma configuração inválida falha no arranque com uma mensagem que diz qual variável corrigir.
+
+**O que a camada HTTP já faz** (`src/data/http/`):
+
+- `Authorization: Bearer` em todos os pedidos depois do login ou da sessão retomada. Também envia `Accept-Language: pt-PT`, `X-Client` e `X-Request-Id`.
+- Converte estados HTTP em `RepositoryError` (`validation`, `unauthorized`, `forbidden`, `not_found`, `invalid_transition`, `server`, `network`), com mensagens em pt-PT quando a API não manda uma.
+- Repete uma vez os GET que falham por rede ou por 502, 503 ou 504.
+- Um 401 num pedido com token termina a sessão (`useSessionStore.expire`), mostra «Sessão expirada» e abre o login (`DataBootstrap`).
+- Tempo real por polling com cursor (`…/changes?since=`): cada alteração chega uma vez. O estado do prestador só é publicado quando muda.
+
+**API simulada** (`src/data/mock/server.ts`): adaptador do axios que serve todos os endpoints a partir da `MockDatabase`, com token, códigos HTTP e cursores. Com `EXPO_PUBLIC_DATA_SOURCE=http` e `EXPO_PUBLIC_API_URL=mock://local`, a app corre por toda a camada HTTP sem backend. A suite de contrato corre sobre ela.
+
+**Passos com o backend real:**
+
+1. Apontar `EXPO_PUBLIC_API_URL` para o servidor de testes e correr a app em modo `http`.
+2. Juntar `contract("http (servidor de testes)", …)` em `repositories.contract.test.ts` e corrigir o que divergir, no backend ou em `HttpRepositories.ts`.
+3. Activar `EXPO_PUBLIC_SECURE_STORAGE=device` nas builds Android e iOS.
+4. A seguir: WebSocket em vez de polling, `MediaRepository` com `expo-image-picker` e `/uploads`, notificações push, renovação de token (ver «Ainda por integrar» em [api.md](api.md)).
+
+Em modo `http` não existe sessão de demonstração (`demoIdentity`), e «Repor dados de demonstração» desaparece das definições.
 
 ## Testes
 
-- `src/data/__tests__/repositories.contract.test.ts` — comportamento esperado de qualquer implementação.
+- `src/data/__tests__/repositories.contract.test.ts` — comportamento esperado de qualquer implementação; corre sobre os mocks e sobre a camada HTTP com a API simulada.
+- `src/data/__tests__/http-client.test.ts` — erros HTTP, sessão expirada, token, repetição sem rede, polling e validação do `.env`.
 - `src/stores/__tests__/service-lifecycle.test.ts` — stores sobre os repositórios, do pedido ao levantamento.
 - `src/data/__tests__/secure-storage.test.ts` — SecureStore mock e `SessionVault`.
 - `src/stores/__tests__/session-persistence.test.ts` — guardar, retomar e terminar a sessão.
