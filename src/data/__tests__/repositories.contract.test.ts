@@ -51,15 +51,15 @@ function contract(name: string, make: () => Repositories) {
     });
 
     it("autenticação: código errado é recusado; registo confirmado cria o cliente", async () => {
-      await repos.auth.register({ name: "Ana Neto", email: "ana@levaja.ao", phone: "923456789", password: "segredo12" });
-      await expect(repos.auth.verifyCode("ana@levaja.ao", "000000", "register")).rejects.toMatchObject({ code: "validation" });
-      const session = await repos.auth.verifyCode("ana@levaja.ao", "123456", "register");
+      await repos.auth.register({ name: "Ana Neto", email: "ana@angoleva.ao", phone: "923456789", password: "segredo12" });
+      await expect(repos.auth.verifyCode("ana@angoleva.ao", "000000", "register")).rejects.toMatchObject({ code: "validation" });
+      const session = await repos.auth.verifyCode("ana@angoleva.ao", "123456", "register");
       expect(session.user.name).toBe("Ana Neto");
       expect(session.user.phone).toBe("+244 923 456 789");
     });
 
     it("autenticação: o token retoma a sessão até ao logout", async () => {
-      const session = await repos.auth.login("joao@levaja.ao", "segredo12", "provider");
+      const session = await repos.auth.login("joao@angoleva.ao", "segredo12", "provider");
       expect(session.token).toBeTruthy();
       const restored = await repos.auth.restore(session.token);
       expect(restored.user.id).toBe(session.user.id);

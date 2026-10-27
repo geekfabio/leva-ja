@@ -37,7 +37,7 @@ export default function VerifyEmailScreen() {
     }
     setLoading(false);
     const session = useSessionStore.getState();
-    toast.success(purpose === "recover" ? { title: "Acesso recuperado", message: "Já podes entrar com a tua conta." } : { title: "Conta criada", message: "Bem-vindo à Leva Já!" });
+    toast.success(purpose === "recover" ? { title: "Acesso recuperado", message: "Já podes entrar com a tua conta." } : { title: "Conta criada", message: "Bem-vindo à AngoLeva!" });
     if (session.locationGranted === null) swap("/enable-location");
     else enterApp(session.role ?? "client");
   };

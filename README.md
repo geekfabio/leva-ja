@@ -1,6 +1,8 @@
-# Leva Já
+# AngoLeva
 
 Aplicação mobile de assistência, transporte e logística em Luanda: reboque de viaturas, transporte de carga com pickup, pequenas mudanças e mudanças completas de casa. Tem dois perfis — **Cliente** e **Prestador de Serviço** — e, nesta fase, funciona inteiramente com dados mockados, sem backend.
+
+O projecto chamava-se **Leva Já**. Com a mudança para AngoLeva passaram a ser `angoleva`: o nome do pacote npm, o slug Expo, o esquema de links (`angoleva://`), os identificadores Android/iOS (`ao.angoleva.app`), as chaves do armazenamento seguro (`angoleva.*`), o domínio de demonstração (`@angoleva.ao`) e o prefixo dos códigos de pedido (`AL-`). O repositório GitHub mantém o nome `leva-ja`.
 
 A interface segue as 46 referências documentadas em [docs/ui-reference.md](docs/ui-reference.md), adaptadas a Android e iOS (e à web, para revisão).
 
@@ -18,7 +20,7 @@ Fluxo de entrada: **splash → onboarding → escolha de perfil → login**. Os 
 | Perfil | Como entrar | Dados |
 | --- | --- | --- |
 | Cliente | Escolhe «Preciso de um serviço» e entra | `armando@email.com` + qualquer palavra-passe com 6+ caracteres |
-| Prestador | Escolhe «Sou prestador» e entra | `joao.manuel@levaja.ao` + qualquer palavra-passe com 6+ caracteres |
+| Prestador | Escolhe «Sou prestador» e entra | `joao.manuel@angoleva.ao` + qualquer palavra-passe com 6+ caracteres |
 | Registo / recuperação | «Criar conta» ou «Esqueci-me da palavra-passe» | Código de confirmação `123456` |
 
 Atalho: no perfil de cada área existe «Mudar para prestador/cliente».

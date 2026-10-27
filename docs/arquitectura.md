@@ -1,4 +1,4 @@
-# Arquitectura da app Leva Já
+# Arquitectura da app AngoLeva
 
 Esta fase não tem backend. Os dados de demonstração estão atrás do **padrão Repository**: a app só conhece contratos (interfaces) e uma implementação é escolhida em tempo de arranque. Trocar mocks pela API é trocar a implementação, sem mexer nos ecrãs nem nas stores.
 

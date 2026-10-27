@@ -1,5 +1,5 @@
 /**
- * Modelo de domínio da Leva Já. Os mocks e a futura API partilham estes tipos;
+ * Modelo de domínio da AngoLeva. Os mocks e a futura API partilham estes tipos;
  * a substituição dos mocks deve respeitar estas formas.
  */
 export type Role = "client" | "provider";

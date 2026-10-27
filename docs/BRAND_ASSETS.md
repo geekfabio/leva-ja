@@ -1,4 +1,4 @@
-# Activos de marca — Leva Já
+# Activos de marca — AngoLeva
 
 ## Conceito
 
@@ -8,9 +8,9 @@ O símbolo combina um camião-reboque, gancho e viatura. Representa assistência
 
 | Ficheiro | Formato | Aplicação |
 | --- | --- | --- |
-| `assets/brand/leva-ja-mark.png` | PNG transparente, 1254×1254 | Símbolo mestre em interfaces e comunicações |
-| `assets/brand/leva-ja-wordmark-light.svg` | SVG | Logótipo horizontal para fundos claros |
-| `assets/brand/leva-ja-wordmark-dark.svg` | SVG | Logótipo horizontal para fundos escuros |
+| `assets/brand/angoleva-mark.png` | PNG transparente, 1254×1254 | Símbolo mestre em interfaces e comunicações |
+| `assets/brand/angoleva-wordmark-light.svg` | SVG | Logótipo horizontal para fundos claros |
+| `assets/brand/angoleva-wordmark-dark.svg` | SVG | Logótipo horizontal para fundos escuros |
 | `assets/icons/app-icon.png` | PNG, 1024×1024 | Ícone da aplicação em fundo quase-preto |
 | `assets/icons/adaptive-icon.png` | PNG, 1024×1024 | Primeiro plano do ícone Android adaptativo |
 | `assets/icons/favicon.png` | PNG, 64×64 | Favicon do web build |
@@ -19,7 +19,7 @@ O símbolo combina um camião-reboque, gancho e viatura. Representa assistência
 
 - Deixar uma margem livre em redor do símbolo; não esticar ou rodar.
 - Usar sobre fundos branco, verde-claro ou quase-preto.
-- Usar a marca verbal **LEVA JÁ** em tipografia forte, sem alterar o acento em “JÁ”.
+- Usar a marca verbal **ANGOLEVA** em tipografia forte, sem alterar o acento em “JÁ”.
 - Não usar laranja nem iconografia de entrega para esta aplicação.
 
 ### Aplicação nas telas
@@ -34,7 +34,7 @@ O símbolo combina um camião-reboque, gancho e viatura. Representa assistência
 
 | Nome | Hex |
 | --- | --- |
-| Verde Leva Já | `#16A34A` |
+| Verde AngoLeva | `#16A34A` |
 | Verde escuro | `#15803D` |
 | Quase-preto | `#102018` |
 | Fundo suave | `#F6F8F6` |

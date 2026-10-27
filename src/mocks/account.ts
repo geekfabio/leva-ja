@@ -18,7 +18,7 @@ export const helpTopics: HelpTopic[] = [
   { id: "faq-2", category: "orders", question: "Posso cancelar um pedido?", answer: "Sim, enquanto a carga ou viatura não tiver sido recolhida. Depois da recolha, fala com o suporte." },
   { id: "faq-3", category: "payments", question: "Quando é que pago o serviço?", answer: "Só pagas depois de confirmarmos o prestador e os detalhes do serviço. O valor final aparece antes da confirmação." },
   { id: "faq-4", category: "payments", question: "Como obtenho o recibo?", answer: "O recibo fica disponível no histórico de serviços logo após o pagamento." },
-  { id: "faq-5", category: "safety", question: "Os prestadores são verificados?", answer: "Todos os prestadores enviam carta de condução, identificação, documentos da viatura e seguro, validados pela equipa Leva Já." },
+  { id: "faq-5", category: "safety", question: "Os prestadores são verificados?", answer: "Todos os prestadores enviam carta de condução, identificação, documentos da viatura e seguro, validados pela equipa AngoLeva." },
   { id: "faq-6", category: "safety", question: "O que faz o botão SOS?", answer: "Partilha a tua localização e o pedido activo com a equipa de segurança e mostra os contactos de emergência." },
   { id: "faq-7", category: "account", question: "Como altero o meu número de telefone?", answer: "Em Perfil → Editar perfil. Vais receber um código para confirmar o novo número." },
 ];
@@ -27,5 +27,5 @@ export const emergencyContacts = [
   { id: "sos-police", label: "Polícia Nacional", number: "113" },
   { id: "sos-fire", label: "Bombeiros", number: "115" },
   { id: "sos-ambulance", label: "Emergência médica", number: "112" },
-  { id: "sos-levaja", label: "Segurança Leva Já", number: "+244 222 000 111" },
+  { id: "sos-angoleva", label: "Segurança AngoLeva", number: "+244 222 000 111" },
 ];

@@ -23,7 +23,7 @@ describe("sessão guardada no armazenamento seguro", () => {
   it("login guarda o token e o perfil; ao reabrir a sessão é retomada", async () => {
     useSessionStore.getState().completeOnboarding();
     useSessionStore.getState().setRole("provider");
-    await useSessionStore.getState().login("joao@levaja.ao", "segredo12");
+    await useSessionStore.getState().login("joao@angoleva.ao", "segredo12");
     const { token, user } = useSessionStore.getState();
     expect(await sessionVault().load()).toEqual({ token, role: "provider" });
 
@@ -34,7 +34,7 @@ describe("sessão guardada no armazenamento seguro", () => {
   });
 
   it("logout apaga a sessão guardada e invalida o token", async () => {
-    await useSessionStore.getState().login("ana@levaja.ao", "segredo12");
+    await useSessionStore.getState().login("ana@angoleva.ao", "segredo12");
     const { token } = useSessionStore.getState();
     await useSessionStore.getState().logout();
     expect(await sessionVault().load()).toBeNull();

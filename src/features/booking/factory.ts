@@ -53,7 +53,7 @@ export function buildRequest(input: RequestInput): ServiceRequest {
   const number = sequence++;
   return {
     id: input.id ?? `req-${number}`,
-    code: `LJ-${number}`,
+    code: `AL-${number}`,
     kind: input.kind,
     status,
     clientId: input.clientId,

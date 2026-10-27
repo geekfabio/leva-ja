@@ -47,7 +47,7 @@ export const avatars = {
 
 export type AvatarKey = keyof typeof avatars;
 
-export const brandMark = require("../../assets/brand/leva-ja-mark.png");
+export const brandMark = require("../../assets/brand/angoleva-mark.png");
 
 /**
  * Resolve uma referência de imagem vinda dos dados: chave de uma imagem local

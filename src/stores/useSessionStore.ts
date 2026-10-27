@@ -5,7 +5,7 @@ import { demoIdentity, isRepositoryError, repositories, sessionVault, type Sessi
 type PendingRegistration = { name: string; email: string; phone: string };
 
 /** Utilizador sem sessão (modo API antes do login). */
-const GUEST: Client = { id: "guest", name: "Convidado", email: "", phone: "", initials: "LJ", rating: 0 };
+const GUEST: Client = { id: "guest", name: "Convidado", email: "", phone: "", initials: "AL", rating: 0 };
 
 type SessionState = {
   /** `true` depois de ler a sessão guardada no arranque (o splash espera por isto). */

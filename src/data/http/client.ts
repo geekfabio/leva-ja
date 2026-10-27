@@ -1,9 +1,9 @@
 import { create, isAxiosError } from "axios";
 import { RepositoryError } from "../repositories/types";
 
-/** Cliente HTTP da API Leva Já. */
+/** Cliente HTTP da API AngoLeva. */
 export const http = create({
-  baseURL: process.env.EXPO_PUBLIC_API_URL ?? "https://api.leva-ja.ao",
+  baseURL: process.env.EXPO_PUBLIC_API_URL ?? "https://api.angoleva.ao",
   timeout: 10_000,
 });
 

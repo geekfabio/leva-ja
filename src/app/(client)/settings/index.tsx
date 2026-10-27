@@ -74,7 +74,7 @@ export default function SettingsScreen() {
       </ListGroup>
       <ListRow tone="danger" icon={<LogOut size={24} color={colors.danger} />} title="Terminar sessão" chevron={false} onPress={() => setLogout(true)} />
       <AppText variant="tiny" color={colors.subtle} align="center">
-        Leva Já 0.2.0 · {role === "provider" ? "Área do prestador" : "Área do cliente"} · dados mockados
+        AngoLeva 0.2.0 · {role === "provider" ? "Área do prestador" : "Área do cliente"} · dados mockados
       </AppText>
       <ConfirmDialog
         visible={logout}

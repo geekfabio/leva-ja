@@ -49,13 +49,13 @@ export default function SplashScreen() {
         <Path d="M420 60 C 250 160, 380 300, 260 420 S 60 640, 120 900" stroke="rgba(255,255,255,0.08)" strokeWidth={2} strokeDasharray="14 18" fill="none" />
         <Path d="M-20 520 C 80 600, 40 760, 180 900" stroke="rgba(255,255,255,0.04)" strokeWidth={50} fill="none" />
       </Svg>
-      <View accessible accessibilityLabel="Leva Já, reboque, carga e mudanças" style={{ alignItems: "center", gap: 6 }}>
+      <View accessible accessibilityLabel="AngoLeva, reboque, carga e mudanças" style={{ alignItems: "center", gap: 6 }}>
         <Appear from="pop">
           <TowTruckIcon size={104} color={colors.white} strokeWidth={1.8} />
         </Appear>
         <Appear delay={180}>
           <AppText weight="extrabold" color={colors.white} style={{ fontSize: 48, lineHeight: 56, letterSpacing: 1 }}>
-            LEVA JÁ
+            ANGOLEVA
           </AppText>
         </Appear>
         <Appear delay={320} from="fade">

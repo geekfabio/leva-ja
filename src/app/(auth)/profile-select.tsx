@@ -25,7 +25,7 @@ export default function ProfileSelectScreen() {
         <SafeAreaView edges={["top"]} style={{ paddingHorizontal: 20, paddingBottom: 40 }}>
           <IconButton label="Voltar ao onboarding" icon={<ArrowLeft size={24} color={colors.white} />} onPress={() => swap("/intro")} />
           <AppText variant="h1" color={colors.white} accessibilityRole="header" style={{ marginTop: 12, fontSize: 32, lineHeight: 38 }}>
-            Como vais usar{"\n"}a Leva Já?
+            Como vais usar{"\n"}a AngoLeva?
           </AppText>
         </SafeAreaView>
         <Svg width="100%" height={36} viewBox="0 0 400 36" preserveAspectRatio="none" style={{ position: "absolute", bottom: -1 }}>

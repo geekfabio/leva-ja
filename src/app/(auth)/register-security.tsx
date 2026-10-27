@@ -54,7 +54,7 @@ export default function RegisterSecurityScreen() {
         name="terms"
         render={({ field, fieldState }) => (
           <View style={{ gap: 6 }}>
-            <Checkbox tone="plain" checked={!!field.value} onChange={field.onChange} label="Aceito os Termos de Utilização e a Política de Privacidade da Leva Já" />
+            <Checkbox tone="plain" checked={!!field.value} onChange={field.onChange} label="Aceito os Termos de Utilização e a Política de Privacidade da AngoLeva" />
             {fieldState.error ? (
               <AppText variant="caption" color={colors.danger} accessibilityRole="alert">
                 {fieldState.error.message}

@@ -4,8 +4,8 @@ import type { SecureStorage } from "./SecureStorage";
 /** O que fica guardado no dispositivo: só o token e o perfil, nunca dados pessoais. */
 export type StoredSession = { token: string; role: Role };
 
-const SESSION_KEY = "levaja.session";
-const ONBOARDED_KEY = "levaja.onboarded";
+const SESSION_KEY = "angoleva.session";
+const ONBOARDED_KEY = "angoleva.onboarded";
 
 const isStoredSession = (value: unknown): value is StoredSession =>
   typeof value === "object" &&

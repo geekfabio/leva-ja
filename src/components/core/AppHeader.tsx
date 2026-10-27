@@ -10,7 +10,7 @@ import { StepProgress } from "./StepProgress";
 
 type Props = {
   title?: string;
-  /** Mostra a marca Leva Já no centro ou à esquerda. */
+  /** Mostra a marca AngoLeva no centro ou à esquerda. */
   brand?: boolean;
   back?: boolean | (() => void);
   right?: ReactNode;

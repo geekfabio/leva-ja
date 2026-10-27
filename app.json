@@ -1,12 +1,12 @@
 {
   "expo": {
-    "name": "Leva Já",
-    "slug": "leva-ja",
-    "scheme": "levaja",
+    "name": "AngoLeva",
+    "slug": "angoleva",
+    "scheme": "angoleva",
     "version": "0.1.0",
     "icon": "./assets/icons/app-icon.png",
     "splash": {
-      "image": "./assets/brand/leva-ja-mark.png",
+      "image": "./assets/brand/angoleva-mark.png",
       "resizeMode": "contain",
       "backgroundColor": "#053420"
     },
@@ -28,14 +28,14 @@
       "typedRoutes": true
     },
     "android": {
-      "package": "ao.leva.app",
+      "package": "ao.angoleva.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/icons/adaptive-icon.png",
         "backgroundColor": "#34D186"
       }
     },
     "ios": {
-      "bundleIdentifier": "ao.leva.app"
+      "bundleIdentifier": "ao.angoleva.app"
     }
   }
 }

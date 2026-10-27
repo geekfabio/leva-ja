@@ -1,5 +1,5 @@
 /**
- * Paleta da nova experiência Leva Já (referências 01–46).
+ * Paleta da nova experiência AngoLeva (referências 01–46).
  * `primary` é o verde de acções com texto branco (contraste AA 4,6:1);
  * `accent` é o verde vivo das referências, usado em elementos sem texto
  * (rotas no mapa, progresso, interruptores, ícones).
