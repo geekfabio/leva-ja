@@ -31,8 +31,8 @@ A API simulada responde a todos estes endpoints neste formato. Por omissão, a a
 | HTTP | `RepositoryError.code` | Quando |
 | --- | --- | --- |
 | 400, 422 | `validation` | Corpo fora do contrato ou regra violada (saldo insuficiente, cobertura vazia…). |
-| 401 | `unauthorized` | Credenciais erradas, ou token expirado ou revogado. Se o pedido levava token, a app termina a sessão e abre o login. |
-| 403 | `forbidden` | Operação não permitida (actor errado numa transição, prestador offline). |
+| 401 | `unauthorized` | Credenciais erradas, ou token expirado ou revogado. Com o token expirado (`code: "token_expired"`), a app renova-o com o refresh token e repete o pedido. Só se a renovação falhar termina a sessão e abre o login. |
+| 403 | `forbidden` | Operação não permitida: recurso de outro utilizador, actor errado numa transição, prestador offline (ver «Regras de acesso»). |
 | 404 | `not_found` | Recurso ou endpoint inexistente. |
 | 409 | `invalid_transition` | Transição fora da máquina de estados do pedido. |
 | 429, 5xx | `server` | Limite de pedidos ou erro do servidor. |
@@ -122,12 +122,39 @@ Há três tópicos, e cada mensagem traz JSON no formato acima:
 | POST | `/auth/recover` (público) | `{ email }` | 204 |
 | POST | `/auth/verify` (público) | `{ email, code, purpose: "register"\|"recover" }` | `{ data: Session }` |
 | POST | `/auth/resend` (público) | `{ email }` | 204 |
+| POST | `/auth/refresh` (público) | `{ refresh_token }` | `{ data: Session }`, com tokens novos; o refresh token antigo deixa de valer |
 | GET | `/auth/me` | — | `{ data: { user: Client, provider_id } }` (retoma a sessão guardada) |
 | POST | `/auth/password` | `{ current_password, new_password }` | 204 |
 | POST | `/auth/logout` | — | 204; invalida o token |
 | PATCH | `/clients/:id` | `{ full_name?, email?, phone? }` | `{ data: Client }` |
 
-`Session` = `{ access_token, token_type: "Bearer", user: Client, provider_id: string | null }` (ver `__fixtures__/session.json`). O token fica no armazenamento seguro do dispositivo.
+`Session` = `{ access_token, token_type: "Bearer", expires_in, refresh_token, user: Client, provider_id: string | null }` (ver `__fixtures__/session.json`). Os dois tokens ficam no armazenamento seguro do dispositivo.
+
+**Renovação:**
+
+- O token de acesso é curto (`expires_in`, em segundos).
+- Quando um pedido recebe 401, a app chama `POST /auth/refresh` uma única vez, mesmo com vários pedidos a falhar em paralelo, e repete os pedidos. Guarda os tokens novos.
+- No arranque, se `/auth/me` recusar o token guardado, a app tenta primeiro renovar.
+
+## Regras de acesso
+
+O servidor decide sempre com base no token. A API simulada aplica estas regras (`src/data/mock/server.ts`, testadas em `api-security.test.ts`):
+
+| Recurso | Quem |
+| --- | --- |
+| `/clients/:id/…` | só o próprio cliente |
+| `/providers/:id/…` | só o próprio prestador |
+| `GET /requests` | sem filtro, só os pedidos do utilizador; `client_id`/`provider_id` têm de ser os dele |
+| `GET /requests/:id`, `/threads/:id` | o cliente do pedido, o prestador atribuído e, enquanto está em `searching`, qualquer prestador |
+| `…/changes` | só alterações de pedidos que o utilizador pode ver |
+| `POST /requests` | `client_id` tem de ser o do utilizador |
+| `transitions` | `actor: client` → o cliente do pedido; `actor: provider` → o prestador atribuído; `actor: system` → **nunca** vindo da app (só o servidor) |
+| `accept`, `proposal` | `provider_id` tem de ser o do utilizador |
+| `cancel` | o cliente ou o prestador atribuído |
+| `proposal/answer`, `payment`, `rating` | o cliente do pedido |
+| `pickup-photos`, `proof` | o prestador atribuído |
+
+Em modo demonstração, a app simula os outros intervenientes (o prestador que aceita, o cliente que confirma a recolha), por isso a API simulada aceita aí `actor: system` e propostas em nome de prestadores simulados. Com `createMockServer(db, { simulation: false })` comporta-se como o backend real.
 
 ## Pedidos de serviço
 
@@ -223,5 +250,3 @@ A distância por estrada é estimada na app (`utils/geo.ts`) só para pré-visua
 - **WebSocket:** mesmos tópicos e mensagens que o socket da API simulada.
 - **Notificações push:** registo do token Expo e envio pelo servidor.
 - **Pagamentos reais:** Multicaixa Express, referência bancária e cartão via processador.
-- **Renovação de token** (refresh token). Hoje, um 401 termina a sessão.
-- **Permissões por recurso:** um cliente só vê os seus pedidos e um prestador só altera o seu estado. A API simulada não verifica isto.

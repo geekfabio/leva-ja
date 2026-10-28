@@ -11,6 +11,8 @@ import { DEMO_CLIENT, DEMO_PROVIDER_ID, DEMO_TOKEN } from "./demo";
 
 type ProviderRecord = Omit<ProviderState, "profile">;
 type PendingAccount = { purpose: "register" | "recover"; client?: Client };
+/** Sessão guardada no servidor simulado; sem `expiresAt` não expira (sessão de demonstração). */
+export type SessionRecord = Omit<Session, "token" | "refreshToken"> & { expiresAt?: number; refreshToken?: string };
 
 /**
  * Base de dados em memória que faz de servidor na fase mock. É semeada a partir
@@ -26,8 +28,10 @@ export class MockDatabase {
   paymentMethods = new Map<string, PaymentMethod[]>();
   pending = new Map<string, PendingAccount>();
   tickets: { code: string; requestId: string; reason: string; description: string }[] = [];
-  /** Tokens emitidos. Não são apagados por `reset()`: repor os dados não termina a sessão. */
-  sessions = new Map<string, Omit<Session, "token">>();
+  /** Tokens de acesso emitidos. Não são apagados por `reset()`: repor os dados não termina a sessão. */
+  sessions = new Map<string, SessionRecord>();
+  /** Refresh tokens → token de acesso que renovam. */
+  refreshTokens = new Map<string, string>();
 
   constructor() {
     this.seed();

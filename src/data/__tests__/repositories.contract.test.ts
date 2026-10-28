@@ -43,7 +43,7 @@ function contract(name: string, make: () => Promise<Repositories>) {
 
     it("pedidos: recusa transições fora da máquina de estados com RepositoryError", async () => {
       const created = await repos.requests.create({ kind: "tow", origin: places.maianga, destination: places.talatona, clientId: "cli-armando" });
-      await expect(repos.requests.transition(created.id, "in_transit", "provider")).rejects.toMatchObject({ code: "invalid_transition" });
+      await expect(repos.requests.transition(created.id, "delivered", "system")).rejects.toMatchObject({ code: "invalid_transition" });
       await expect(repos.requests.get("nao-existe")).rejects.toBeInstanceOf(RepositoryError);
     });
 
@@ -114,7 +114,7 @@ contract("API simulada (socket)", async () => {
   const server = createMockServer(new MockDatabase());
   http.defaults.adapter = server.adapter;
   const repos = createApiRepositories({ realtime: server.socket });
-  await repos.auth.login("armando@email.com", "segredo12", "client");
+  await repos.auth.login("joao.manuel@angoleva.ao", "segredo12", "provider");
   return repos;
 });
 
@@ -122,6 +122,6 @@ contract("API simulada (socket)", async () => {
 contract("API simulada (polling)", async () => {
   http.defaults.adapter = createMockServer(new MockDatabase()).adapter;
   const repos = createApiRepositories({ pollIntervalMs: 5 });
-  await repos.auth.login("armando@email.com", "segredo12", "client");
+  await repos.auth.login("joao.manuel@angoleva.ao", "segredo12", "provider");
   return repos;
 });

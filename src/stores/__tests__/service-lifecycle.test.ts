@@ -1,4 +1,5 @@
-import { resetMockDatabase } from "@/data";
+import { repositories, resetMockDatabase, setAuthTokens } from "@/data";
+import { DEMO_TOKEN } from "@/data/mock/demo";
 import { useServiceStore } from "@/stores/useServiceStore";
 import { useProviderStore } from "@/stores/useProviderStore";
 import { useBookingStore } from "@/stores/useBookingStore";
@@ -15,8 +16,20 @@ function cargoDraft() {
 
 const find = (id: string) => useServiceStore.getState().requests.find((r) => r.id === id)!;
 
+/** A API só deixa o dono do pedido responder à proposta: entra como esse cliente. */
+async function asClient(email: string, action: () => Promise<unknown>) {
+  const session = await repositories().auth.login(email, "segredo12", "client");
+  try {
+    return await action();
+  } finally {
+    void session;
+    setAuthTokens({ token: DEMO_TOKEN });
+  }
+}
+
 beforeEach(async () => {
   resetMockDatabase();
+  setAuthTokens({ token: DEMO_TOKEN });
   useServiceStore.getState().clear();
   await useServiceStore.getState().hydrate();
   await useProviderStore.getState().hydrate(useSessionStore.getState().providerId!);
@@ -67,9 +80,11 @@ describe("ciclo de vida partilhado cliente ↔ prestador (stores sobre repositó
 
   it("mudança de casa: proposta aceite actualiza o preço e atribui o pedido", async () => {
     const store = useServiceStore.getState();
-    const before = find("req-near-4");
+    // Fora da cobertura do prestador de demonstração: abre-o como numa ligação directa.
+    const before = await repositories().requests.get("req-near-4");
+    store.upsert(before);
     expect(await store.submitProposal("req-near-4", 40000, "Inclui 2 ajudantes e escadas")).toBe(true);
-    expect(await store.answerProposal("req-near-4", true)).toBe(true);
+    expect(await asClient("carlos.mendes@email.com", () => store.answerProposal("req-near-4", true))).toBe(true);
     const after = find("req-near-4");
     expect(after.status).toBe("assigned");
     expect(after.price.total).toBe(40000 + before.price.platformFee);
@@ -78,8 +93,9 @@ describe("ciclo de vida partilhado cliente ↔ prestador (stores sobre repositó
 
   it("proposta recusada devolve o pedido à lista", async () => {
     const store = useServiceStore.getState();
+    store.upsert(await repositories().requests.get("req-near-4"));
     await store.submitProposal("req-near-4", 40000, "Inclui 2 ajudantes e escadas");
-    await store.answerProposal("req-near-4", false);
+    await asClient("carlos.mendes@email.com", () => store.answerProposal("req-near-4", false));
     expect(find("req-near-4").status).toBe("searching");
     expect(find("req-near-4").providerId).toBeUndefined();
   });

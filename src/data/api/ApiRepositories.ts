@@ -4,7 +4,7 @@ import type { Repositories } from "../repositories";
 import { RepositoryError } from "../repositories/types";
 import { MockMediaRepository } from "../mock/MockMediaRepository";
 import { roadDistanceKm } from "@/utils/geo";
-import { call, http, setAuthToken } from "../http/client";
+import { call, http, setAuthToken, setAuthTokens, setTokenRefresher } from "../http/client";
 import * as Dto from "./dto";
 import * as map from "./mappers";
 import { PollingRealtime, type RealtimeChannel } from "./realtime";
@@ -54,9 +54,12 @@ export function createApiRepositories({ realtime, pollIntervalMs = env.pollInter
 
   const startSession = async (request: Promise<{ data: unknown }>) => {
     const session = map.toSession(await one(Dto.SessionDto, request, "sessão"));
-    setAuthToken(session.token);
+    setAuthTokens(session);
     return session;
   };
+  const refresh = (refreshToken: string) => startSession(http.post("/auth/refresh", { refresh_token: refreshToken }));
+  // Um 401 com token tenta primeiro renovar a sessão (src/data/http/client.ts).
+  setTokenRefresher(refresh);
 
   return {
     auth: {
@@ -70,6 +73,7 @@ export function createApiRepositories({ realtime, pollIntervalMs = env.pollInter
         setAuthToken(token);
         return { token, user: map.toClient(me.user), providerId: me.provider_id ?? undefined };
       },
+      refresh,
       updateProfile: async (clientId, data) =>
         map.toClient(await one(Dto.ClientDto, http.patch(`/clients/${clientId}`, { full_name: data.name, email: data.email, phone: data.phone }), "cliente")),
       changePassword: (current, next) => none(http.post("/auth/password", { current_password: current, new_password: next })),

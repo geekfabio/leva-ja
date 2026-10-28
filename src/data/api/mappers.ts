@@ -298,8 +298,15 @@ export const toProofInput = (body: ReturnType<typeof fromProofInput>): Omit<Deli
 
 // —— Sessão ——
 
-export const toSession = (dto: Dto.SessionDto): Session => ({ token: dto.access_token, user: toClient(dto.user), providerId: orUndefined(dto.provider_id) });
-export const fromSession = (s: Session): Dto.SessionDto => ({ access_token: s.token, token_type: "Bearer", user: fromClient(s.user), provider_id: orNull(s.providerId) });
+export const toSession = (dto: Dto.SessionDto): Session => ({ token: dto.access_token, refreshToken: dto.refresh_token, user: toClient(dto.user), providerId: orUndefined(dto.provider_id) });
+export const fromSession = (s: Session, expiresInSeconds: number): Dto.SessionDto => ({
+  access_token: s.token,
+  token_type: "Bearer",
+  expires_in: Math.max(1, Math.round(expiresInSeconds)),
+  refresh_token: s.refreshToken ?? "",
+  user: fromClient(s.user),
+  provider_id: orNull(s.providerId),
+});
 
 // —— Prestador ——
 

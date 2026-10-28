@@ -6,7 +6,7 @@ import type { AuthRepository, RegistrationInput, Session, VerificationPurpose } 
 import { DEMO_PROVIDER_ID } from "./demo";
 import { RepositoryError } from "../repositories/types";
 import { db, type MockDatabase } from "./database";
-import { clone, simulate } from "./runtime";
+import { clone, mockRuntime, simulate } from "./runtime";
 
 const formatPhone = (digits: string) => `+244 ${digits.replace(/(\d{3})(\d{3})(\d{3})/, "$1 $2 $3")}`;
 
@@ -14,11 +14,22 @@ const formatPhone = (digits: string) => `+244 ${digits.replace(/(\d{3})(\d{3})(\
 export class MockAuthRepository implements AuthRepository {
   constructor(private readonly database: MockDatabase = db) {}
 
-  /** Emite um token e regista a sessão, como faria o servidor. */
-  private open(session: Omit<Session, "token">): Session {
-    const token = `mock.${session.user.id}.${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
-    this.database.sessions.set(token, clone(session));
-    return { token, ...session };
+  /** Emite um token de acesso e um refresh token, e regista a sessão, como faria o servidor. */
+  private open(session: Pick<Session, "user" | "providerId">): Session {
+    const id = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
+    const token = `mock.${session.user.id}.${id()}`;
+    const refreshToken = `mock-refresh.${id()}`;
+    this.database.sessions.set(token, { ...clone(session), expiresAt: Date.now() + mockRuntime.accessTokenTtlMs, refreshToken });
+    this.database.refreshTokens.set(refreshToken, token);
+    return { token, refreshToken, ...session };
+  }
+
+  /** Sessão válida para o token, ou erro `unauthorized` (inexistente ou expirada). */
+  private active(token: string) {
+    const session = this.database.sessions.get(token);
+    if (!session) throw new RepositoryError("unauthorized", "A sessão expirou. Entra de novo.");
+    if (session.expiresAt !== undefined && session.expiresAt <= Date.now()) throw new RepositoryError("unauthorized", "O token de acesso expirou.");
+    return session;
   }
 
   private byEmail(email: string) {
@@ -68,12 +79,33 @@ export class MockAuthRepository implements AuthRepository {
 
   restore(token: string) {
     return simulate<Session>(() => {
-      const session = this.database.sessions.get(token);
-      if (!session) throw new RepositoryError("unauthorized", "A sessão expirou. Entra de novo.");
+      const session = this.active(token);
       // Dados actuais do utilizador (o perfil pode ter mudado desde o login).
       const user = this.database.clients.get(session.user.id) ?? session.user;
-      return { token, user: clone(user), providerId: session.providerId };
+      return { token, refreshToken: session.refreshToken, user: clone(user), providerId: session.providerId };
     }, 300);
+  }
+
+  refresh(refreshToken: string) {
+    return simulate<Session>(() => {
+      const previous = this.database.refreshTokens.get(refreshToken);
+      const session = previous ? this.database.sessions.get(previous) : undefined;
+      if (!previous || !session) throw new RepositoryError("unauthorized", "A sessão terminou. Entra de novo.");
+      // Rotação: o refresh token e o token de acesso antigos deixam de valer.
+      this.database.refreshTokens.delete(refreshToken);
+      this.database.sessions.delete(previous);
+      const user = this.database.clients.get(session.user.id) ?? session.user;
+      return this.open({ user: clone(user), providerId: session.providerId });
+    }, 200);
+  }
+
+  /** Só para a API simulada: a sessão do token, ou `undefined` se não for válida. */
+  sessionFor(token: string) {
+    try {
+      return this.active(token);
+    } catch {
+      return undefined;
+    }
   }
 
   updateProfile(clientId: string, data: Partial<Pick<Client, "name" | "email" | "phone">>) {
@@ -93,6 +125,8 @@ export class MockAuthRepository implements AuthRepository {
 
   logout(token: string) {
     return simulate(() => {
+      const session = this.database.sessions.get(token);
+      if (session?.refreshToken) this.database.refreshTokens.delete(session.refreshToken);
       this.database.sessions.delete(token);
     }, 0);
   }

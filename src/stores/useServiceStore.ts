@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { create } from "zustand";
 import type { DeliveryProofData, PaymentMethodKind, Photo, ServiceRequest, ServiceStatus } from "@/types/domain";
 import { repositories, type RequestActor } from "@/data";
@@ -63,7 +64,15 @@ export const useServiceStore = create<ServiceState>((set, get) => {
 
     hydrate: async () => {
       try {
-        const requests = await repo().list();
+        // A API devolve a cada utilizador só o que lhe diz respeito: os pedidos
+        // dele como cliente e, se for prestador, os atribuídos e os próximos.
+        const providerId = myProviderId();
+        const [own, assigned, nearby] = await Promise.all([
+          repo().list(),
+          providerId ? repo().list({ providerId }) : Promise.resolve([]),
+          providerId ? repo().nearby(providerId).then((list) => list.map((n) => n.request)) : Promise.resolve([]),
+        ]);
+        const requests = [...new Map([...nearby, ...assigned, ...own].map((r) => [r.id, r])).values()];
         set({ requests, loaded: true });
       } catch (error) {
         set({ loaded: true, lastError: error instanceof Error ? error.message : "Erro ao carregar pedidos." });
@@ -139,7 +148,19 @@ export const useServiceStore = create<ServiceState>((set, get) => {
   };
 });
 
-export const useRequest = (id?: string | null) => useServiceStore((s) => (id ? s.requests.find((r) => r.id === id) : undefined));
+/** Pedido da cache; se não estiver lá (ex.: ligação directa), é pedido à API. */
+export function useRequest(id?: string | null) {
+  const request = useServiceStore((s) => (id ? s.requests.find((r) => r.id === id) : undefined));
+  const loaded = useServiceStore((s) => s.loaded);
+  useEffect(() => {
+    if (!id || request || !loaded) return;
+    repositories()
+      .requests.get(id)
+      .then((found) => useServiceStore.getState().upsert(found))
+      .catch(() => undefined);
+  }, [id, request, loaded]);
+  return request;
+}
 
 /** Recalcula a estimativa de um rascunho (usado no ecrã de estimativa antes de criar o pedido). */
 export { estimatePrice };

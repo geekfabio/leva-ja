@@ -11,10 +11,57 @@ export const http = create({
 });
 
 let authToken: string | null = null;
+let refreshToken: string | null = null;
 
-/** Token da sessão actual (vem do login ou da sessão guardada no armazenamento seguro). */
+/** Tokens da sessão actual (vêm do login ou da sessão guardada no armazenamento seguro). */
+export function setAuthTokens(tokens: { token: string; refreshToken?: string } | null) {
+  authToken = tokens?.token ?? null;
+  refreshToken = tokens?.refreshToken ?? null;
+}
+
+/** Só o token de acesso (mantém o refresh token, excepto ao limpar). */
 export function setAuthToken(token: string | null) {
   authToken = token;
+  if (!token) refreshToken = null;
+}
+
+export type FreshTokens = { token: string; refreshToken?: string };
+type Refresher = (refreshToken: string) => Promise<FreshTokens>;
+let refresher: Refresher | undefined;
+
+/** Como trocar o refresh token por tokens novos (registado pelos repositórios da API). */
+export function setTokenRefresher(next: Refresher | undefined) {
+  refresher = next;
+}
+
+const refreshedListeners = new Set<(tokens: FreshTokens) => void>();
+
+/** Avisa quando os tokens são renovados, para a sessão guardada ser actualizada. */
+export function onTokensRefreshed(listener: (tokens: FreshTokens) => void) {
+  refreshedListeners.add(listener);
+  return () => {
+    refreshedListeners.delete(listener);
+  };
+}
+
+let inflight: Promise<boolean> | null = null;
+
+/** Renova os tokens uma só vez, mesmo com vários pedidos a falhar ao mesmo tempo. */
+function refreshOnce(): Promise<boolean> {
+  const current = refreshToken;
+  if (!refresher || !current) return Promise.resolve(false);
+  inflight ??= refresher(current)
+    .then((fresh) => {
+      authToken = fresh.token;
+      refreshToken = fresh.refreshToken ?? current;
+      refreshedListeners.forEach((listener) => listener({ token: fresh.token, refreshToken: refreshToken ?? undefined }));
+      return true;
+    })
+    .catch(() => false)
+    .finally(() => {
+      inflight = null;
+    });
+  return inflight;
 }
 
 const unauthorizedListeners = new Set<() => void>();
@@ -36,7 +83,20 @@ http.interceptors.request.use((config) => {
   return config;
 });
 
-type RetriableConfig = InternalAxiosRequestConfig & { retried?: boolean };
+type RetriableConfig = InternalAxiosRequestConfig & { retried?: boolean; refreshed?: boolean };
+
+// Token de acesso expirado: renova-o com o refresh token e repete o pedido uma vez.
+http.interceptors.response.use(undefined, async (error) => {
+  if (!isAxiosError(error) || !error.config) throw error;
+  const config = error.config as RetriableConfig;
+  const sent = String(config.headers?.Authorization ?? "").replace(/^Bearer\s+/i, "");
+  if (error.response?.status !== 401 || !sent || config.refreshed || config.url?.startsWith("/auth/")) throw error;
+  config.refreshed = true;
+  // Outro pedido pode já ter renovado o token entretanto.
+  if (!(authToken && authToken !== sent) && !(await refreshOnce())) throw error;
+  config.headers.Authorization = `Bearer ${authToken}`;
+  return http.request(config);
+});
 const RETRY_DELAY_MS = 600;
 
 // Uma repetição para leituras (GET) que falham por rede ou indisponibilidade temporária.
@@ -74,7 +134,8 @@ export function toRepositoryError(error: unknown): unknown {
   }
   if (status === 401) {
     // Só conta como sessão expirada se o pedido levava token (um login falhado também dá 401).
-    if (error.config?.headers?.Authorization) unauthorizedListeners.forEach((listener) => listener());
+    // Nos endpoints /auth/* (login, renovação…) um 401 é a resposta à própria operação.
+    if (error.config?.headers?.Authorization && !error.config.url?.startsWith("/auth/")) unauthorizedListeners.forEach((listener) => listener());
     return new RepositoryError("unauthorized", message ?? "A sessão expirou. Entra de novo.");
   }
   if (status === 403) return new RepositoryError("forbidden", message ?? "Não tens permissão para esta operação.");

@@ -42,7 +42,12 @@ describe("formato da API → domínio (fixtures escritas à mão, como as do bac
 
   it("sessão", () => {
     const session = map.toSession(parse(Dto.envelope(Dto.SessionDto), sessionFixture, "fixture").data);
-    expect(session).toEqual({ token: "eyJhbGciOiJIUzI1NiJ9.exemplo.assinatura", user: expect.objectContaining({ id: "cli-armando", initials: "AM" }), providerId: undefined });
+    expect(session).toEqual({
+      token: "eyJhbGciOiJIUzI1NiJ9.exemplo.assinatura",
+      refreshToken: "rt_3f9c2a71b8e04d6f",
+      user: expect.objectContaining({ id: "cli-armando", initials: "AM" }),
+      providerId: undefined,
+    });
   });
 
   it("erro: a mensagem do servidor chega ao ecrã", () => {

@@ -144,9 +144,17 @@ export type ServiceRequestDto = z.infer<typeof ServiceRequestDto>;
 
 export const NearbyRequestDto = z.object({ request: ServiceRequestDto, distance_km: z.number() });
 
-export const SessionDto = z.object({ access_token: z.string(), token_type: z.literal("Bearer"), user: ClientDto, provider_id: z.string().nullable() });
+export const SessionDto = z.object({
+  access_token: z.string(),
+  token_type: z.literal("Bearer"),
+  /** Segundos até o token de acesso expirar. */
+  expires_in: z.number().int().positive(),
+  refresh_token: z.string(),
+  user: ClientDto,
+  provider_id: z.string().nullable(),
+});
 export type SessionDto = z.infer<typeof SessionDto>;
-export const MeDto = SessionDto.omit({ access_token: true, token_type: true });
+export const MeDto = z.object({ user: ClientDto, provider_id: z.string().nullable() });
 
 export const TransactionDto = z.object({
   id: z.string(),

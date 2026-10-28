@@ -1,11 +1,12 @@
 import { AxiosError, type AxiosAdapter, type AxiosResponse, type InternalAxiosRequestConfig } from "axios";
 import { z } from "zod";
-import type { ServiceStatus } from "@/types/domain";
+import type { ServiceRequest, ServiceStatus } from "@/types/domain";
 import * as Dto from "../api/dto";
 import * as map from "../api/mappers";
 import type { RealtimeChannel } from "../api/realtime";
 import { RepositoryError, type RepositoryErrorCode, type Unsubscribe } from "../repositories/types";
-import { db, type MockDatabase } from "./database";
+import type { Session } from "../repositories/AuthRepository";
+import { db, type MockDatabase, type SessionRecord } from "./database";
 import { createMockRepositories } from "./index";
 
 /**
@@ -19,7 +20,7 @@ import { createMockRepositories } from "./index";
  */
 
 type Body = Record<string, unknown>;
-type Context = { params: Record<string, string>; query: Record<string, unknown>; body: Body; token: string };
+type Context = { params: Record<string, string>; query: Record<string, unknown>; body: Body; token: string; session: SessionRecord };
 type Handler = (ctx: Context) => unknown;
 type RouteOptions = { public?: boolean; created?: boolean };
 type Route = { method: string; pattern: RegExp; keys: string[]; handler: Handler; options: RouteOptions };
@@ -45,23 +46,41 @@ function input<S extends z.ZodTypeAny>(schema: S, body: unknown): z.infer<S> {
   throw new RepositoryError("validation", `Dados inválidos${issue ? ` em ${issue.path.join(".") || "corpo"}` : ""}.`);
 }
 
+const deny = (message = "Não tens acesso a este recurso."): never => {
+  throw new RepositoryError("forbidden", message);
+};
+
+/** Quem pode ver um pedido: o cliente, o prestador atribuído e, enquanto procura prestador, qualquer prestador. */
+const canSee = (s: SessionRecord, r: Pick<ServiceRequest, "clientId" | "providerId" | "status">) =>
+  r.clientId === s.user.id || (!!s.providerId && (r.providerId === s.providerId || r.status === "searching"));
+
 /** Simula a viagem pela rede: o que sai do servidor é JSON, nunca referências partilhadas. */
 const wire = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 
 /** Registo de alterações com cursor (posição no registo), como os endpoints `…/changes`. */
-class ChangeLog {
-  private items: unknown[] = [];
-  push = (item: unknown) => {
+class ChangeLog<T> {
+  private items: T[] = [];
+  push = (item: T) => {
     this.items.push(item);
   };
-  page(since: unknown) {
+  page(since: unknown, visible: (item: T) => boolean = () => true) {
     const from = Number(since);
-    const items = since === undefined || Number.isNaN(from) ? [] : this.items.slice(from);
+    const items = since === undefined || Number.isNaN(from) ? [] : this.items.slice(from).filter(visible);
     return { data: items, meta: { cursor: String(this.items.length) } };
   }
 }
 
-export function createMockServer(database: MockDatabase = db) {
+export type MockServerOptions = {
+  /**
+   * Na app, a simulação faz de "outros intervenientes" (o prestador que aceita,
+   * o cliente que confirma a recolha): permite o actor `system` e propostas em
+   * nome de prestadores simulados. Com `false`, só valem as regras de acesso
+   * que o backend real aplica.
+   */
+  simulation?: boolean;
+};
+
+export function createMockServer(database: MockDatabase = db, { simulation = true }: MockServerOptions = {}) {
   const repos = createMockRepositories(database);
   const routes: Route[] = [];
   const add = (method: string, path: string, handler: Handler, options: RouteOptions = {}) => {
@@ -71,13 +90,13 @@ export function createMockServer(database: MockDatabase = db) {
   };
 
   // —— Tempo real: os mesmos eventos alimentam o socket e os endpoints …/changes ——
-  const requestChanges = new ChangeLog();
-  repos.requests.subscribe((r) => requestChanges.push(map.fromServiceRequest(r)));
-  const chatChanges = new Map<string, ChangeLog>();
+  const requestChanges = new ChangeLog<ServiceRequest>();
+  repos.requests.subscribe(requestChanges.push);
+  const chatChanges = new Map<string, ChangeLog<unknown>>();
   const chatLog = (threadId: string) => {
     let log = chatChanges.get(threadId);
     if (!log) {
-      const created = new ChangeLog();
+      const created = new ChangeLog<unknown>();
       repos.chat.subscribe(threadId, (event) => event.type === "message" && created.push(map.fromChatMessage(event.message)));
       chatChanges.set(threadId, created);
       log = created;
@@ -99,10 +118,24 @@ export function createMockServer(database: MockDatabase = db) {
     },
   };
 
+  // —— Regras de acesso ——
+  const request = (id: string) => database.requests.get(id) ?? (() => { throw new RepositoryError("not_found", "Pedido não encontrado."); })();
+  const ownClient = (ctx: Context, clientId: string) => ctx.session.user.id === clientId || deny();
+  const ownProvider = (ctx: Context, providerId: string) => ctx.session.providerId === providerId || deny();
+  const assignedProvider = (ctx: Context, id: string) => (!!ctx.session.providerId && request(id).providerId === ctx.session.providerId) || deny();
+  const requestClient = (ctx: Context, id: string) => request(id).clientId === ctx.session.user.id || deny();
+  const thread = (ctx: Context, id: string) => id.startsWith("support-") || canSee(ctx.session, request(id)) || deny();
+
+  /** Sessão no formato da API, com a validade real do token de acesso. */
+  const sessionOut = (session: Session) => {
+    const expiresAt = database.sessions.get(session.token)?.expiresAt;
+    return map.fromSession(session, expiresAt === undefined ? 24 * 3600 : (expiresAt - Date.now()) / 1000);
+  };
+
   // —— Autenticação ——
   add("post", "/auth/login", async ({ body }) => {
     const { email, password, role } = input(z.object({ email: z.string(), password: z.string(), role: z.enum(["client", "provider"]) }), body);
-    return ok(map.fromSession(await repos.auth.login(email, password, role)));
+    return ok(sessionOut(await repos.auth.login(email, password, role)));
   }, { public: true });
   add("post", "/auth/register", async ({ body }) => {
     const data = input(Dto.RegisterBodyDto, body);
@@ -111,49 +144,97 @@ export function createMockServer(database: MockDatabase = db) {
   add("post", "/auth/recover", ({ body }) => repos.auth.requestRecovery(input(z.object({ email: z.string() }), body).email), { public: true });
   add("post", "/auth/verify", async ({ body }) => {
     const { email, code, purpose } = input(z.object({ email: z.string(), code: z.string(), purpose: z.enum(["register", "recover"]) }), body);
-    return ok(map.fromSession(await repos.auth.verifyCode(email, code, purpose)));
+    return ok(sessionOut(await repos.auth.verifyCode(email, code, purpose)));
   }, { public: true });
   add("post", "/auth/resend", ({ body }) => repos.auth.resendCode(input(z.object({ email: z.string() }), body).email), { public: true });
+  add("post", "/auth/refresh", async ({ body }) => ok(sessionOut(await repos.auth.refresh(input(z.object({ refresh_token: z.string() }), body).refresh_token))), {
+    public: true,
+  });
   add("get", "/auth/me", async ({ token }) => {
-    const { access_token: _token, token_type: _type, ...me } = map.fromSession(await repos.auth.restore(token));
-    return ok(me);
+    const session = await repos.auth.restore(token);
+    return ok({ user: map.fromClient(session.user), provider_id: session.providerId ?? null });
   });
   add("post", "/auth/password", ({ body }) => {
     const { current_password, new_password } = input(z.object({ current_password: z.string(), new_password: z.string().min(6) }), body);
     return repos.auth.changePassword(current_password, new_password);
   });
   add("post", "/auth/logout", ({ token }) => repos.auth.logout(token));
-  add("patch", "/clients/:id", async ({ params, body }) => {
+  add("patch", "/clients/:id", async (ctx) => {
+    const { params, body } = ctx;
+    ownClient(ctx, params.id!);
     const patch = input(Dto.ProfilePatchDto, body);
     return ok(map.fromClient(await repos.auth.updateProfile(params.id!, { name: patch.full_name, email: patch.email, phone: patch.phone })));
   });
 
   // —— Pedidos ——
-  add("get", "/requests", async ({ query }) => {
+  add("get", "/requests", async (ctx) => {
+    const { query, session } = ctx;
     const status = typeof query.status === "string" && query.status ? (query.status.split(",") as ServiceStatus[]) : undefined;
-    const items = await repos.requests.list({ clientId: query.client_id as string | undefined, providerId: query.provider_id as string | undefined, status });
+    const clientId = query.client_id as string | undefined;
+    const providerId = query.provider_id as string | undefined;
+    if (clientId) ownClient(ctx, clientId);
+    if (providerId) ownProvider(ctx, providerId);
+    // Sem filtro, cada utilizador só vê os seus pedidos.
+    const items = await repos.requests.list({ clientId: clientId ?? (providerId ? undefined : session.user.id), providerId, status });
     return list(items.map(map.fromServiceRequest));
   });
-  add("get", "/requests/changes", ({ query }) => requestChanges.page(query.since));
-  add("get", "/requests/:id", async ({ params }) => ok(map.fromServiceRequest(await repos.requests.get(params.id!))));
-  add("post", "/requests", async ({ body }) => ok(map.fromServiceRequest(await repos.requests.create(map.toCreateRequest(input(Dto.CreateRequestBodyDto, body))))), { created: true });
-  const requestAction = (path: string, run: (id: string, body: Body) => Promise<Parameters<typeof map.fromServiceRequest>[0]>) =>
-    add("post", `/requests/:id${path}`, async ({ params, body }) => ok(map.fromServiceRequest(await run(params.id!, body))));
-  requestAction("/transitions", (id, body) => {
+  add("get", "/requests/changes", ({ query, session }) => {
+    const page = requestChanges.page(query.since, (r) => canSee(session, r));
+    return { ...page, data: page.data.map((r) => map.fromServiceRequest(database.withPeople(r))) };
+  });
+  add("get", "/requests/:id", async ({ params, session }) => {
+    const found = await repos.requests.get(params.id!);
+    if (!canSee(session, found)) deny();
+    return ok(map.fromServiceRequest(found));
+  });
+  add("post", "/requests", async (ctx) => {
+    const body = input(Dto.CreateRequestBodyDto, ctx.body);
+    ownClient(ctx, body.client_id);
+    return ok(map.fromServiceRequest(await repos.requests.create(map.toCreateRequest(body))));
+  }, { created: true });
+  const requestAction = (path: string, run: (id: string, body: Body, ctx: Context) => Promise<ServiceRequest>) =>
+    add("post", `/requests/:id${path}`, async (ctx) => ok(map.fromServiceRequest(await run(ctx.params.id!, ctx.body, ctx))));
+  requestAction("/transitions", (id, body, ctx) => {
     const { to, actor } = input(z.object({ to: z.string(), actor: z.enum(["client", "provider", "system"]) }), body);
+    if (actor === "client") requestClient(ctx, id);
+    if (actor === "provider") assignedProvider(ctx, id);
+    if (actor === "system" && !simulation) deny("Só o servidor pode fazer esta transição.");
     return repos.requests.transition(id, to as ServiceStatus, actor);
   });
-  requestAction("/accept", (id, body) => repos.requests.accept(id, input(z.object({ provider_id: z.string() }), body).provider_id));
-  requestAction("/cancel", (id, body) => repos.requests.cancel(id, input(z.object({ reason: z.string() }), body).reason));
-  requestAction("/proposal", (id, body) => {
+  requestAction("/accept", (id, body, ctx) => {
+    const providerId = input(z.object({ provider_id: z.string() }), body).provider_id;
+    ownProvider(ctx, providerId);
+    return repos.requests.accept(id, providerId);
+  });
+  requestAction("/cancel", (id, body, ctx) => {
+    const reason = input(z.object({ reason: z.string() }), body).reason;
+    const r = request(id);
+    if (r.clientId !== ctx.session.user.id && !(ctx.session.providerId && r.providerId === ctx.session.providerId)) deny();
+    return repos.requests.cancel(id, reason);
+  });
+  requestAction("/proposal", (id, body, ctx) => {
     const p = input(z.object({ provider_id: z.string(), amount_kz: z.number().positive(), reason: z.string() }), body);
+    if (!simulation) ownProvider(ctx, p.provider_id);
     return repos.requests.submitProposal(id, p.provider_id, p.amount_kz, p.reason);
   });
-  requestAction("/proposal/answer", (id, body) => repos.requests.answerProposal(id, input(z.object({ accepted: z.boolean() }), body).accepted));
-  requestAction("/pickup-photos", (id, body) => repos.requests.addPickupPhotos(id, input(z.object({ photos: z.array(Dto.PhotoDto) }), body).photos.map(map.toPhoto)));
-  requestAction("/proof", (id, body) => repos.requests.submitProof(id, map.toProofInput(input(Dto.ProofBodyDto, body))));
-  requestAction("/payment", (id, body) => repos.requests.pay(id, input(z.object({ payment_method: z.enum(["bank_reference", "card", "cash"]) }), body).payment_method));
-  requestAction("/rating", (id, body) => {
+  requestAction("/proposal/answer", (id, body, ctx) => {
+    requestClient(ctx, id);
+    return repos.requests.answerProposal(id, input(z.object({ accepted: z.boolean() }), body).accepted);
+  });
+  requestAction("/pickup-photos", (id, body, ctx) => {
+    assignedProvider(ctx, id);
+    return repos.requests.addPickupPhotos(id, input(z.object({ photos: z.array(Dto.PhotoDto) }), body).photos.map(map.toPhoto));
+  });
+  requestAction("/proof", (id, body, ctx) => {
+    assignedProvider(ctx, id);
+    return repos.requests.submitProof(id, map.toProofInput(input(Dto.ProofBodyDto, body)));
+  });
+  requestAction("/payment", (id, body, ctx) => {
+    requestClient(ctx, id);
+    return repos.requests.pay(id, input(z.object({ payment_method: z.enum(["bank_reference", "card", "cash"]) }), body).payment_method);
+  });
+  requestAction("/rating", (id, body, ctx) => {
+    requestClient(ctx, id);
     const r = input(z.object({ rating: z.number().int().min(1).max(5), review: z.string().nullable() }), body);
     return repos.requests.rate(id, r.rating, r.review ?? undefined);
   });
@@ -223,6 +304,15 @@ export function createMockServer(database: MockDatabase = db) {
     return repos.support.sendSosAlert({ requestId: sos.request_id ?? undefined, coords: map.toCoordinates(sos) });
   });
 
+  /** Recursos com dono no caminho: /clients/<id>, /providers/<id> e /threads/<id>. */
+  const guard = (ctx: Context, path: string) => {
+    const [, kind, id] = path.split("/");
+    if (!id) return;
+    if (kind === "clients") ownClient(ctx, id);
+    if (kind === "providers") ownProvider(ctx, id);
+    if (kind === "threads") thread(ctx, id);
+  };
+
   const adapter: AxiosAdapter = async (config) => {
     const method = (config.method ?? "get").toLowerCase();
     const path = (config.url ?? "").replace(/^[a-z]+:\/\/[^/]+/i, "").split("?")[0] ?? "";
@@ -236,9 +326,15 @@ export function createMockServer(database: MockDatabase = db) {
       if (!match) continue;
       const params = Object.fromEntries(route.keys.map((key, i) => [key, decodeURIComponent(match[i + 1]!)]));
       const token = String(config.headers?.Authorization ?? "").replace(/^Bearer\s+/i, "");
-      if (!route.options.public && !database.sessions.has(token)) fail(401, "unauthorized", "A sessão expirou. Entra de novo.");
+      const session = database.sessions.get(token);
+      if (!route.options.public) {
+        if (!session) fail(401, "unauthorized", "A sessão expirou. Entra de novo.");
+        if (session?.expiresAt !== undefined && session.expiresAt <= Date.now()) fail(401, "token_expired", "O token de acesso expirou.");
+      }
       try {
-        const data = await route.handler({ params, query: (config.params ?? {}) as Record<string, unknown>, body: parseBody(config), token });
+        const ctx: Context = { params, query: (config.params ?? {}) as Record<string, unknown>, body: parseBody(config), token, session: session! };
+        if (!route.options.public) guard(ctx, path);
+        const data = await route.handler(ctx);
         return data === undefined ? reply(204, "") : reply(route.options.created ? 201 : 200, wire(data));
       } catch (error) {
         if (error instanceof RepositoryError) {

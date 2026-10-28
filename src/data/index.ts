@@ -13,7 +13,7 @@ import type { SecureStorage } from "./storage/SecureStorage";
 export * from "./repositories";
 export * from "./storage";
 export { configureMock, mockRuntime, resetMockDatabase, simulatedProviderFor } from "./mock";
-export { onUnauthorized } from "./http/client";
+export { onTokensRefreshed, onUnauthorized, setAuthTokens } from "./http/client";
 
 /**
  * Origem dos dados (src/config/env.ts). Em ambos os casos a app usa os mesmos
