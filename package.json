@@ -10,7 +10,8 @@
     "web": "expo start --web",
     "lint": "eslint .",
     "test": "jest --watchAll=false",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@expo-google-fonts/plus-jakarta-sans": "^0.4.2",
@@ -55,6 +56,7 @@
     "zustand": "^5.0.3"
   },
   "devDependencies": {
+    "@playwright/test": "1.56.1",
     "@testing-library/react-native": "^13.0.0",
     "@types/jest": "^29.5.14",
     "@types/react": "~19.1.10",

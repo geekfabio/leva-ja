@@ -30,8 +30,17 @@ Atalho: no perfil de cada área existe «Mudar para prestador/cliente».
 ```bash
 npm run typecheck   # TypeScript
 npm run lint        # ESLint (eslint-config-expo)
-npm test            # Jest: lógica de negócio, stores, kit e fluxos
+npm test            # Jest: lógica de negócio, API (contrato, segurança, tempo real, pagamentos…), stores e ecrãs
+npm run test:e2e    # Playwright: gera o build web e percorre a app no browser
 ```
+
+A suite E2E (`e2e/`) abre todas as rotas e verifica que nenhuma dá erro. Corre também três percursos completos com a API simulada:
+
+- a entrada na app (onboarding, login e localização);
+- o pedido do cliente até ao recibo, com o pagamento por referência Multicaixa confirmado pelo «banco»;
+- o serviço do prestador até o ganho chegar à carteira pelo tempo real.
+
+Usa o Chromium já instalado pelo Playwright (`@playwright/test` 1.56.1).
 
 ## Stack
 
@@ -182,4 +191,6 @@ O protótipo anterior (separadores `/legacy`, fluxos `request/`, `transport/`, `
 
 - Os dados mockados vivem em memória (`MockDatabase`) e voltam ao início ao recarregar a app.
 - O armazenamento seguro mock também é em memória: a sessão é retomada enquanto a app estiver aberta (ex.: voltar ao splash), não depois de a fechar. Para persistir de verdade no dispositivo, usar `EXPO_PUBLIC_SECURE_STORAGE=device`.
-- A revisão visual foi feita no browser (Playwright, 390 × 844); as builds Android e iOS foram exportadas mas não testadas em dispositivo — ver [design-qa.md](design-qa.md).
+- A revisão visual e os testes E2E correm no browser (Playwright, 390 × 844). As builds Android e iOS foram exportadas mas não testadas em dispositivo. GPS, câmara, notificações push e WebSocket reais (`device` / `EXPO_PUBLIC_REALTIME_URL`) estão testados com módulos simulados e precisam de validação num telemóvel — ver [design-qa.md](design-qa.md).
+- As notificações push reais precisam de `extra.eas.projectId` no `app.json` (projecto EAS) e de uma development build; no Expo Go não há push remoto.
+- O processador de pagamentos é simulado: a forma da API está fechada (`docs/api.md` → Pagamentos), falta ligar a EMIS / Multicaixa Express e a tokenização de cartões no backend.

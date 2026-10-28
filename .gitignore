@@ -13,3 +13,7 @@ work/
 
 expo-env.d.ts
 # @end expo-cli
+# Testes E2E
+dist-e2e/
+test-results/
+playwright-report/

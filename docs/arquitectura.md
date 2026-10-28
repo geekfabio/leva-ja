@@ -138,4 +138,9 @@ Em modo `http` não existe sessão de demonstração (`demoIdentity`), e «Repor
 - `src/stores/__tests__/service-lifecycle.test.ts` — stores sobre os repositórios, do pedido ao levantamento.
 - `src/data/__tests__/secure-storage.test.ts` — SecureStore mock e `SessionVault`.
 - `src/stores/__tests__/session-persistence.test.ts` — guardar, retomar e terminar a sessão.
+- `src/data/__tests__/api-security.test.ts` — regras de acesso por recurso e renovação do token.
+- `src/data/__tests__/websocket.test.ts` — protocolo WebSocket: cliente (reconexão, re-subscrição, recurso ao polling) e servidor (autenticação, tópicos, visibilidade).
+- `src/data/__tests__/payments.test.ts` — cartão, numerário e referência Multicaixa com confirmação assíncrona.
+- `src/data/__tests__/notifications.test.ts`, `media.test.ts`, `device-location.test.ts` — push, fotografias (`/uploads`) e GPS, com os módulos Expo simulados.
+- `e2e/` (Playwright, `npm run test:e2e`) — todas as rotas e os percursos completos de entrada, cliente e prestador no build web.
 - `jest.setup.ts` põe a latência dos mocks a zero.
