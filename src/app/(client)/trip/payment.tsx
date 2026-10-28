@@ -30,7 +30,8 @@ import {
 import { paymentKindCopy } from "@/features/payment/copy";
 import { useAccountStore } from "@/stores/useAccountStore";
 import { useServiceStore } from "@/stores/useServiceStore";
-import type { PaymentMethodKind } from "@/types/domain";
+import type { Payment, PaymentMethodKind } from "@/types/domain";
+import { dataSource } from "@/data";
 import { formatTime } from "@/utils/date";
 import { formatDuration, formatKz } from "@/utils/format";
 import { swap } from "@/features/navigation";
@@ -45,7 +46,11 @@ const artFor = {
   house_move: "box",
 } as const;
 
-/** 29 · Serviço concluído e escolha do pagamento (simulado: nenhum valor é cobrado). */
+/**
+ * 29 · Serviço concluído e escolha do pagamento. Cartão e numerário confirmam
+ * logo; a referência Multicaixa é pedida à API e o pedido passa a pago quando
+ * o banco confirma (chega pelo tempo real e o ecrã segue para o recibo).
+ */
 export default function PaymentScreen() {
   const request = useActiveClientRequest();
   useStatusRoute(request, ["delivered"]);
@@ -54,13 +59,19 @@ export default function PaymentScreen() {
   );
   const [method, setMethod] = useState<PaymentMethodKind>(defaultKind);
   const reference = useRef<BottomSheetModal>(null);
+  const [pending, setPending] = useState<Payment | null>(null);
   const pay = useMutation({
     mutationFn: async () => {
-      // A confirmação do pagamento vem do RequestRepository (simulada nesta fase).
-      if (!(await useServiceStore.getState().pay(request!.id, method)))
-        throw new Error(useServiceStore.getState().lastError ?? "Estado inválido");
+      const payment = await useServiceStore.getState().startPayment(request!.id, method);
+      if (!payment) throw new Error(useServiceStore.getState().lastError ?? "Estado inválido");
+      return payment;
     },
-    onSuccess: () => {
+    onSuccess: (payment) => {
+      if (payment.status === "pending") {
+        setPending(payment);
+        reference.current?.present();
+        return;
+      }
       reference.current?.dismiss();
       swap("/trip/receipt");
     },
@@ -70,10 +81,20 @@ export default function PaymentScreen() {
         message: "Tenta novamente ou escolhe outro método.",
       }),
   });
+  const check = useMutation({
+    mutationFn: async () => useServiceStore.getState().checkPayment(pending!),
+    onSuccess: (payment) => {
+      if (payment?.status === "confirmed") {
+        reference.current?.dismiss();
+        swap("/trip/receipt");
+      } else {
+        toast.info({ title: "Ainda não recebemos a confirmação", message: "O banco pode demorar alguns minutos. Avisamos-te quando chegar." });
+      }
+    },
+  });
   if (!request) return <NoActiveRequest />;
 
-  const proceed = () =>
-    method === "bank_reference" ? reference.current?.present() : pay.mutate();
+  const proceed = () => pay.mutate();
   const started =
     request.timeline.find((e) => e.status === "in_transit")?.at ??
     request.createdAt;
@@ -91,7 +112,7 @@ export default function PaymentScreen() {
                 ? "Confirmar pagamento em numerário"
                 : "Continuar para pagamento"
             }
-            loading={pay.isPending && method !== "bank_reference"}
+            loading={pay.isPending}
             onPress={proceed}
             trailingIcon={<ArrowRight size={22} color={colors.white} />}
           />
@@ -230,20 +251,15 @@ export default function PaymentScreen() {
       </ScreenContainer>
       <SheetModal ref={reference} title="Referência Multicaixa">
         <AppText variant="body" color={colors.muted}>
-          Paga num Multicaixa ou no Internet Banking com estes dados
-          (simulados).
+          Paga num Multicaixa ou no Internet Banking com estes dados. A
+          confirmação chega automaticamente.
         </AppText>
         <Card tone="soft" style={{ gap: 10 }}>
           {[
-            ["Entidade", "00123"],
-            [
-              "Referência",
-              `${request.code
-                .replace(/\D/g, "")
-                .padStart(9, "4")
-                .replace(/(\d{3})(?=\d)/g, "$1 ")}`,
-            ],
-            ["Montante", formatKz(request.price.total)],
+            ["Entidade", pending?.reference?.entity ?? "—"],
+            ["Referência", (pending?.reference?.reference ?? "").replace(/(\d{3})(?=\d)/g, "$1 ") || "—"],
+            ["Montante", formatKz(pending?.amount ?? request.price.total)],
+            ["Válida até", pending?.reference ? `${formatTime(pending.reference.expiresAt)} · ${new Date(pending.reference.expiresAt).toLocaleDateString("pt-PT")}` : "—"],
           ].map(([k, v], i) => (
             <View key={k}>
               {i ? <Divider /> : null}
@@ -264,14 +280,16 @@ export default function PaymentScreen() {
             </View>
           ))}
         </Card>
-        <InfoNote>
-          Nenhum pagamento real é feito nesta fase. Toca em «Já paguei» para
-          simular a confirmação.
-        </InfoNote>
+        {dataSource === "mock" ? (
+          <InfoNote>
+            Demonstração: nenhum valor é cobrado e o banco confirma o
+            pagamento ao fim de alguns segundos.
+          </InfoNote>
+        ) : null}
         <PrimaryButton
           label="Já paguei"
-          loading={pay.isPending}
-          onPress={() => pay.mutate()}
+          loading={check.isPending}
+          onPress={() => check.mutate()}
         />
       </SheetModal>
     </View>

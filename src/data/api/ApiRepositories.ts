@@ -98,7 +98,6 @@ export function createApiRepositories({ realtime, pollIntervalMs = env.pollInter
       addPickupPhotos: async (id, photos) =>
         map.toServiceRequest(await one(Dto.ServiceRequestDto, http.post(`/requests/${id}/pickup-photos`, { photos: photos.map(map.fromPhoto) }), "pedido")),
       submitProof: async (id, proof) => map.toServiceRequest(await one(Dto.ServiceRequestDto, http.post(`/requests/${id}/proof`, map.fromProofInput(proof)), "pedido")),
-      pay: async (id, method) => map.toServiceRequest(await one(Dto.ServiceRequestDto, http.post(`/requests/${id}/payment`, { payment_method: method }), "pedido")),
       rate: async (id, rating, review) => map.toServiceRequest(await one(Dto.ServiceRequestDto, http.post(`/requests/${id}/rating`, { rating, review: review ?? null }), "pedido")),
       subscribe: (listener) =>
         channel.subscribe("requests", (payload) => {
@@ -178,6 +177,11 @@ export function createApiRepositories({ realtime, pollIntervalMs = env.pollInter
       emergencyContacts: async () => (await many(Dto.EmergencyContactDto, http.get("/help/emergency-contacts"), "contactos")).map(map.toEmergencyContact),
       createTicket: async (input) => (await one(Dto.TicketDto, http.post("/tickets", map.fromTicketInput(input)), "ocorrência")).code,
       sendSosAlert: (input) => none(http.post("/sos", { request_id: input.requestId ?? null, ...map.fromCoordinates(input.coords) })),
+    },
+
+    payments: {
+      start: async (requestId, method) => map.toPayment(await one(Dto.PaymentDto, http.post(`/requests/${requestId}/payments`, { payment_method: method }), "pagamento")),
+      get: async (paymentId) => map.toPayment(await one(Dto.PaymentDto, http.get(`/payments/${paymentId}`), "pagamento")),
     },
 
     notifications: {

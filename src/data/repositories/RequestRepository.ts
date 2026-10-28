@@ -1,6 +1,5 @@
 import type {
   DeliveryProofData,
-  PaymentMethodKind,
   Photo,
   Role,
   ServiceRequest,
@@ -37,7 +36,6 @@ export interface RequestRepository {
   answerProposal(id: string, accepted: boolean): Promise<ServiceRequest>;
   addPickupPhotos(id: string, photos: Photo[]): Promise<ServiceRequest>;
   submitProof(id: string, proof: Omit<DeliveryProofData, "at">): Promise<ServiceRequest>;
-  pay(id: string, method: PaymentMethodKind): Promise<ServiceRequest>;
   rate(id: string, rating: number, review?: string): Promise<ServiceRequest>;
   /** Alterações em tempo real (no backend: WebSocket ou push). */
   subscribe(listener: (request: ServiceRequest) => void): Unsubscribe;

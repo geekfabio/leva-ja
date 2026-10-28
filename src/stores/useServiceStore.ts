@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { create } from "zustand";
-import type { DeliveryProofData, PaymentMethodKind, Photo, ServiceRequest, ServiceStatus } from "@/types/domain";
+import type { DeliveryProofData, Payment, PaymentMethodKind, Photo, ServiceRequest, ServiceStatus } from "@/types/domain";
 import { repositories, type RequestActor } from "@/data";
 import { isDraftComplete } from "@/features/booking/validation";
 import { estimatePrice } from "@/features/booking/pricing";
@@ -26,6 +26,14 @@ type ServiceState = {
   answerProposal: (id: string, accepted: boolean) => Promise<boolean>;
   addPickupPhotos: (id: string, photos: Photo[]) => Promise<boolean>;
   submitProof: (id: string, proof: Omit<DeliveryProofData, "at">) => Promise<boolean>;
+  /**
+   * Inicia o pagamento. Devolve-o com o estado (`confirmed` no cartão e no
+   * numerário; `pending` com os dados da referência Multicaixa), ou `null` com erro.
+   */
+  startPayment: (id: string, method: PaymentMethodKind) => Promise<Payment | null>;
+  /** Consulta um pagamento pendente; se já estiver confirmado, actualiza o pedido. */
+  checkPayment: (payment: Payment) => Promise<Payment | null>;
+  /** Paga e espera pela confirmação imediata (cartão ou numerário). */
   pay: (id: string, method: PaymentMethodKind) => Promise<boolean>;
   rate: (id: string, rating: number, review?: string) => Promise<boolean>;
   setActiveClient: (id: string | null) => void;
@@ -134,7 +142,31 @@ export const useServiceStore = create<ServiceState>((set, get) => {
 
     submitProof: (id, proof) => run(() => repo().submitProof(id, proof)),
 
-    pay: (id, method) => run(() => repo().pay(id, method)),
+    startPayment: async (id, method) => {
+      try {
+        const payment = await repositories().payments.start(id, method);
+        // Confirmado: o pedido já está pago no servidor; actualiza a cache sem esperar pelo tempo real.
+        if (payment.status === "confirmed") await run(() => repo().get(id));
+        set({ lastError: null });
+        return payment;
+      } catch (error) {
+        set({ lastError: error instanceof Error ? error.message : "Não foi possível iniciar o pagamento." });
+        return null;
+      }
+    },
+
+    checkPayment: async (payment) => {
+      try {
+        const current = await repositories().payments.get(payment.id);
+        if (current.status === "confirmed") await run(() => repo().get(payment.requestId));
+        return current;
+      } catch (error) {
+        set({ lastError: error instanceof Error ? error.message : "Não foi possível consultar o pagamento." });
+        return null;
+      }
+    },
+
+    pay: async (id, method) => (await get().startPayment(id, method))?.status === "confirmed",
 
     rate: (id, rating, review) =>
       run(

@@ -167,7 +167,7 @@ O servidor decide sempre com base no token. A API simulada aplica estas regras (
 | `transitions` | `actor: client` → o cliente do pedido; `actor: provider` → o prestador atribuído; `actor: system` → **nunca** vindo da app (só o servidor) |
 | `accept`, `proposal` | `provider_id` tem de ser o do utilizador |
 | `cancel` | o cliente ou o prestador atribuído |
-| `proposal/answer`, `payment`, `rating` | o cliente do pedido |
+| `proposal/answer`, `payments`, `rating` | o cliente do pedido |
 | `pickup-photos`, `proof` | o prestador atribuído |
 
 Em modo demonstração, a app simula os outros intervenientes (o prestador que aceita, o cliente que confirma a recolha), por isso a API simulada aceita aí `actor: system` e propostas em nome de prestadores simulados. Com `createMockServer(db, { simulation: false })` comporta-se como o backend real.
@@ -187,7 +187,6 @@ Em modo demonstração, a app simula os outros intervenientes (o prestador que a
 | POST | `/requests/:id/proposal/answer` | `{ accepted }` | `ServiceRequest` |
 | POST | `/requests/:id/pickup-photos` | `{ photos: [{ id, url, caption }] }` | `ServiceRequest` |
 | POST | `/requests/:id/proof` | `{ photos, signed_by, good_condition, notes }` | `ServiceRequest` (`delivered`; credita o ganho) |
-| POST | `/requests/:id/payment` | `{ payment_method: "bank_reference"\|"card"\|"cash" }` | `ServiceRequest` (`paid`) |
 | POST | `/requests/:id/rating` | `{ rating: 1–5, review }` | `ServiceRequest` (`rated`) |
 
 **Regras que o servidor tem de garantir** (hoje estão nos serviços mock, `src/data/mock/Mock*Repository.ts`):
@@ -201,6 +200,25 @@ Em modo demonstração, a app simula os outros intervenientes (o prestador que a
 - **Aceitar um pedido** exige o prestador online.
 - **Proposta de preço:** o pedido tem de estar em `searching` (a app só a oferece em mudanças de casa). O cliente aceita, e o pedido fica atribuído a esse prestador, ou recusa, e o pedido volta a ficar livre.
 - **Preço:** base mais distância mais extras, arredondado a 500 Kz, mais a taxa da plataforma de 500 Kz. O ganho do prestador é o valor do serviço menos 15 %. Ver `features/booking/pricing.ts`.
+
+## Pagamentos
+
+| Método | Caminho | Corpo | Resposta |
+| --- | --- | --- | --- |
+| POST | `/requests/:id/payments` | `{ payment_method: "bank_reference"\|"card"\|"cash" }` | `201`, `Payment` |
+| GET | `/payments/:id` | — | `Payment` |
+
+`Payment` = `{ id, request_id, payment_method, status: "pending"|"confirmed"|"failed"|"expired", amount_kz, bank_reference: { entity, reference, expires_at } | null, created_at, confirmed_at }`
+
+O que acontece em cada método:
+
+- **Cartão e numerário:** o pagamento vem logo `confirmed` e o pedido já está `paid`. Com o processador real, o cartão passa a ser tokenizado antes deste pedido.
+- **Referência Multicaixa:** o pagamento vem `pending`, com a entidade, a referência (9 dígitos) e a validade (48 h).
+  - Quando o banco confirma, o servidor marca o pagamento `confirmed` e o pedido `paid`, que chega à app pelo tempo real e pelo push.
+  - «Já paguei» consulta `GET /payments/:id`.
+  - Iniciar de novo com o mesmo método devolve o pagamento pendente que já existe.
+  - Na demonstração, o «banco» confirma passados 5 s.
+- **Regras de acesso:** só o cliente do pedido paga ou consulta o pagamento, e só depois da entrega (`409` antes disso).
 
 ## Prestador
 
@@ -289,4 +307,4 @@ A app tira a foto (câmara ou, sem câmara, galeria; `src/data/device/DeviceCame
 
 - **WebSocket:** mesmos tópicos e mensagens que o socket da API simulada.
 - **Notificações push:** registo do token Expo e envio pelo servidor.
-- **Pagamentos reais:** Multicaixa Express, referência bancária e cartão via processador.
+- **Processador de pagamentos real:** emissão de referências e notificação de pagamento (EMIS / Multicaixa Express) e tokenização de cartões. O contrato acima já tem a forma final.

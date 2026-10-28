@@ -247,9 +247,15 @@ export function createMockServer(database: MockDatabase = db, { simulation = tru
     assignedProvider(ctx, id);
     return repos.requests.submitProof(id, map.toProofInput(input(Dto.ProofBodyDto, body)));
   });
-  requestAction("/payment", (id, body, ctx) => {
-    requestClient(ctx, id);
-    return repos.requests.pay(id, input(z.object({ payment_method: z.enum(["bank_reference", "card", "cash"]) }), body).payment_method);
+  add("post", "/requests/:id/payments", async (ctx) => {
+    requestClient(ctx, ctx.params.id!);
+    const { payment_method } = input(z.object({ payment_method: z.enum(["bank_reference", "card", "cash"]) }), ctx.body);
+    return ok(map.fromPayment(await repos.payments.start(ctx.params.id!, payment_method)));
+  }, { created: true });
+  add("get", "/payments/:id", async (ctx) => {
+    const payment = await repos.payments.get(ctx.params.id!);
+    requestClient(ctx, payment.requestId);
+    return ok(map.fromPayment(payment));
   });
   requestAction("/rating", (id, body, ctx) => {
     requestClient(ctx, id);

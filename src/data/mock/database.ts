@@ -1,4 +1,4 @@
-import type { ChatMessage, Client, PaymentMethod, Provider, SavedAddress, ServiceRequest } from "@/types/domain";
+import type { ChatMessage, Client, Payment, PaymentMethod, Provider, SavedAddress, ServiceRequest } from "@/types/domain";
 import type { ProviderState } from "../repositories/ProviderRepository";
 import type { Session } from "../repositories/AuthRepository";
 import { clients, providers } from "@/mocks/people";
@@ -30,6 +30,7 @@ export class MockDatabase {
   tickets: { code: string; requestId: string; reason: string; description: string }[] = [];
   /** Tokens de acesso emitidos. Não são apagados por `reset()`: repor os dados não termina a sessão. */
   sessions = new Map<string, SessionRecord>();
+  payments = new Map<string, Payment>();
   /** Dispositivos registados para push: token → dono. */
   devices = new Map<string, { userId: string; providerId?: string; role: "client" | "provider"; platform: string }>();
   /** Refresh tokens → token de acesso que renovam. */
@@ -61,6 +62,7 @@ export class MockDatabase {
     this.paymentMethods = new Map(clients.map((c) => [c.id, clone(initialPaymentMethods)]));
     this.pending = new Map();
     this.tickets = [];
+    this.payments = new Map();
   }
 
   reset() {

@@ -7,6 +7,7 @@ import type {
   DeliveryProofData,
   HelpTopic,
   MovingDetails,
+  Payment,
   PaymentMethod,
   Photo,
   Place,
@@ -373,6 +374,29 @@ export const fromReview = (r: Review): D<typeof Dto.ReviewDto> => ({ id: r.id, r
 
 export const toNearbyVehicle = (dto: D<typeof Dto.NearbyVehicleDto>): NearbyVehicle => ({ id: dto.id, coords: { latitude: dto.lat, longitude: dto.lng }, kind: dto.type });
 export const fromNearbyVehicle = (v: NearbyVehicle): D<typeof Dto.NearbyVehicleDto> => ({ id: v.id, lat: v.coords.latitude, lng: v.coords.longitude, type: v.kind });
+
+// —— Pagamentos ——
+
+export const toPayment = (dto: Dto.PaymentDto): Payment => ({
+  id: dto.id,
+  requestId: dto.request_id,
+  method: dto.payment_method,
+  status: dto.status,
+  amount: dto.amount_kz,
+  reference: dto.bank_reference ? { entity: dto.bank_reference.entity, reference: dto.bank_reference.reference, expiresAt: dto.bank_reference.expires_at } : undefined,
+  createdAt: dto.created_at,
+  confirmedAt: orUndefined(dto.confirmed_at),
+});
+export const fromPayment = (p: Payment): Dto.PaymentDto => ({
+  id: p.id,
+  request_id: p.requestId,
+  payment_method: p.method,
+  status: p.status,
+  amount_kz: p.amount,
+  bank_reference: p.reference ? { entity: p.reference.entity, reference: p.reference.reference, expires_at: p.reference.expiresAt } : null,
+  created_at: p.createdAt,
+  confirmed_at: orNull(p.confirmedAt),
+});
 
 // —— Chat ——
 

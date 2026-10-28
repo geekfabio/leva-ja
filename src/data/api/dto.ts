@@ -219,6 +219,19 @@ export const EmergencyContactDto = z.object({ id: z.string(), label: z.string(),
 
 export const TicketDto = z.object({ code: z.string() });
 
+export const PaymentDto = z.object({
+  id: z.string(),
+  request_id: z.string(),
+  payment_method: paymentType,
+  status: z.enum(["pending", "confirmed", "failed", "expired"]),
+  amount_kz: z.number(),
+  /** Só na referência Multicaixa. */
+  bank_reference: z.object({ entity: z.string(), reference: z.string(), expires_at: z.string() }).nullable(),
+  created_at: z.string(),
+  confirmed_at: z.string().nullable(),
+});
+export type PaymentDto = z.infer<typeof PaymentDto>;
+
 /** Resposta de `POST /uploads` (multipart: `file` + `context`). */
 export const UploadDto = z.object({ id: z.string(), url: z.string(), content_type: z.string() });
 

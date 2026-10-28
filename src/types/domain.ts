@@ -51,6 +51,21 @@ export type ServiceStatus =
 
 export type PaymentMethodKind = "bank_reference" | "card" | "cash";
 
+export type PaymentStatus = "pending" | "confirmed" | "failed" | "expired";
+
+/** Pagamento de um pedido. Por referência Multicaixa fica pendente até o banco confirmar. */
+export type Payment = {
+  id: string;
+  requestId: string;
+  method: PaymentMethodKind;
+  status: PaymentStatus;
+  amount: number;
+  /** Dados para pagar no Multicaixa / Internet Banking (só referência bancária). */
+  reference?: { entity: string; reference: string; expiresAt: string };
+  createdAt: string;
+  confirmedAt?: string;
+};
+
 export type Photo = {
   id: string;
   /** Chave de uma ilustração local (ver `src/mocks/photos.ts`). */
