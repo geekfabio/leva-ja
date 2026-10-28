@@ -19,10 +19,27 @@
     "plugins": [
       "expo-router",
       "expo-secure-store",
-      "expo-location",
-      "expo-notifications",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "A AngoLeva usa a tua localização para encontrar ajuda perto de ti e indicar a origem do pedido."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#0A8743"
+        }
+      ],
       "expo-font",
-      "expo-asset"
+      "expo-asset",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "A AngoLeva usa as tuas fotografias para mostrar a carga, a viatura ou a entrega ao prestador.",
+          "cameraPermission": "A AngoLeva usa a câmara para fotografar a carga, a viatura ou o comprovativo de entrega."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
