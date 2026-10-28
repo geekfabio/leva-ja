@@ -103,7 +103,24 @@ Há três tópicos, e cada mensagem traz JSON no formato acima:
 | `providers/<id>` | `ProviderState` |
 | `threads/<id>` | `{ "type": "message", "message": ChatMessage }` ou `{ "type": "typing", "sender": "provider", "typing": true }` |
 
-**Transportes** (`src/data/api/realtime.ts`):
+**Transportes** (`src/data/api/realtime.ts`, `src/data/api/WebSocketRealtime.ts`):
+
+- **WebSocket** (preferido; `EXPO_PUBLIC_REALTIME_URL`, por exemplo `wss://api.angoleva.ao/v1/realtime`). Uma mensagem JSON por frame:
+
+  | Sentido | Mensagem |
+  | --- | --- |
+  | app → servidor | `{ "type": "auth", "token": "<access_token>" }`, a primeira de cada ligação e de novo após renovar o token |
+  | app → servidor | `{ "type": "subscribe", "topic": "requests" }` / `{ "type": "unsubscribe", "topic": "…" }` |
+  | app → servidor | `{ "type": "ping" }` a cada 25 s |
+  | servidor → app | `{ "type": "event", "topic": "…", "data": … }` |
+  | servidor → app | `{ "type": "pong" }` |
+  | servidor → app | `{ "type": "error", "code": "unauthorized"\|"forbidden"\|"validation", "message": "…" }`; num `unauthorized` o servidor fecha a ligação |
+
+  O servidor aplica as mesmas regras de acesso dos endpoints: `providers/<id>` só do próprio, `threads/<id>` só de quem vê o pedido, e em `requests` só chegam os pedidos que o utilizador pode ver.
+
+  A app liga-se no primeiro `subscribe` e fecha a ligação quando já não há subscrições. Se a ligação cair, volta a ligar com espera crescente (1 s, 2 s, 4 s… até 30 s), volta a subscrever e recarrega os dados (podem ter-se perdido eventos). Se o WebSocket nunca chegar a abrir (3 tentativas), passa a usar o polling.
+
+  A API simulada fala este protocolo (`server.connect`), e é por ele que o modo mock recebe o tempo real.
 
 - **Polling** (API REST de hoje, a cada `EXPO_PUBLIC_POLL_INTERVAL_MS`):
   - `GET /requests/changes?since=<cursor>` e `GET /threads/:id/changes?since=<cursor>` devolvem `{ "data": [...], "meta": { "cursor": "<opaco>" } }`.
@@ -111,7 +128,6 @@ Há três tópicos, e cada mensagem traz JSON no formato acima:
     - Com `since`, vêm as alterações posteriores, cada uma uma só vez.
   - O estado do prestador é lido de `GET /providers/:id/state` e só é publicado quando muda.
   - Por polling não há «a escrever…».
-- **WebSocket** (a fazer no backend): os mesmos tópicos e mensagens. A API simulada já se comporta assim (`server.socket`), incluindo «a escrever…».
 
 ## Autenticação
 

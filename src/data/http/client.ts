@@ -19,6 +19,9 @@ export function setAuthTokens(tokens: { token: string; refreshToken?: string } |
   refreshToken = tokens?.refreshToken ?? null;
 }
 
+/** Token de acesso actual (usado pelo canal de tempo real para se autenticar). */
+export const getAuthToken = () => authToken;
+
 /** Só o token de acesso (mantém o refresh token, excepto ao limpar). */
 export function setAuthToken(token: string | null) {
   authToken = token;

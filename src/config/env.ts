@@ -11,6 +11,8 @@ const schema = z
     apiUrl: z.string().url("EXPO_PUBLIC_API_URL tem de ser um URL (ex.: https://api.angoleva.ao/v1).").optional(),
     apiTimeoutMs: z.coerce.number().int().positive().default(10_000),
     pollIntervalMs: z.coerce.number().int().min(1_000).default(5_000),
+    /** WebSocket do tempo real (ex.: wss://api.angoleva.ao/v1/realtime). Sem ele, a app usa polling. */
+    realtimeUrl: z.string().url("EXPO_PUBLIC_REALTIME_URL tem de ser um URL ws:// ou wss://.").optional(),
     secureStorage: z.enum(["mock", "device"]).default("mock"),
     /** GPS: `simulated` (ponto em Luanda) ou `device`. Por omissão, simulado com dados mock e real com a API. */
     location: z.enum(["simulated", "device"]).optional(),
@@ -41,6 +43,7 @@ export const env = parseEnv({
   apiUrl: process.env.EXPO_PUBLIC_API_URL,
   apiTimeoutMs: process.env.EXPO_PUBLIC_API_TIMEOUT_MS,
   pollIntervalMs: process.env.EXPO_PUBLIC_POLL_INTERVAL_MS,
+  realtimeUrl: process.env.EXPO_PUBLIC_REALTIME_URL,
   secureStorage: process.env.EXPO_PUBLIC_SECURE_STORAGE,
   location: process.env.EXPO_PUBLIC_LOCATION,
   camera: process.env.EXPO_PUBLIC_CAMERA,

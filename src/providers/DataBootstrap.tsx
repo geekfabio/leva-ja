@@ -1,6 +1,6 @@
 import { PropsWithChildren, useEffect } from "react";
 import { router } from "expo-router";
-import { onUnauthorized, repositories } from "@/data";
+import { onRealtimeReconnect, onUnauthorized, repositories } from "@/data";
 import { toast } from "@/lib/toast";
 import { usePushNotifications } from "@/features/notifications/usePushNotifications";
 import { useAccountStore } from "@/stores/useAccountStore";
@@ -22,6 +22,17 @@ export function DataBootstrap({ children }: PropsWithChildren) {
   useEffect(() => {
     useSessionStore.getState().restore();
   }, []);
+
+  // O tempo real voltou depois de uma quebra: recarrega o que pode ter mudado entretanto.
+  useEffect(
+    () =>
+      onRealtimeReconnect(() => {
+        useServiceStore.getState().hydrate();
+        const { providerId } = useSessionStore.getState();
+        if (providerId) useProviderStore.getState().hydrate(providerId);
+      }),
+    [],
+  );
 
   // Token recusado pela API (expirado ou revogado): volta ao login.
   useEffect(

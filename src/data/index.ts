@@ -2,7 +2,10 @@ import { Platform } from "react-native";
 import { cameraSource, env, locationSource } from "@/config/env";
 import type { Repositories } from "./repositories";
 import { createApiRepositories } from "./api/ApiRepositories";
-import { http, setAuthToken } from "./http/client";
+import { getAuthToken, http, setAuthToken } from "./http/client";
+import { PollingRealtime, type RealtimeChannel } from "./api/realtime";
+import { WebSocketRealtime } from "./api/WebSocketRealtime";
+import { Emitter } from "./mock/events";
 import { createMockServer } from "./mock/server";
 import { ExpoDeviceLocation, type DeviceLocation } from "./device/DeviceLocation";
 import { SimulatedDeviceLocation, SimulatedDeviceNotifications } from "./mock/device";
@@ -44,15 +47,29 @@ export const deviceFeatures = { camera: cameraSource, location: locationSource, 
 let notifications: DeviceNotifications;
 export const deviceNotifications = () => notifications;
 
+const reconnects = new Emitter<void>();
+/** Avisa quando o tempo real volta depois de uma quebra (podem ter-se perdido eventos). */
+export const onRealtimeReconnect = (listener: () => void) => reconnects.on("reconnect", listener);
+const onReconnect = () => reconnects.emit("reconnect", undefined);
+
+/** Tempo real: WebSocket quando há URL (com recurso ao polling), senão polling. */
+function realtimeChannel(): RealtimeChannel {
+  const polling = new PollingRealtime(env.pollIntervalMs);
+  if (!env.realtimeUrl) return polling;
+  return new WebSocketRealtime({ url: env.realtimeUrl, token: getAuthToken, fallback: polling, onReconnect });
+}
+
 function createRepositories(): Repositories {
   if (dataSource === "http") {
     notifications = new ExpoDeviceNotifications();
-    return createApiRepositories({ location, camera });
+    return createApiRepositories({ realtime: realtimeChannel(), location, camera });
   }
   const server = createMockServer();
   http.defaults.adapter = server.adapter;
   notifications = new SimulatedDeviceNotifications(server.pushGateway);
-  return createApiRepositories({ realtime: server.socket, location, camera });
+  // A API simulada fala o mesmo protocolo WebSocket que o backend vai falar.
+  const realtime = new WebSocketRealtime({ url: "mock://realtime", token: getAuthToken, createSocket: server.connect, onReconnect });
+  return createApiRepositories({ realtime, location, camera });
 }
 
 let current: Repositories = createRepositories();

@@ -36,6 +36,7 @@ src/data/
     mappers.ts             JSON da API ↔ modelo de domínio, nos dois sentidos
     ApiRepositories.ts     um endpoint por método; valida cada resposta e converte-a
     realtime.ts            canal de tempo real (tópicos requests, providers/<id>, threads/<id>); transporte por polling
+    WebSocketRealtime.ts   tempo real por WebSocket: auth, subscrições, ping, reconexão exponencial, recurso ao polling
     __fixtures__/          respostas de exemplo escritas à mão, no formato do backend
   repositories/            contratos — o que a app precisa, independente da origem
     AuthRepository         login, registo, recuperação, código, perfil, palavra-passe
@@ -97,6 +98,7 @@ A app já está preparada para a API. O contrato completo (endpoints, erros, aut
 | `EXPO_PUBLIC_API_URL` | URL da API | — (obrigatória em `http`) |
 | `EXPO_PUBLIC_API_TIMEOUT_MS` | ms | `10000` |
 | `EXPO_PUBLIC_POLL_INTERVAL_MS` | ms (mín. 1000) | `5000` |
+| `EXPO_PUBLIC_REALTIME_URL` | `wss://…` (WebSocket do tempo real) | — (sem ele, polling) |
 | `EXPO_PUBLIC_SECURE_STORAGE` | `mock` \| `device` | `mock` |
 | `EXPO_PUBLIC_LOCATION` | `simulated` \| `device` | `simulated` com `mock`, `device` com `http` |
 | `EXPO_PUBLIC_CAMERA` | `simulated` \| `device` | `simulated` com `mock`, `device` com `http` |

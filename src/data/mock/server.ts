@@ -4,6 +4,7 @@ import type { ServiceRequest, ServiceStatus } from "@/types/domain";
 import * as Dto from "../api/dto";
 import * as map from "../api/mappers";
 import type { RealtimeChannel } from "../api/realtime";
+import type { ClientFrame, ServerFrame, SocketLike } from "../api/WebSocketRealtime";
 import { RepositoryError, type RepositoryErrorCode, type Unsubscribe } from "../repositories/types";
 import type { Session } from "../repositories/AuthRepository";
 import { db, type MockDatabase, type SessionRecord } from "./database";
@@ -388,7 +389,83 @@ export function createMockServer(database: MockDatabase = db, { simulation = tru
     return fail(404, "not_found", `Endpoint inexistente: ${method.toUpperCase()} ${path}`);
   };
 
-  return { adapter, socket, pushGateway, repositories: repos };
+  /**
+   * WebSocket simulado: o protocolo de `WebSocketRealtime` (auth, subscribe,
+   * unsubscribe, ping) sobre o canal de tempo real, com as mesmas regras de
+   * acesso dos endpoints. `connect(url)` devolve o lado da app da ligação.
+   */
+  const connect = (_url: string): SocketLike => {
+    let session: SessionRecord | undefined;
+    let closed = false;
+    const subscriptions = new Map<string, Unsubscribe>();
+    const client: SocketLike = {
+      onopen: null,
+      onmessage: null,
+      onclose: null,
+      onerror: null,
+      send(data: string) {
+        if (closed) throw new Error("Ligação fechada.");
+        let frame: ClientFrame;
+        try {
+          frame = JSON.parse(data) as ClientFrame;
+        } catch {
+          return reply({ type: "error", code: "validation", message: "Mensagem inválida." });
+        }
+        if (frame.type === "ping") return reply({ type: "pong" });
+        if (frame.type === "auth") {
+          const found = database.sessions.get(frame.token);
+          if (!found || (found.expiresAt !== undefined && found.expiresAt <= Date.now())) {
+            reply({ type: "error", code: "unauthorized", message: "Token inválido ou expirado." });
+            return end();
+          }
+          session = found;
+          return;
+        }
+        if (!session) return reply({ type: "error", code: "unauthorized", message: "Autentica a ligação primeiro." });
+        if (frame.type === "unsubscribe") {
+          subscriptions.get(frame.topic)?.();
+          subscriptions.delete(frame.topic);
+          return;
+        }
+        const current = session;
+        const [kind, id] = frame.topic.split("/");
+        const allowed =
+          frame.topic === "requests" ||
+          (kind === "providers" && id === current.providerId) ||
+          (kind === "threads" && !!id && (id.startsWith("support-") || (database.requests.has(id) && canSee(current, database.requests.get(id)!))));
+        if (!allowed) return reply({ type: "error", code: "forbidden", message: `Sem acesso ao tópico ${frame.topic}.` });
+        if (subscriptions.has(frame.topic)) return;
+        const visible = (data: unknown) => {
+          if (frame.topic !== "requests") return true;
+          const r = data as { client_id: string; provider_id: string | null; status: ServiceRequest["status"] };
+          return canSee(current, { clientId: r.client_id, providerId: r.provider_id ?? undefined, status: r.status });
+        };
+        subscriptions.set(frame.topic, socket.subscribe(frame.topic, (data) => visible(data) && reply({ type: "event", topic: frame.topic, data })));
+      },
+      close() {
+        end();
+      },
+    };
+    const reply = (frame: ServerFrame) => {
+      if (!closed) setTimeout(() => !closed && client.onmessage?.({ data: JSON.stringify(frame) }), 0);
+    };
+    let ending = false;
+    // Fecha depois de entregar as mensagens já em fila (ex.: o erro que explica o fecho).
+    const end = () => {
+      if (ending) return;
+      ending = true;
+      subscriptions.forEach((off) => off());
+      subscriptions.clear();
+      setTimeout(() => {
+        closed = true;
+        client.onclose?.();
+      }, 0);
+    };
+    setTimeout(() => !closed && client.onopen?.(), 0);
+    return client;
+  };
+
+  return { adapter, socket, connect, pushGateway, repositories: repos };
 }
 
 function parseBody(config: InternalAxiosRequestConfig): Body {

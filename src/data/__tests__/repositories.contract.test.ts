@@ -1,6 +1,7 @@
 import type { Repositories } from "@/data";
 import { RepositoryError } from "@/data";
-import { http } from "@/data/http/client";
+import { getAuthToken, http } from "@/data/http/client";
+import { WebSocketRealtime } from "@/data/api/WebSocketRealtime";
 import { createApiRepositories } from "@/data/api/ApiRepositories";
 import { createMockRepositories } from "@/data/mock";
 import { MockDatabase } from "@/data/mock/database";
@@ -32,6 +33,8 @@ function contract(name: string, make: () => Promise<Repositories>) {
     it("pedidos: cria, devolve com cliente incluído e notifica subscritores", async () => {
       const seen: string[] = [];
       const off = repos.requests.subscribe((r) => seen.push(r.status));
+      // Dá tempo ao canal de tempo real para ligar (WebSocket) ou fixar o cursor (polling).
+      await new Promise((resolve) => setTimeout(resolve, 20));
       const created = await repos.requests.create({ kind: "cargo", origin: places.ingombota, destination: places.talatona, clientId: "cli-armando" });
       expect(created.status).toBe("searching");
       expect(created.client?.id).toBe("cli-armando");
@@ -114,6 +117,16 @@ contract("API simulada (socket)", async () => {
   const server = createMockServer(new MockDatabase());
   http.defaults.adapter = server.adapter;
   const repos = createApiRepositories({ realtime: server.socket });
+  await repos.auth.login("joao.manuel@angoleva.ao", "segredo12", "provider");
+  return repos;
+});
+
+// Tempo real pelo protocolo WebSocket (o que a app usa em modo mock e com EXPO_PUBLIC_REALTIME_URL).
+contract("API simulada (WebSocket)", async () => {
+  const server = createMockServer(new MockDatabase());
+  http.defaults.adapter = server.adapter;
+  const realtime = new WebSocketRealtime({ url: "mock://realtime", token: getAuthToken, createSocket: server.connect });
+  const repos = createApiRepositories({ realtime });
   await repos.auth.login("joao.manuel@angoleva.ao", "segredo12", "provider");
   return repos;
 });
