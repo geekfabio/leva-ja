@@ -260,6 +260,10 @@ export function createMockServer(database: MockDatabase = db, { simulation = tru
 
   // —— Localização ——
   add("get", "/locations/current", async () => ok(map.fromPlace(await repos.locations.currentLocation())));
+  add("get", "/locations/reverse", async ({ query }) => {
+    const { lat, lng } = input(z.object({ lat: z.coerce.number().min(-90).max(90), lng: z.coerce.number().min(-180).max(180) }), query);
+    return ok(map.fromPlace(await repos.locations.reverseGeocode(map.toCoordinates({ lat, lng }))));
+  });
   add("get", "/locations/search", async ({ query }) => list((await repos.locations.search(String(query.q ?? ""))).map(map.fromPlace)));
   add("get", "/locations/areas", async () => list((await repos.locations.areas()).map(map.fromPlace)));
   add("get", "/vehicles/nearby", async ({ query }) => {

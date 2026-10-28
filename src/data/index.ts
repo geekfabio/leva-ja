@@ -1,9 +1,11 @@
 import { Platform } from "react-native";
-import { env } from "@/config/env";
+import { env, locationSource } from "@/config/env";
 import type { Repositories } from "./repositories";
 import { createApiRepositories } from "./api/ApiRepositories";
 import { http, setAuthToken } from "./http/client";
 import { createMockServer } from "./mock/server";
+import { ExpoDeviceLocation, type DeviceLocation } from "./device/DeviceLocation";
+import { SimulatedDeviceLocation } from "./mock/device";
 import { DEMO_CLIENT, DEMO_PROVIDER_ID, DEMO_TOKEN } from "./mock/demo";
 import { DeviceSecureStorage } from "./storage/DeviceSecureStorage";
 import { MockSecureStorage } from "./storage/MockSecureStorage";
@@ -25,11 +27,15 @@ export { onTokensRefreshed, onUnauthorized, setAuthTokens } from "./http/client"
  */
 export const dataSource = env.dataSource;
 
+/** Funcionalidades do dispositivo (GPS). */
+const location: DeviceLocation = locationSource === "device" ? new ExpoDeviceLocation() : new SimulatedDeviceLocation();
+export const deviceLocation = () => location;
+
 function createRepositories(): Repositories {
-  if (dataSource === "http") return createApiRepositories();
+  if (dataSource === "http") return createApiRepositories({ location });
   const server = createMockServer();
   http.defaults.adapter = server.adapter;
-  return createApiRepositories({ realtime: server.socket });
+  return createApiRepositories({ realtime: server.socket, location });
 }
 
 let current: Repositories = createRepositories();

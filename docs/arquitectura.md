@@ -53,6 +53,8 @@ src/data/
     runtime.ts             latência, falhas de rede simuladas, cópias defensivas, efeitos "do servidor"
     events.ts              emissor para o tempo real simulado
     Mock*Repository.ts     serviços do backend simulado: as regras de negócio (máquina de estados, saldo, cobertura…)
+  device/
+    DeviceLocation.ts      GPS do dispositivo (expo-location): autorização, posição com tempo limite; a morada vem da API
   storage/                 armazenamento seguro no dispositivo
     SecureStorage.ts       contrato (espelha o expo-secure-store) e regras de chave/tamanho
     MockSecureStorage.ts   SecureStore simulado em memória (por omissão)
@@ -94,6 +96,7 @@ A app já está preparada para a API. O contrato completo (endpoints, erros, aut
 | `EXPO_PUBLIC_API_TIMEOUT_MS` | ms | `10000` |
 | `EXPO_PUBLIC_POLL_INTERVAL_MS` | ms (mín. 1000) | `5000` |
 | `EXPO_PUBLIC_SECURE_STORAGE` | `mock` \| `device` | `mock` |
+| `EXPO_PUBLIC_LOCATION` | `simulated` \| `device` | `simulated` com `mock`, `device` com `http` |
 
 Uma configuração inválida falha no arranque com uma mensagem que diz qual variável corrigir.
 

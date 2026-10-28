@@ -8,6 +8,7 @@ import { call, http, setAuthToken, setAuthTokens, setTokenRefresher } from "../h
 import * as Dto from "./dto";
 import * as map from "./mappers";
 import { PollingRealtime, type RealtimeChannel } from "./realtime";
+import type { DeviceLocation } from "../device/DeviceLocation";
 
 /**
  * Repositórios sobre a API AngoLeva (docs/api.md). Cada resposta é validada
@@ -22,6 +23,8 @@ export type ApiRepositoriesOptions = {
   /** Canal de tempo real; por omissão, polling sobre a API REST. */
   realtime?: RealtimeChannel;
   pollIntervalMs?: number;
+  /** GPS do dispositivo; sem ele, a posição é a aproximada da API. */
+  location?: DeviceLocation;
 };
 
 /** Valida uma resposta; um formato inesperado é um erro do servidor, não dados errados no ecrã. */
@@ -49,7 +52,7 @@ async function none(request: Promise<{ data: unknown }>): Promise<void> {
 
 const bearer = (token: string) => ({ headers: { Authorization: `Bearer ${token}` } });
 
-export function createApiRepositories({ realtime, pollIntervalMs = env.pollIntervalMs }: ApiRepositoriesOptions = {}): Repositories {
+export function createApiRepositories({ realtime, pollIntervalMs = env.pollIntervalMs, location }: ApiRepositoriesOptions = {}): Repositories {
   const channel = realtime ?? new PollingRealtime(pollIntervalMs);
 
   const startSession = async (request: Promise<{ data: unknown }>) => {
@@ -131,7 +134,12 @@ export function createApiRepositories({ realtime, pollIntervalMs = env.pollInter
     },
 
     locations: {
-      currentLocation: async () => map.toPlace(await one(Dto.PlaceDto, http.get("/locations/current"), "localização")),
+      currentLocation: async () => {
+        const coords = await location?.coords();
+        if (coords) return map.toPlace(await one(Dto.PlaceDto, http.get("/locations/reverse", { params: map.fromCoordinates(coords) }), "localização"));
+        return map.toPlace(await one(Dto.PlaceDto, http.get("/locations/current"), "localização"));
+      },
+      reverseGeocode: async (coords) => map.toPlace(await one(Dto.PlaceDto, http.get("/locations/reverse", { params: map.fromCoordinates(coords) }), "morada")),
       search: async (query) => (await many(Dto.PlaceDto, http.get("/locations/search", { params: { q: query } }), "moradas")).map(map.toPlace),
       areas: async () => (await many(Dto.PlaceDto, http.get("/locations/areas"), "bairros")).map(map.toPlace),
       nearbyVehicles: async (around) =>

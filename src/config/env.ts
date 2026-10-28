@@ -12,6 +12,8 @@ const schema = z
     apiTimeoutMs: z.coerce.number().int().positive().default(10_000),
     pollIntervalMs: z.coerce.number().int().min(1_000).default(5_000),
     secureStorage: z.enum(["mock", "device"]).default("mock"),
+    /** GPS: `simulated` (ponto em Luanda) ou `device`. Por omissão, simulado com dados mock e real com a API. */
+    location: z.enum(["simulated", "device"]).optional(),
   })
   .superRefine((value, ctx) => {
     if (value.dataSource === "http" && !value.apiUrl) {
@@ -23,7 +25,7 @@ export type AppEnv = z.infer<typeof schema>;
 
 const blank = (value: string | undefined) => (value === "" ? undefined : value);
 
-export function parseEnv(raw: Record<keyof AppEnv, string | undefined>): AppEnv {
+export function parseEnv(raw: Partial<Record<keyof AppEnv, string | undefined>>): AppEnv {
   const result = schema.safeParse(Object.fromEntries(Object.entries(raw).map(([k, v]) => [k, blank(v)])));
   if (!result.success) {
     const details = result.error.issues.map((issue) => `- ${issue.path.join(".")}: ${issue.message}`).join("\n");
@@ -38,4 +40,8 @@ export const env = parseEnv({
   apiTimeoutMs: process.env.EXPO_PUBLIC_API_TIMEOUT_MS,
   pollIntervalMs: process.env.EXPO_PUBLIC_POLL_INTERVAL_MS,
   secureStorage: process.env.EXPO_PUBLIC_SECURE_STORAGE,
+  location: process.env.EXPO_PUBLIC_LOCATION,
 });
+
+/** Origem da posição do utilizador. */
+export const locationSource = env.location ?? (env.dataSource === "http" ? "device" : "simulated");

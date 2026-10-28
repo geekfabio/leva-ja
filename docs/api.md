@@ -206,7 +206,8 @@ Em modo demonstração, a app simula os outros intervenientes (o prestador que a
 
 | Método | Caminho | Parâmetros | Resposta |
 | --- | --- | --- | --- |
-| GET | `/locations/current` | — | `Place` (no futuro vem do GPS do dispositivo e de geocodificação inversa) |
+| GET | `/locations/current` | — | `Place`: posição aproximada (sem GPS autorizado) |
+| GET | `/locations/reverse` | `?lat=&lng=` | `Place`: morada ou bairro mais próximo das coordenadas do GPS |
 | GET | `/locations/search` | `?q=` | lista de `Place` |
 | GET | `/locations/areas` | — | lista de `Place` (bairros) |
 | GET | `/vehicles/nearby` | `?lat=&lng=` | lista de `{ id, lat, lng, type: "tow"\|"cargo"\|"move" }` |
