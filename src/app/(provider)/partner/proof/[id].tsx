@@ -7,7 +7,7 @@ import { AppHeader, AppText, Card, DeliveryProofForm, Divider, EmptyState, IconC
 import { Avatar } from "@/components/core/Avatar";
 import { serviceTitle } from "@/features/booking/catalog";
 import { proofSchema } from "@/features/provider/schemas";
-import { repositories } from "@/data";
+import { deviceFeatures, repositories } from "@/data";
 import { useRequest, useServiceStore } from "@/stores/useServiceStore";
 import type { Photo } from "@/types/domain";
 import { formatKz } from "@/utils/format";
@@ -24,9 +24,12 @@ export default function DeliveryProofScreen() {
   const me = useMyProvider();
   const vehicle = me.vehicle;
   const [photos, setPhotos] = useState<Photo[]>([]);
-  // Três fotos iniciais "tiradas" pela câmara (MediaRepository).
+  // Na demonstração, começa com três fotos de exemplo; com a câmara real, começa vazio.
   useEffect(() => {
-    Promise.all([0, 1, 2].map((i) => repositories().media.capture("delivery", i))).then(setPhotos).catch(() => undefined);
+    if (deviceFeatures.camera !== "simulated") return;
+    Promise.all([0, 1, 2].map((i) => repositories().media.capture("delivery", i)))
+      .then((list) => setPhotos(list.filter((p): p is Photo => !!p)))
+      .catch(() => undefined);
   }, []);
   const [signed, setSigned] = useState(false);
   const [good, setGood] = useState(true);
@@ -61,8 +64,12 @@ export default function DeliveryProofScreen() {
     submit.mutate();
   };
   const addPhoto = async () => {
-    const next = await repositories().media.capture("delivery", photos.length);
-    setPhotos((p) => [...p, next]);
+    try {
+      const next = await repositories().media.capture("delivery", photos.length);
+      if (next) setPhotos((p) => [...p, next]);
+    } catch (error) {
+      toast.error({ title: "Não foi possível enviar a foto", message: error instanceof Error ? error.message : undefined });
+    }
   };
 
   return (

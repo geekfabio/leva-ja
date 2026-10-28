@@ -2,7 +2,7 @@ import { Pressable, View } from "react-native";
 import { Image } from "expo-image";
 import { Camera, ImagePlus, Plus, X } from "lucide-react-native";
 import type { Photo } from "@/types/domain";
-import { photoAssets, vehicleArt, type PhotoAssetKey, type VehicleArtKey } from "@/theme/images";
+import { imageSource, vehicleArt, type VehicleArtKey } from "@/theme/images";
 import { colors, radius } from "@/theme/colors";
 import { AppText } from "@/components/core/AppText";
 
@@ -31,7 +31,8 @@ export function PhotoTile({
   rounded?: number;
   aspect?: number;
 }) {
-  const source = photoAssets[photo.asset as PhotoAssetKey];
+  // Chave de uma foto de exemplo ou URL devolvido pela API (`POST /uploads`).
+  const source = imageSource(photo.asset);
   return (
     <View style={size === "flex" ? { flex: 1, aspectRatio: aspect } : { width: size, height: size / aspect }}>
       <Image
@@ -56,7 +57,7 @@ export function PhotoTile({
   );
 }
 
-/** Espaço para adicionar foto (câmara simulada). */
+/** Espaço para adicionar foto (abre a câmara ou a galeria). */
 export function AddPhotoTile({ onPress, size = "flex", variant = "placeholder", label = "Adicionar foto" }: { onPress: () => void; size?: number | "flex"; variant?: "placeholder" | "dashed"; label?: string }) {
   return (
     <Pressable

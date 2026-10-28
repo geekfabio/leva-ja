@@ -1,13 +1,15 @@
 import { z } from "zod";
 import { env } from "@/config/env";
 import type { Repositories } from "../repositories";
-import { RepositoryError } from "../repositories/types";
 import { MockMediaRepository } from "../mock/MockMediaRepository";
 import { roadDistanceKm } from "@/utils/geo";
 import { call, http, setAuthToken, setAuthTokens, setTokenRefresher } from "../http/client";
 import * as Dto from "./dto";
 import * as map from "./mappers";
 import { PollingRealtime, type RealtimeChannel } from "./realtime";
+import { parse } from "./parse";
+import { ApiMediaRepository } from "./ApiMediaRepository";
+import type { DeviceCamera } from "../device/DeviceCamera";
 import type { DeviceLocation } from "../device/DeviceLocation";
 
 /**
@@ -25,15 +27,11 @@ export type ApiRepositoriesOptions = {
   pollIntervalMs?: number;
   /** GPS do dispositivo; sem ele, a posição é a aproximada da API. */
   location?: DeviceLocation;
+  /** Câmara/galeria do dispositivo; sem ela, as fotos são as de exemplo. */
+  camera?: DeviceCamera;
 };
 
-/** Valida uma resposta; um formato inesperado é um erro do servidor, não dados errados no ecrã. */
-export function parse<S extends z.ZodTypeAny>(schema: S, payload: unknown, what: string): z.infer<S> {
-  const result = schema.safeParse(payload);
-  if (result.success) return result.data;
-  if (process.env.NODE_ENV !== "test") console.warn(`Resposta da API fora do contrato (${what}):`, result.error.issues.slice(0, 5));
-  throw new RepositoryError("server", "Resposta inesperada do servidor.");
-}
+export { parse } from "./parse";
 
 /** `{ data: T }` → T já validado. */
 async function one<S extends z.ZodTypeAny>(schema: S, request: Promise<{ data: unknown }>, what: string): Promise<z.infer<S>> {
@@ -52,7 +50,7 @@ async function none(request: Promise<{ data: unknown }>): Promise<void> {
 
 const bearer = (token: string) => ({ headers: { Authorization: `Bearer ${token}` } });
 
-export function createApiRepositories({ realtime, pollIntervalMs = env.pollIntervalMs, location }: ApiRepositoriesOptions = {}): Repositories {
+export function createApiRepositories({ realtime, pollIntervalMs = env.pollIntervalMs, location, camera }: ApiRepositoriesOptions = {}): Repositories {
   const channel = realtime ?? new PollingRealtime(pollIntervalMs);
 
   const startSession = async (request: Promise<{ data: unknown }>) => {
@@ -182,8 +180,7 @@ export function createApiRepositories({ realtime, pollIntervalMs = env.pollInter
       sendSosAlert: (input) => none(http.post("/sos", { request_id: input.requestId ?? null, ...map.fromCoordinates(input.coords) })),
     },
 
-    // A câmara é do dispositivo, não da API: até integrar expo-image-picker e o
-    // envio para /uploads, as fotos continuam a ser as de exemplo.
-    media: new MockMediaRepository(),
+    // Com câmara: foto real enviada para POST /uploads. Sem ela (demonstração): fotos de exemplo.
+    media: camera ? new ApiMediaRepository(camera) : new MockMediaRepository(),
   };
 }

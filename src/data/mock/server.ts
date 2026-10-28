@@ -20,7 +20,7 @@ import { createMockRepositories } from "./index";
  */
 
 type Body = Record<string, unknown>;
-type Context = { params: Record<string, string>; query: Record<string, unknown>; body: Body; token: string; session: SessionRecord };
+type Context = { params: Record<string, string>; query: Record<string, unknown>; body: Body; token: string; session: SessionRecord; raw: unknown };
 type Handler = (ctx: Context) => unknown;
 type RouteOptions = { public?: boolean; created?: boolean };
 type Route = { method: string; pattern: RegExp; keys: string[]; handler: Handler; options: RouteOptions };
@@ -303,6 +303,15 @@ export function createMockServer(database: MockDatabase = db, { simulation = tru
   add("get", "/help", async ({ query }) => list((await repos.support.searchHelp(String(query.q ?? ""), query.category as never)).map(map.fromHelpTopic)));
   add("get", "/help/emergency-contacts", async () => list((await repos.support.emergencyContacts()).map(map.fromEmergencyContact)));
   add("post", "/tickets", async ({ body }) => ok({ code: await repos.support.createTicket(map.toTicketInput(input(Dto.TicketBodyDto, body))) }), { created: true });
+  // —— Ficheiros ——
+  add("post", "/uploads", async ({ raw }) => {
+    const upload = await readUpload(raw);
+    const context = input(z.enum(["cargo", "vehicle", "delivery", "document"]), upload.context);
+    if (!upload.url) throw new RepositoryError("validation", "Falta o ficheiro (campo file).");
+    if (!/^image\//.test(upload.type)) throw new RepositoryError("validation", "Só são aceites imagens.");
+    return ok({ id: `upl-${context}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`, url: upload.url, content_type: upload.type });
+  }, { created: true });
+
   add("post", "/sos", ({ body }) => {
     const sos = input(z.object({ request_id: z.string().nullable(), lat: z.number(), lng: z.number() }), body);
     return repos.support.sendSosAlert({ requestId: sos.request_id ?? undefined, coords: map.toCoordinates(sos) });
@@ -336,7 +345,7 @@ export function createMockServer(database: MockDatabase = db, { simulation = tru
         if (session?.expiresAt !== undefined && session.expiresAt <= Date.now()) fail(401, "token_expired", "O token de acesso expirou.");
       }
       try {
-        const ctx: Context = { params, query: (config.params ?? {}) as Record<string, unknown>, body: parseBody(config), token, session: session! };
+        const ctx: Context = { params, query: (config.params ?? {}) as Record<string, unknown>, body: parseBody(config), token, session: session!, raw: config.data };
         if (!route.options.public) guard(ctx, path);
         const data = await route.handler(ctx);
         return data === undefined ? reply(204, "") : reply(route.options.created ? 201 : 200, wire(data));
@@ -364,4 +373,39 @@ function parseBody(config: InternalAxiosRequestConfig): Body {
     }
   }
   return config.data as Body;
+}
+
+/**
+ * Lê um multipart como o backend faria. No React Native o FormData expõe
+ * `getParts()` com `{ uri, type }`; na web (e no Node) expõe `get()` com Blobs,
+ * que a API simulada "guarda" como URL `blob:` local.
+ */
+async function readUpload(data: unknown): Promise<{ context?: string; url?: string; type: string }> {
+  const form = data as { getParts?: () => { fieldName: string; string?: string; uri?: string; type?: string }[]; get?: (name: string) => unknown };
+  if (typeof form?.getParts === "function") {
+    const parts = form.getParts();
+    const file = parts.find((p) => p.fieldName === "file");
+    return { context: parts.find((p) => p.fieldName === "context")?.string, url: file?.uri, type: file?.type ?? "" };
+  }
+  if (typeof form?.get === "function") {
+    const file = form.get("file");
+    const context = form.get("context");
+    if (typeof Blob !== "undefined" && file instanceof Blob) {
+      return { context: typeof context === "string" ? context : undefined, url: await storeBlob(file), type: file.type };
+    }
+    return { context: typeof context === "string" ? context : undefined, type: "" };
+  }
+  return { type: "" };
+}
+
+/** "Guarda" o ficheiro: URL `blob:` local quando existe; senão, `data:` URL. */
+async function storeBlob(file: Blob) {
+  try {
+    return URL.createObjectURL(file);
+  } catch {
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    let binary = "";
+    bytes.forEach((b) => (binary += String.fromCharCode(b)));
+    return `data:${file.type};base64,${btoa(binary)}`;
+  }
 }

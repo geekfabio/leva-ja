@@ -14,6 +14,8 @@ const schema = z
     secureStorage: z.enum(["mock", "device"]).default("mock"),
     /** GPS: `simulated` (ponto em Luanda) ou `device`. Por omissão, simulado com dados mock e real com a API. */
     location: z.enum(["simulated", "device"]).optional(),
+    /** Fotografias: `simulated` (fotos de exemplo) ou `device` (câmara/galeria + envio). Mesma regra por omissão. */
+    camera: z.enum(["simulated", "device"]).optional(),
   })
   .superRefine((value, ctx) => {
     if (value.dataSource === "http" && !value.apiUrl) {
@@ -41,7 +43,11 @@ export const env = parseEnv({
   pollIntervalMs: process.env.EXPO_PUBLIC_POLL_INTERVAL_MS,
   secureStorage: process.env.EXPO_PUBLIC_SECURE_STORAGE,
   location: process.env.EXPO_PUBLIC_LOCATION,
+  camera: process.env.EXPO_PUBLIC_CAMERA,
 });
 
 /** Origem da posição do utilizador. */
 export const locationSource = env.location ?? (env.dataSource === "http" ? "device" : "simulated");
+
+/** Origem das fotografias. */
+export const cameraSource = env.camera ?? (env.dataSource === "http" ? "device" : "simulated");

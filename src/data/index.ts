@@ -1,11 +1,12 @@
 import { Platform } from "react-native";
-import { env, locationSource } from "@/config/env";
+import { cameraSource, env, locationSource } from "@/config/env";
 import type { Repositories } from "./repositories";
 import { createApiRepositories } from "./api/ApiRepositories";
 import { http, setAuthToken } from "./http/client";
 import { createMockServer } from "./mock/server";
 import { ExpoDeviceLocation, type DeviceLocation } from "./device/DeviceLocation";
 import { SimulatedDeviceLocation } from "./mock/device";
+import { ExpoDeviceCamera } from "./device/DeviceCamera";
 import { DEMO_CLIENT, DEMO_PROVIDER_ID, DEMO_TOKEN } from "./mock/demo";
 import { DeviceSecureStorage } from "./storage/DeviceSecureStorage";
 import { MockSecureStorage } from "./storage/MockSecureStorage";
@@ -30,12 +31,16 @@ export const dataSource = env.dataSource;
 /** Funcionalidades do dispositivo (GPS). */
 const location: DeviceLocation = locationSource === "device" ? new ExpoDeviceLocation() : new SimulatedDeviceLocation();
 export const deviceLocation = () => location;
+const camera = cameraSource === "device" ? new ExpoDeviceCamera() : undefined;
+
+/** Que funcionalidades do dispositivo são reais e quais são simuladas. */
+export const deviceFeatures = { camera: cameraSource, location: locationSource } as const;
 
 function createRepositories(): Repositories {
-  if (dataSource === "http") return createApiRepositories({ location });
+  if (dataSource === "http") return createApiRepositories({ location, camera });
   const server = createMockServer();
   http.defaults.adapter = server.adapter;
-  return createApiRepositories({ realtime: server.socket, location });
+  return createApiRepositories({ realtime: server.socket, location, camera });
 }
 
 let current: Repositories = createRepositories();

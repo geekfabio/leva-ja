@@ -219,6 +219,9 @@ export const EmergencyContactDto = z.object({ id: z.string(), label: z.string(),
 
 export const TicketDto = z.object({ code: z.string() });
 
+/** Resposta de `POST /uploads` (multipart: `file` + `context`). */
+export const UploadDto = z.object({ id: z.string(), url: z.string(), content_type: z.string() });
+
 // —— Corpos enviados pela app ——
 
 export const CreateRequestBodyDto = z.object({

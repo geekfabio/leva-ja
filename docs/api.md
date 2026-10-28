@@ -245,9 +245,16 @@ A distância por estrada é estimada na app (`utils/geo.ts`) só para pré-visua
 | POST | `/tickets` | `{ request_id, reason, description }` (descrição com 10 ou mais caracteres) | `201`, `{ code }` (ex.: `OC-1234`) |
 | POST | `/sos` | `{ request_id, lat, lng }` | 204 |
 
+## Ficheiros
+
+| Método | Caminho | Corpo | Resposta |
+| --- | --- | --- | --- |
+| POST | `/uploads` | `multipart/form-data`: `file` (imagem) e `context` (`cargo` \| `vehicle` \| `delivery` \| `document`) | `201`, `{ data: { id, url, content_type } }`; 422 se faltar o ficheiro ou se não for uma imagem |
+
+A app tira a foto (câmara ou, sem câmara, galeria; `src/data/device/DeviceCamera.ts`) e envia-a. O `url` devolvido é o que vai nos pedidos (`photos[].url`). Na demonstração (`EXPO_PUBLIC_CAMERA=simulated`), as fotos são imagens de exemplo empacotadas, referidas por chave; o `imageSource` aceita as duas formas.
+
 ## Ainda por integrar
 
-- **Fotografias:** captura com `expo-image-picker` e envio para `POST /uploads`, que devolve o `url`. Até lá, os `url` das fotos são chaves de imagens de exemplo empacotadas na app; o `imageSource` aceita as duas formas.
 - **WebSocket:** mesmos tópicos e mensagens que o socket da API simulada.
 - **Notificações push:** registo do token Expo e envio pelo servidor.
 - **Pagamentos reais:** Multicaixa Express, referência bancária e cartão via processador.
