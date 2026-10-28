@@ -245,6 +245,22 @@ A distância por estrada é estimada na app (`utils/geo.ts`) só para pré-visua
 | POST | `/tickets` | `{ request_id, reason, description }` (descrição com 10 ou mais caracteres) | `201`, `{ code }` (ex.: `OC-1234`) |
 | POST | `/sos` | `{ request_id, lat, lng }` | 204 |
 
+## Dispositivos e notificações push
+
+| Método | Caminho | Corpo | Resposta |
+| --- | --- | --- | --- |
+| POST | `/devices` | `{ push_token, platform: "android"\|"ios"\|"web", role: "client"\|"provider" }` | 204; o dono é o utilizador do token de acesso |
+| DELETE | `/devices/:push_token` | — | 204; 403 se o dispositivo for de outra pessoa |
+
+A app regista o dispositivo depois do login e anula o registo ao sair. Usa o token do Expo Push (`ExponentPushToken[…]`), que exige `extra.eas.projectId` no `app.json`.
+
+O servidor envia uma notificação quando um pedido muda de estado. A notificação leva `{ title, body, data: { href } }`, e `href` é o ecrã que a app abre ao tocar. Os textos estão em `src/features/notifications/push.ts`:
+
+- **Cliente:** prestador encontrado, a caminho, chegou, em transporte, entregue, pagamento confirmado, cancelado.
+- **Prestador:** recolha confirmada, pagamento recebido, nova avaliação, cancelado.
+
+Na demonstração, a API simulada entrega as notificações por um serviço interno, e a app mostra-as no topo do ecrã.
+
 ## Ficheiros
 
 | Método | Caminho | Corpo | Resposta |

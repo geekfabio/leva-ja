@@ -7,6 +7,8 @@ import type { RealtimeChannel } from "../api/realtime";
 import { RepositoryError, type RepositoryErrorCode, type Unsubscribe } from "../repositories/types";
 import type { Session } from "../repositories/AuthRepository";
 import { db, type MockDatabase, type SessionRecord } from "./database";
+import { Emitter } from "./events";
+import { pushFor, type PushMessage } from "@/features/notifications/push";
 import { createMockRepositories } from "./index";
 
 /**
@@ -103,6 +105,21 @@ export function createMockServer(database: MockDatabase = db, { simulation = tru
     }
     return log;
   };
+
+  // —— Push: quando um pedido muda de estado, o servidor avisa os dispositivos dos interessados ——
+  const push = new Emitter<PushMessage>();
+  const lastStatus = new Map<string, string>();
+  repos.requests.subscribe((r) => {
+    if (lastStatus.get(r.id) === r.status) return;
+    lastStatus.set(r.id, r.status);
+    for (const [token, device] of database.devices) {
+      const concerned = device.role === "client" ? device.userId === r.clientId : !!device.providerId && device.providerId === r.providerId;
+      const message = concerned ? pushFor(device.role, r) : null;
+      if (message) push.emit(token, wire(message));
+    }
+  });
+  /** Serviço de entrega de push simulado (no real: Expo Push / FCM / APNs). */
+  const pushGateway = { subscribe: (token: string, handler: (message: PushMessage) => void): Unsubscribe => push.on(token, handler) };
 
   const socket: RealtimeChannel = {
     subscribe(topic, handler): Unsubscribe {
@@ -303,6 +320,17 @@ export function createMockServer(database: MockDatabase = db, { simulation = tru
   add("get", "/help", async ({ query }) => list((await repos.support.searchHelp(String(query.q ?? ""), query.category as never)).map(map.fromHelpTopic)));
   add("get", "/help/emergency-contacts", async () => list((await repos.support.emergencyContacts()).map(map.fromEmergencyContact)));
   add("post", "/tickets", async ({ body }) => ok({ code: await repos.support.createTicket(map.toTicketInput(input(Dto.TicketBodyDto, body))) }), { created: true });
+  // —— Dispositivos (push) ——
+  add("post", "/devices", ({ body, session }) => {
+    const d = input(z.object({ push_token: z.string().min(8), platform: z.enum(["android", "ios", "web"]), role: z.enum(["client", "provider"]) }), body);
+    database.devices.set(d.push_token, { userId: session.user.id, providerId: session.providerId, role: d.role, platform: d.platform });
+  });
+  add("delete", "/devices/:token", ({ params, session }) => {
+    const device = database.devices.get(params.token!);
+    if (device && device.userId !== session.user.id) deny();
+    database.devices.delete(params.token!);
+  });
+
   // —— Ficheiros ——
   add("post", "/uploads", async ({ raw }) => {
     const upload = await readUpload(raw);
@@ -360,7 +388,7 @@ export function createMockServer(database: MockDatabase = db, { simulation = tru
     return fail(404, "not_found", `Endpoint inexistente: ${method.toUpperCase()} ${path}`);
   };
 
-  return { adapter, socket, repositories: repos };
+  return { adapter, socket, pushGateway, repositories: repos };
 }
 
 function parseBody(config: InternalAxiosRequestConfig): Body {

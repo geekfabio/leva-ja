@@ -180,6 +180,11 @@ export function createApiRepositories({ realtime, pollIntervalMs = env.pollInter
       sendSosAlert: (input) => none(http.post("/sos", { request_id: input.requestId ?? null, ...map.fromCoordinates(input.coords) })),
     },
 
+    notifications: {
+      registerDevice: (device) => none(http.post("/devices", { push_token: device.token, platform: device.platform, role: device.role })),
+      unregisterDevice: (token) => none(http.delete(`/devices/${encodeURIComponent(token)}`)),
+    },
+
     // Com câmara: foto real enviada para POST /uploads. Sem ela (demonstração): fotos de exemplo.
     media: camera ? new ApiMediaRepository(camera) : new MockMediaRepository(),
   };

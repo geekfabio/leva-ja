@@ -56,6 +56,7 @@ src/data/
   device/
     DeviceLocation.ts      GPS do dispositivo (expo-location): autorização, posição com tempo limite; a morada vem da API
     DeviceCamera.ts        câmara ou galeria (expo-image-picker); o envio é feito por api/ApiMediaRepository (POST /uploads)
+    DeviceNotifications.ts push (expo-notifications): autorização, token Expo, mensagens e toques; registo em POST /devices
   storage/                 armazenamento seguro no dispositivo
     SecureStorage.ts       contrato (espelha o expo-secure-store) e regras de chave/tamanho
     MockSecureStorage.ts   SecureStore simulado em memória (por omissão)

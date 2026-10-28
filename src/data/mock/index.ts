@@ -5,6 +5,7 @@ import { MockAuthRepository } from "./MockAuthRepository";
 import { MockChatRepository } from "./MockChatRepository";
 import { MockLocationRepository } from "./MockLocationRepository";
 import { MockMediaRepository } from "./MockMediaRepository";
+import { MockNotificationRepository } from "./MockNotificationRepository";
 import { MockProviderRepository } from "./MockProviderRepository";
 import { MockRequestRepository } from "./MockRequestRepository";
 import { MockSupportRepository } from "./MockSupportRepository";
@@ -19,6 +20,7 @@ export function createMockRepositories(database = db): Repositories {
     account: new MockAccountRepository(database),
     support: new MockSupportRepository(database),
     media: new MockMediaRepository(),
+    notifications: new MockNotificationRepository(database),
   };
 }
 

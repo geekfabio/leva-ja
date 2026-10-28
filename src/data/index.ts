@@ -5,7 +5,8 @@ import { createApiRepositories } from "./api/ApiRepositories";
 import { http, setAuthToken } from "./http/client";
 import { createMockServer } from "./mock/server";
 import { ExpoDeviceLocation, type DeviceLocation } from "./device/DeviceLocation";
-import { SimulatedDeviceLocation } from "./mock/device";
+import { SimulatedDeviceLocation, SimulatedDeviceNotifications } from "./mock/device";
+import { ExpoDeviceNotifications, type DeviceNotifications } from "./device/DeviceNotifications";
 import { ExpoDeviceCamera } from "./device/DeviceCamera";
 import { DEMO_CLIENT, DEMO_PROVIDER_ID, DEMO_TOKEN } from "./mock/demo";
 import { DeviceSecureStorage } from "./storage/DeviceSecureStorage";
@@ -34,12 +35,23 @@ export const deviceLocation = () => location;
 const camera = cameraSource === "device" ? new ExpoDeviceCamera() : undefined;
 
 /** Que funcionalidades do dispositivo são reais e quais são simuladas. */
-export const deviceFeatures = { camera: cameraSource, location: locationSource } as const;
+export const deviceFeatures = { camera: cameraSource, location: locationSource, notifications: dataSource === "http" ? "device" : "simulated" } as const;
+
+/**
+ * Push: com a API real, Expo Push; com a API simulada, o serviço de entrega
+ * dela (o servidor simulado não consegue enviar para um telemóvel real).
+ */
+let notifications: DeviceNotifications;
+export const deviceNotifications = () => notifications;
 
 function createRepositories(): Repositories {
-  if (dataSource === "http") return createApiRepositories({ location, camera });
+  if (dataSource === "http") {
+    notifications = new ExpoDeviceNotifications();
+    return createApiRepositories({ location, camera });
+  }
   const server = createMockServer();
   http.defaults.adapter = server.adapter;
+  notifications = new SimulatedDeviceNotifications(server.pushGateway);
   return createApiRepositories({ realtime: server.socket, location, camera });
 }
 

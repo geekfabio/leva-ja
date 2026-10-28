@@ -5,6 +5,7 @@ import { useAccountStore, type Preferences } from "@/stores/useAccountStore";
 import { toast } from "@/lib/toast";
 import { go } from "@/features/navigation";
 import { colors } from "@/theme/colors";
+import { deviceFeatures } from "@/data";
 
 const titles: Record<string, string> = {
   notifications: "Notificações",
@@ -28,7 +29,7 @@ export default function SettingsSection() {
           <ToggleRow title="Actualizações do serviço" description="Prestador a caminho, chegada, entrega e pagamento." value={prefs.notifications.serviceUpdates} onChange={toggle("notifications", "serviceUpdates")} />
           <ToggleRow title="Promoções e novidades" description="Descontos e novos serviços em Luanda." value={prefs.notifications.promotions} onChange={toggle("notifications", "promotions")} />
           <ToggleRow title="Som" description="Tocar um som nas notificações." value={prefs.notifications.sound} onChange={toggle("notifications", "sound")} />
-          <InfoNote>As notificações push são simuladas nesta fase.</InfoNote>
+          <InfoNote>{deviceFeatures.notifications === "simulated" ? "Na demonstração, as notificações push são simuladas e aparecem no topo do ecrã." : "As notificações chegam ao telemóvel mesmo com a app fechada."}</InfoNote>
         </>
       ) : null}
       {section === "privacy" ? (
