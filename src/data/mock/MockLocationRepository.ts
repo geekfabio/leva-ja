@@ -11,6 +11,16 @@ export class MockLocationRepository implements LocationRepository {
     return simulate(() => clone(userLocation), 0);
   }
 
+  reverseGeocode(coords: Coordinates) {
+    return simulate(() => {
+      // Bairro conhecido mais próximo (em linha recta), como faria um serviço de geocodificação.
+      const distance = (p: (typeof placeList)[number]) => Math.hypot(p.coords.latitude - coords.latitude, p.coords.longitude - coords.longitude);
+      const nearest = [...placeList].sort((a, b) => distance(a) - distance(b))[0]!;
+      const id = `gps-${coords.latitude.toFixed(4)},${coords.longitude.toFixed(4)}`;
+      return { id, label: distance(nearest) < 0.003 ? nearest.label : `Perto de ${nearest.label}`, area: nearest.area, city: nearest.city, coords: { ...coords } };
+    }, 200);
+  }
+
   search(query: string) {
     return simulate(() => {
       const q = normalize(query.trim());

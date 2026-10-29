@@ -10,7 +10,7 @@ import { colors, radius } from "@/theme/colors";
 
 const MAX = 6;
 
-/** 18 · Fotos da carga/viatura e instruções. A câmara é simulada com fotos de exemplo. */
+/** 18 · Fotos da carga/viatura e instruções. Câmara ou galeria (na demonstração, fotos de exemplo). */
 export default function PhotosStep() {
   const { position, next, kind } = useBookingStep("photos");
   const photos = useBookingStore((s) => s.draft.photos);
@@ -22,6 +22,7 @@ export default function PhotosStep() {
     if (photos.length >= MAX) return toast.info({ title: "Limite atingido", message: `Podes adicionar até ${MAX} fotos.` });
     try {
       const photo = await repositories().media.capture(kind === "tow" ? "vehicle" : "cargo", photos.length);
+      if (!photo) return;
       patch({ photos: [...useBookingStore.getState().draft.photos, photo] });
     } catch {
       toast.error("Não foi possível abrir a câmara");
@@ -37,7 +38,7 @@ export default function PhotosStep() {
         <IconCircle size={72} tone="white">
           <ImageIcon size={44} color={colors.primary} strokeWidth={1.6} />
         </IconCircle>
-        <PrimaryButton size="md" label="Adicionar fotos" onPress={addPhoto} accessibilityHint="Adiciona uma foto de exemplo (câmara simulada)" />
+        <PrimaryButton size="md" label="Adicionar fotos" onPress={addPhoto} accessibilityHint="Abre a câmara ou a galeria" />
       </View>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
         {photos.map((photo) => (

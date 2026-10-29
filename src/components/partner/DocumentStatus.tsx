@@ -25,7 +25,7 @@ export function DocumentStatus({ document, onPress, selected }: { document: Prov
     <ScalePressable
       accessibilityRole="button"
       accessibilityLabel={`${document.title}, ${state.label}, válido até ${formatDate(document.validUntil)}`}
-      accessibilityState={{ selected }}
+      accessibilityState={{ selected }} aria-selected={selected}
       onPress={onPress}
       style={({ pressed }) => [
         {

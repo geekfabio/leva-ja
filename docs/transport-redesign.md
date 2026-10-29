@@ -2,7 +2,7 @@
 
 ## Produto
 
-O Leva Já passa a apresentar três famílias de transporte — cargas leves, cargas pesadas e mudanças — além de reboque e apoio automóvel. A direcção visual mantém verde vivo, tipografia clara e componentes partilhados.
+O AngoLeva passa a apresentar três famílias de transporte — cargas leves, cargas pesadas e mudanças — além de reboque e apoio automóvel. A direcção visual mantém verde vivo, tipografia clara e componentes partilhados.
 
 ## Imagens 3D
 

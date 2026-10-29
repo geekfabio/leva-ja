@@ -1,4 +1,5 @@
-import { resetMockDatabase } from "@/data";
+import { repositories, resetMockDatabase, setAuthTokens } from "@/data";
+import { DEMO_TOKEN } from "@/data/mock/demo";
 import { useServiceStore } from "@/stores/useServiceStore";
 import { useProviderStore } from "@/stores/useProviderStore";
 import { useBookingStore } from "@/stores/useBookingStore";
@@ -15,11 +16,34 @@ function cargoDraft() {
 
 const find = (id: string) => useServiceStore.getState().requests.find((r) => r.id === id)!;
 
+/** O tempo real chega pelo WebSocket (assíncrono): espera pela condição. */
+async function eventually(check: () => boolean, timeoutMs = 1000) {
+  const start = Date.now();
+  while (!check()) {
+    if (Date.now() - start > timeoutMs) throw new Error("Condição não cumprida a tempo.");
+    await new Promise((resolve) => setTimeout(resolve, 5));
+  }
+}
+
+/** A API só deixa o dono do pedido responder à proposta: entra como esse cliente. */
+async function asClient(email: string, action: () => Promise<unknown>) {
+  const session = await repositories().auth.login(email, "segredo12", "client");
+  try {
+    return await action();
+  } finally {
+    void session;
+    setAuthTokens({ token: DEMO_TOKEN });
+  }
+}
+
 beforeEach(async () => {
   resetMockDatabase();
+  setAuthTokens({ token: DEMO_TOKEN });
   useServiceStore.getState().clear();
   await useServiceStore.getState().hydrate();
   await useProviderStore.getState().hydrate(useSessionStore.getState().providerId!);
+  // Deixa a ligação de tempo real (WebSocket) abrir, como acontece na app antes de qualquer acção.
+  await new Promise((resolve) => setTimeout(resolve, 10));
 });
 
 describe("ciclo de vida partilhado cliente ↔ prestador (stores sobre repositórios)", () => {
@@ -50,7 +74,7 @@ describe("ciclo de vida partilhado cliente ↔ prestador (stores sobre repositó
     expect(await store.submitProof(id, { photos: deliveryPhotos, signedBy: "Armando Manuel", goodCondition: true })).toBe(true);
     expect(find(id).status).toBe("delivered");
     // A carteira é actualizada pelo repositório e chega à store pela subscrição.
-    expect(useProviderStore.getState().balance).toBe(balance + find(id).providerEarning);
+    await eventually(() => useProviderStore.getState().balance === balance + find(id).providerEarning);
 
     expect(await store.rate(id, 5)).toBe(false);
     expect(await store.pay(id, "card")).toBe(true);
@@ -67,9 +91,11 @@ describe("ciclo de vida partilhado cliente ↔ prestador (stores sobre repositó
 
   it("mudança de casa: proposta aceite actualiza o preço e atribui o pedido", async () => {
     const store = useServiceStore.getState();
-    const before = find("req-near-4");
+    // Fora da cobertura do prestador de demonstração: abre-o como numa ligação directa.
+    const before = await repositories().requests.get("req-near-4");
+    store.upsert(before);
     expect(await store.submitProposal("req-near-4", 40000, "Inclui 2 ajudantes e escadas")).toBe(true);
-    expect(await store.answerProposal("req-near-4", true)).toBe(true);
+    expect(await asClient("carlos.mendes@email.com", () => store.answerProposal("req-near-4", true))).toBe(true);
     const after = find("req-near-4");
     expect(after.status).toBe("assigned");
     expect(after.price.total).toBe(40000 + before.price.platformFee);
@@ -78,8 +104,9 @@ describe("ciclo de vida partilhado cliente ↔ prestador (stores sobre repositó
 
   it("proposta recusada devolve o pedido à lista", async () => {
     const store = useServiceStore.getState();
+    store.upsert(await repositories().requests.get("req-near-4"));
     await store.submitProposal("req-near-4", 40000, "Inclui 2 ajudantes e escadas");
-    await store.answerProposal("req-near-4", false);
+    await asClient("carlos.mendes@email.com", () => store.answerProposal("req-near-4", false));
     expect(find("req-near-4").status).toBe("searching");
     expect(find("req-near-4").providerId).toBeUndefined();
   });
@@ -89,8 +116,7 @@ describe("ciclo de vida partilhado cliente ↔ prestador (stores sobre repositó
     expect(await useProviderStore.getState().withdraw(20000)).toBe(true);
     expect(useProviderStore.getState().balance).toBe(balance - 20000);
     expect(useProviderStore.getState().transactions[0]?.status).toBe("pending");
-    await new Promise((r) => setTimeout(r, 30));
-    expect(useProviderStore.getState().transactions[0]?.status).toBe("completed");
+    await eventually(() => useProviderStore.getState().transactions[0]?.status === "completed");
     expect(await useProviderStore.getState().withdraw(10_000_000)).toBe(false);
   });
 });

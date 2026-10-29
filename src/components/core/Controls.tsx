@@ -92,7 +92,7 @@ export function ToggleRow({
       accessibilityRole="switch"
       accessibilityLabel={title}
       accessibilityHint={description}
-      accessibilityState={{ checked: value }}
+      accessibilityState={{ checked: value }} aria-checked={value}
       onPress={() => onChange(!value)}
       style={{
         flexDirection: "row",
@@ -128,7 +128,7 @@ export function Checkbox({ checked, onChange, label, tone = "soft" }: { checked:
   return (
     <Pressable
       accessibilityRole="checkbox"
-      accessibilityState={{ checked }}
+      accessibilityState={{ checked }} aria-checked={checked}
       accessibilityLabel={label}
       onPress={() => onChange(!checked)}
       style={{

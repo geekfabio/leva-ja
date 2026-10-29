@@ -1,5 +1,6 @@
+import { useEffect } from "react";
 import { create } from "zustand";
-import type { DeliveryProofData, PaymentMethodKind, Photo, ServiceRequest, ServiceStatus } from "@/types/domain";
+import type { DeliveryProofData, Payment, PaymentMethodKind, Photo, ServiceRequest, ServiceStatus } from "@/types/domain";
 import { repositories, type RequestActor } from "@/data";
 import { isDraftComplete } from "@/features/booking/validation";
 import { estimatePrice } from "@/features/booking/pricing";
@@ -25,6 +26,14 @@ type ServiceState = {
   answerProposal: (id: string, accepted: boolean) => Promise<boolean>;
   addPickupPhotos: (id: string, photos: Photo[]) => Promise<boolean>;
   submitProof: (id: string, proof: Omit<DeliveryProofData, "at">) => Promise<boolean>;
+  /**
+   * Inicia o pagamento. Devolve-o com o estado (`confirmed` no cartão e no
+   * numerário; `pending` com os dados da referência Multicaixa), ou `null` com erro.
+   */
+  startPayment: (id: string, method: PaymentMethodKind) => Promise<Payment | null>;
+  /** Consulta um pagamento pendente; se já estiver confirmado, actualiza o pedido. */
+  checkPayment: (payment: Payment) => Promise<Payment | null>;
+  /** Paga e espera pela confirmação imediata (cartão ou numerário). */
   pay: (id: string, method: PaymentMethodKind) => Promise<boolean>;
   rate: (id: string, rating: number, review?: string) => Promise<boolean>;
   setActiveClient: (id: string | null) => void;
@@ -63,7 +72,15 @@ export const useServiceStore = create<ServiceState>((set, get) => {
 
     hydrate: async () => {
       try {
-        const requests = await repo().list();
+        // A API devolve a cada utilizador só o que lhe diz respeito: os pedidos
+        // dele como cliente e, se for prestador, os atribuídos e os próximos.
+        const providerId = myProviderId();
+        const [own, assigned, nearby] = await Promise.all([
+          repo().list(),
+          providerId ? repo().list({ providerId }) : Promise.resolve([]),
+          providerId ? repo().nearby(providerId).then((list) => list.map((n) => n.request)) : Promise.resolve([]),
+        ]);
+        const requests = [...new Map([...nearby, ...assigned, ...own].map((r) => [r.id, r])).values()];
         set({ requests, loaded: true });
       } catch (error) {
         set({ loaded: true, lastError: error instanceof Error ? error.message : "Erro ao carregar pedidos." });
@@ -125,7 +142,31 @@ export const useServiceStore = create<ServiceState>((set, get) => {
 
     submitProof: (id, proof) => run(() => repo().submitProof(id, proof)),
 
-    pay: (id, method) => run(() => repo().pay(id, method)),
+    startPayment: async (id, method) => {
+      try {
+        const payment = await repositories().payments.start(id, method);
+        // Confirmado: o pedido já está pago no servidor; actualiza a cache sem esperar pelo tempo real.
+        if (payment.status === "confirmed") await run(() => repo().get(id));
+        set({ lastError: null });
+        return payment;
+      } catch (error) {
+        set({ lastError: error instanceof Error ? error.message : "Não foi possível iniciar o pagamento." });
+        return null;
+      }
+    },
+
+    checkPayment: async (payment) => {
+      try {
+        const current = await repositories().payments.get(payment.id);
+        if (current.status === "confirmed") await run(() => repo().get(payment.requestId));
+        return current;
+      } catch (error) {
+        set({ lastError: error instanceof Error ? error.message : "Não foi possível consultar o pagamento." });
+        return null;
+      }
+    },
+
+    pay: async (id, method) => (await get().startPayment(id, method))?.status === "confirmed",
 
     rate: (id, rating, review) =>
       run(
@@ -139,7 +180,19 @@ export const useServiceStore = create<ServiceState>((set, get) => {
   };
 });
 
-export const useRequest = (id?: string | null) => useServiceStore((s) => (id ? s.requests.find((r) => r.id === id) : undefined));
+/** Pedido da cache; se não estiver lá (ex.: ligação directa), é pedido à API. */
+export function useRequest(id?: string | null) {
+  const request = useServiceStore((s) => (id ? s.requests.find((r) => r.id === id) : undefined));
+  const loaded = useServiceStore((s) => s.loaded);
+  useEffect(() => {
+    if (!id || request || !loaded) return;
+    repositories()
+      .requests.get(id)
+      .then((found) => useServiceStore.getState().upsert(found))
+      .catch(() => undefined);
+  }, [id, request, loaded]);
+  return request;
+}
 
 /** Recalcula a estimativa de um rascunho (usado no ecrã de estimativa antes de criar o pedido). */
 export { estimatePrice };

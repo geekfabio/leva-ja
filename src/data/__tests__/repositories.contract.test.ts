@@ -1,35 +1,52 @@
 import type { Repositories } from "@/data";
 import { RepositoryError } from "@/data";
+import { getAuthToken, http } from "@/data/http/client";
+import { WebSocketRealtime } from "@/data/api/WebSocketRealtime";
+import { createApiRepositories } from "@/data/api/ApiRepositories";
 import { createMockRepositories } from "@/data/mock";
 import { MockDatabase } from "@/data/mock/database";
+import { createMockServer } from "@/data/mock/server";
 import { places } from "@/mocks/places";
+
+/** Espera que a condição se cumpra (o tempo real por polling não é imediato). */
+async function eventually(check: () => boolean, timeoutMs = 1000) {
+  const start = Date.now();
+  while (!check()) {
+    if (Date.now() - start > timeoutMs) throw new Error("Condição não cumprida a tempo.");
+    await new Promise((resolve) => setTimeout(resolve, 5));
+  }
+}
 
 /**
  * Testes de contrato: descrevem o comportamento que qualquer implementação dos
- * repositórios deve ter. Hoje correm sobre os mocks; a implementação HTTP pode
- * ser validada com a mesma suite contra um servidor de testes.
+ * repositórios deve ter. Correm sobre os mocks e sobre a implementação HTTP
+ * (com a API simulada); contra um servidor de testes basta outra entrada
+ * `contract(...)` com EXPO_PUBLIC_API_URL a apontar para ele.
  */
-function contract(name: string, make: () => Repositories) {
+function contract(name: string, make: () => Promise<Repositories>) {
   describe(`contrato dos repositórios — ${name}`, () => {
     let repos: Repositories;
-    beforeEach(() => {
-      repos = make();
+    beforeEach(async () => {
+      repos = await make();
     });
 
     it("pedidos: cria, devolve com cliente incluído e notifica subscritores", async () => {
       const seen: string[] = [];
       const off = repos.requests.subscribe((r) => seen.push(r.status));
+      // Dá tempo ao canal de tempo real para ligar (WebSocket) ou fixar o cursor (polling).
+      await new Promise((resolve) => setTimeout(resolve, 20));
       const created = await repos.requests.create({ kind: "cargo", origin: places.ingombota, destination: places.talatona, clientId: "cli-armando" });
-      off();
       expect(created.status).toBe("searching");
       expect(created.client?.id).toBe("cli-armando");
+      await eventually(() => seen.length > 0);
+      off();
       expect(seen).toEqual(["searching"]);
       expect((await repos.requests.get(created.id)).id).toBe(created.id);
     });
 
     it("pedidos: recusa transições fora da máquina de estados com RepositoryError", async () => {
       const created = await repos.requests.create({ kind: "tow", origin: places.maianga, destination: places.talatona, clientId: "cli-armando" });
-      await expect(repos.requests.transition(created.id, "in_transit", "provider")).rejects.toMatchObject({ code: "invalid_transition" });
+      await expect(repos.requests.transition(created.id, "delivered", "system")).rejects.toMatchObject({ code: "invalid_transition" });
       await expect(repos.requests.get("nao-existe")).rejects.toBeInstanceOf(RepositoryError);
     });
 
@@ -51,15 +68,15 @@ function contract(name: string, make: () => Repositories) {
     });
 
     it("autenticação: código errado é recusado; registo confirmado cria o cliente", async () => {
-      await repos.auth.register({ name: "Ana Neto", email: "ana@levaja.ao", phone: "923456789", password: "segredo12" });
-      await expect(repos.auth.verifyCode("ana@levaja.ao", "000000", "register")).rejects.toMatchObject({ code: "validation" });
-      const session = await repos.auth.verifyCode("ana@levaja.ao", "123456", "register");
+      await repos.auth.register({ name: "Ana Neto", email: "ana@angoleva.ao", phone: "923456789", password: "segredo12" });
+      await expect(repos.auth.verifyCode("ana@angoleva.ao", "000000", "register")).rejects.toMatchObject({ code: "validation" });
+      const session = await repos.auth.verifyCode("ana@angoleva.ao", "123456", "register");
       expect(session.user.name).toBe("Ana Neto");
       expect(session.user.phone).toBe("+244 923 456 789");
     });
 
     it("autenticação: o token retoma a sessão até ao logout", async () => {
-      const session = await repos.auth.login("joao@levaja.ao", "segredo12", "provider");
+      const session = await repos.auth.login("joao@angoleva.ao", "segredo12", "provider");
       expect(session.token).toBeTruthy();
       const restored = await repos.auth.restore(session.token);
       expect(restored.user.id).toBe(session.user.id);
@@ -67,6 +84,21 @@ function contract(name: string, make: () => Repositories) {
       await repos.auth.logout(session.token);
       await expect(repos.auth.restore(session.token)).rejects.toMatchObject({ code: "unauthorized" });
       await expect(repos.auth.restore("token-inventado")).rejects.toMatchObject({ code: "unauthorized" });
+    });
+
+    it("chat: a mensagem enviada fica na conversa e a resposta chega em tempo real", async () => {
+      const thread = "support-client";
+      const before = await repos.chat.messages(thread, "support");
+      const replies: string[] = [];
+      const off = repos.chat.subscribe(thread, (event) => {
+        if (event.type === "message" && event.message.from === "support") replies.push(event.message.text);
+      });
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      const sent = await repos.chat.send(thread, "client", "Preciso de ajuda com o recibo");
+      expect(sent).toMatchObject({ from: "client", text: "Preciso de ajuda com o recibo" });
+      await eventually(() => replies.length > 0);
+      off();
+      expect(await repos.chat.messages(thread, "support")).toHaveLength(before.length + 2);
     });
 
     it("suporte e localização", async () => {
@@ -77,4 +109,32 @@ function contract(name: string, make: () => Repositories) {
   });
 }
 
-contract("mock", () => createMockRepositories(new MockDatabase()));
+// Serviços mock: as regras de negócio do "backend" simulado.
+contract("serviços mock", async () => createMockRepositories(new MockDatabase()));
+
+// O que a app usa: repositórios da API sobre a API simulada (formato da API, tempo real por socket).
+contract("API simulada (socket)", async () => {
+  const server = createMockServer(new MockDatabase());
+  http.defaults.adapter = server.adapter;
+  const repos = createApiRepositories({ realtime: server.socket });
+  await repos.auth.login("joao.manuel@angoleva.ao", "segredo12", "provider");
+  return repos;
+});
+
+// Tempo real pelo protocolo WebSocket (o que a app usa em modo mock e com EXPO_PUBLIC_REALTIME_URL).
+contract("API simulada (WebSocket)", async () => {
+  const server = createMockServer(new MockDatabase());
+  http.defaults.adapter = server.adapter;
+  const realtime = new WebSocketRealtime({ url: "mock://realtime", token: getAuthToken, createSocket: server.connect });
+  const repos = createApiRepositories({ realtime });
+  await repos.auth.login("joao.manuel@angoleva.ao", "segredo12", "provider");
+  return repos;
+});
+
+// Igual, mas com o tempo real por polling (como com a API REST real hoje).
+contract("API simulada (polling)", async () => {
+  http.defaults.adapter = createMockServer(new MockDatabase()).adapter;
+  const repos = createApiRepositories({ pollIntervalMs: 5 });
+  await repos.auth.login("joao.manuel@angoleva.ao", "segredo12", "provider");
+  return repos;
+});

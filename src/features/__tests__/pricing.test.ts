@@ -1,3 +1,4 @@
+import { cargoVehicleOptions, vehicleForWeight } from "@/features/booking/catalog";
 import { estimatePrice, needsProposal, PLATFORM_FEE, providerEarningFor, recommendVehicle } from "@/features/booking/pricing";
 
 describe("estimativa de preço", () => {
@@ -34,5 +35,20 @@ describe("estimativa de preço", () => {
     expect(recommendVehicle({ kind: "cargo", distanceKm: 5, cargo: { vehicleClass: "pickup", helper: true } }).title).toBe("Pickup com ajudante");
     expect(needsProposal("house_move")).toBe(true);
     expect(needsProposal("cargo")).toBe(false);
+  });
+});
+
+describe("viatura sugerida pelo peso da carga", () => {
+  const maxOfRange = { upto100: 100, "101to300": 300, "301to500": 500, over500: 501 } as const;
+
+  it("escolhe pickup até 300 kg, carrinha de 301 a 500 kg e camião acima", () => {
+    expect(vehicleForWeight).toEqual({ upto100: "pickup", "101to300": "pickup", "301to500": "van", over500: "truck" });
+  });
+
+  it("a viatura sugerida aguenta sempre o peso máximo da faixa", () => {
+    for (const [range, kg] of Object.entries(maxOfRange)) {
+      const vehicle = cargoVehicleOptions.find((v) => v.value === vehicleForWeight[range as keyof typeof maxOfRange])!;
+      expect(vehicle.maxKg).toBeGreaterThanOrEqual(kg);
+    }
   });
 });

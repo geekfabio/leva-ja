@@ -4,6 +4,8 @@ import { RepositoryError } from "../repositories/types";
 export const mockRuntime = {
   latencyMs: 350,
   failNetwork: false,
+  /** Validade do token de acesso emitido pela API simulada. */
+  accessTokenTtlMs: 60 * 60 * 1000,
 };
 
 export function configureMock(options: Partial<typeof mockRuntime>) {
@@ -12,7 +14,8 @@ export function configureMock(options: Partial<typeof mockRuntime>) {
 
 /** Executa uma operação da base mock com latência e, se configurado, falha de rede. */
 export async function simulate<T>(operation: () => T, latencyMs = mockRuntime.latencyMs): Promise<T> {
-  if (latencyMs > 0) await new Promise((resolve) => setTimeout(resolve, latencyMs));
+  // Latência global a zero (testes) anula também as latências próprias de cada operação.
+  if (latencyMs > 0 && mockRuntime.latencyMs > 0) await new Promise((resolve) => setTimeout(resolve, latencyMs));
   if (mockRuntime.failNetwork) throw new RepositoryError("network", "Sem ligação ao servidor (simulado).");
   return operation();
 }

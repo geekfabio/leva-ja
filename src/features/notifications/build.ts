@@ -12,7 +12,7 @@ export type AppNotification = {
   href?: string;
 };
 
-const clientCopy: Partial<Record<ServiceStatus, (r: ServiceRequest) => [string, string]>> = {
+export const clientCopy: Partial<Record<ServiceStatus, (r: ServiceRequest) => [string, string]>> = {
   assigned: (r) => ["Prestador encontrado", `O teu pedido de ${serviceTitle[r.kind].toLowerCase()} foi aceite.`],
   en_route: (r) => ["Prestador a caminho", `Segue para ${r.origin.area}.`],
   arrived: () => ["O prestador chegou", "Confirma a viatura antes de começar."],

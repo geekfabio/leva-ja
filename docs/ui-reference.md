@@ -1,10 +1,10 @@
-# Leva Já — referências visuais mobile
+# AngoLeva — referências visuais mobile
 
-Este guia reúne as referências UI/UX produzidas para as aplicações mobile da Leva Já. As imagens são materiais de direcção visual: orientam a implementação com dados mockados; não representam integrações reais de GPS, pagamentos, chamadas ou suporte.
+Este guia reúne as referências UI/UX produzidas para as aplicações mobile da AngoLeva. As imagens são materiais de direcção visual: orientam a implementação com dados mockados; não representam integrações reais de GPS, pagamentos, chamadas ou suporte.
 
 ## Regras visuais comuns
 
-- Verde Leva Já para acções e estados activos; superfícies claras e tipografia de contraste elevado.
+- Verde AngoLeva para acções e estados activos; superfícies claras e tipografia de contraste elevado.
 - Acção principal sempre fixa no fundo quando a decisão seguinte for inequívoca.
 - Mapa e acompanhamento aparecem apenas quando ajudam o utilizador a tomar uma decisão ou a acompanhar a execução.
 - O cliente vê o estado do pedido; o prestador vê também a viatura, o ganho e a próxima acção operacional.
@@ -18,7 +18,7 @@ Este guia reúne as referências UI/UX produzidas para as aplicações mobile da
 | 05 | Escolha de perfil | Separar cliente e prestador desde a entrada. |
 | 06–10 | Acesso | Login, criação de conta, recuperação, validação e localização. |
 
-<img src="assets/ui-reference/01-splash.jpg" width="220" alt="Splash Leva Já"> <img src="assets/ui-reference/02-onboarding-assistance.jpg" width="220" alt="Onboarding de assistência"> <img src="assets/ui-reference/03-onboarding-live-tracking.jpg" width="220" alt="Onboarding de acompanhamento"> <img src="assets/ui-reference/04-onboarding-safety.jpg" width="220" alt="Onboarding de segurança">
+<img src="assets/ui-reference/01-splash.jpg" width="220" alt="Splash AngoLeva"> <img src="assets/ui-reference/02-onboarding-assistance.jpg" width="220" alt="Onboarding de assistência"> <img src="assets/ui-reference/03-onboarding-live-tracking.jpg" width="220" alt="Onboarding de acompanhamento"> <img src="assets/ui-reference/04-onboarding-safety.jpg" width="220" alt="Onboarding de segurança">
 
 <img src="assets/ui-reference/05-profile-selection.jpg" width="220" alt="Selecção de perfil"> <img src="assets/ui-reference/06-login.jpg" width="220" alt="Login"> <img src="assets/ui-reference/07-registration.jpg" width="220" alt="Criação de conta"> <img src="assets/ui-reference/08-password-recovery.jpg" width="220" alt="Recuperar acesso">
 

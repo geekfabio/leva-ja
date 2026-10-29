@@ -1,4 +1,4 @@
-import { MockSecureStorage, resetMockDatabase, sessionVault, setSecureStorage } from "@/data";
+import { configureMock, MockSecureStorage, mockRuntime, resetMockDatabase, sessionVault, setSecureStorage } from "@/data";
 import { useSessionStore } from "@/stores/useSessionStore";
 
 const initial = useSessionStore.getState();
@@ -23,9 +23,9 @@ describe("sessão guardada no armazenamento seguro", () => {
   it("login guarda o token e o perfil; ao reabrir a sessão é retomada", async () => {
     useSessionStore.getState().completeOnboarding();
     useSessionStore.getState().setRole("provider");
-    await useSessionStore.getState().login("joao@levaja.ao", "segredo12");
+    await useSessionStore.getState().login("joao@angoleva.ao", "segredo12");
     const { token, user } = useSessionStore.getState();
-    expect(await sessionVault().load()).toEqual({ token, role: "provider" });
+    expect(await sessionVault().load()).toEqual({ token, refreshToken: expect.any(String), role: "provider" });
 
     reopen();
     await useSessionStore.getState().restore();
@@ -33,8 +33,24 @@ describe("sessão guardada no armazenamento seguro", () => {
     expect(useSessionStore.getState().user.id).toBe(user.id);
   });
 
+  it("ao reabrir com o token de acesso expirado, renova-o com o refresh token", async () => {
+    const ttl = mockRuntime.accessTokenTtlMs;
+    configureMock({ accessTokenTtlMs: 1 });
+    await useSessionStore.getState().login("ana@angoleva.ao", "segredo12");
+    configureMock({ accessTokenTtlMs: ttl });
+    const old = await sessionVault().load();
+    await new Promise((resolve) => setTimeout(resolve, 5));
+
+    reopen();
+    await useSessionStore.getState().restore();
+    const stored = await sessionVault().load();
+    expect(useSessionStore.getState()).toMatchObject({ authenticated: true, token: stored?.token });
+    expect(stored?.token).not.toBe(old?.token);
+    expect(stored?.refreshToken).not.toBe(old?.refreshToken);
+  });
+
   it("logout apaga a sessão guardada e invalida o token", async () => {
-    await useSessionStore.getState().login("ana@levaja.ao", "segredo12");
+    await useSessionStore.getState().login("ana@angoleva.ao", "segredo12");
     const { token } = useSessionStore.getState();
     await useSessionStore.getState().logout();
     expect(await sessionVault().load()).toBeNull();

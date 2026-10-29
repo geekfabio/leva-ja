@@ -66,7 +66,7 @@ export function SelectField({
             <Pressable
               key={option.value}
               accessibilityRole="radio"
-              accessibilityState={{ checked: active }}
+              accessibilityState={{ checked: active }} aria-checked={active}
               onPress={() => {
                 onChange(option.value);
                 sheet.current?.dismiss();

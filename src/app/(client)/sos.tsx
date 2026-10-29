@@ -22,7 +22,7 @@ export default function SosScreen() {
     mutationFn: () => repositories().support.sendSosAlert({ requestId: active?.id, coords: location?.coords ?? { latitude: 0, longitude: 0 } }),
     onSuccess: () => {
       setSent(true);
-      toast.success({ title: "Alerta enviado", message: "A equipa de segurança Leva Já vai contactar-te." });
+      toast.success({ title: "Alerta enviado", message: "A equipa de segurança AngoLeva vai contactar-te." });
     },
   });
   return (

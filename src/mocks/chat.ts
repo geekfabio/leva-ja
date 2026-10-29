@@ -13,7 +13,7 @@ export const autoReplies: Record<"provider" | "client" | "support", string[]> = 
   provider: ["Recebido, obrigado!", "Combinado. Já estou perto.", "Sem problema, aguardo no local."],
   client: ["Perfeito, obrigado.", "Estou à espera.", "Ok, até já!"],
   support: [
-    "Olá! Sou a Marta, do apoio Leva Já. Em que posso ajudar?",
+    "Olá! Sou a Marta, do apoio AngoLeva. Em que posso ajudar?",
     "Obrigada pela informação. Estou a verificar o teu pedido.",
     "Registei a ocorrência. Vais receber uma actualização em breve.",
   ],

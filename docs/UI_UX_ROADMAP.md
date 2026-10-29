@@ -1,4 +1,4 @@
-# Roadmap UI/UX — Leva Já
+# Roadmap UI/UX — AngoLeva
 
 ## Princípios
 
@@ -48,13 +48,13 @@
 
 ### Rotas legadas a remover ou substituir
 
-As rotas de e-commerce ainda presentes no repositório (`cart`, `checkout`, `category`, `merchant`, `product`, `search` e componentes/mocks `commerce`) não fazem parte do Leva Já. Não estão expostas no fluxo novo e devem ser removidas na próxima limpeza técnica.
+As rotas de e-commerce ainda presentes no repositório (`cart`, `checkout`, `category`, `merchant`, `product`, `search` e componentes/mocks `commerce`) não fazem parte do AngoLeva. Não estão expostas no fluxo novo e devem ser removidas na próxima limpeza técnica.
 
 ## Activos de marca
 
 | Activo | Uso |
 | --- | --- |
-| `assets/brand/leva-ja-mark.png` | Símbolo principal e marca na app |
+| `assets/brand/angoleva-mark.png` | Símbolo principal e marca na app |
 | `assets/icons/app-icon.png` | Ícone para lojas e dispositivos |
 | `assets/icons/adaptive-icon.png` | Ícone Android adaptativo |
 | `assets/icons/favicon.png` | Favicon web |

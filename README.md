@@ -1,6 +1,8 @@
-# Leva Já
+# AngoLeva
 
 Aplicação mobile de assistência, transporte e logística em Luanda: reboque de viaturas, transporte de carga com pickup, pequenas mudanças e mudanças completas de casa. Tem dois perfis — **Cliente** e **Prestador de Serviço** — e, nesta fase, funciona inteiramente com dados mockados, sem backend.
+
+O projecto chamava-se **Leva Já**. Com a mudança para AngoLeva passaram a ser `angoleva`: o nome do pacote npm, o slug Expo, o esquema de links (`angoleva://`), os identificadores Android/iOS (`ao.angoleva.app`), as chaves do armazenamento seguro (`angoleva.*`), o domínio de demonstração (`@angoleva.ao`) e o prefixo dos códigos de pedido (`AL-`). O repositório GitHub mantém o nome `leva-ja`.
 
 A interface segue as 46 referências documentadas em [docs/ui-reference.md](docs/ui-reference.md), adaptadas a Android e iOS (e à web, para revisão).
 
@@ -18,7 +20,7 @@ Fluxo de entrada: **splash → onboarding → escolha de perfil → login**. Os 
 | Perfil | Como entrar | Dados |
 | --- | --- | --- |
 | Cliente | Escolhe «Preciso de um serviço» e entra | `armando@email.com` + qualquer palavra-passe com 6+ caracteres |
-| Prestador | Escolhe «Sou prestador» e entra | `joao.manuel@levaja.ao` + qualquer palavra-passe com 6+ caracteres |
+| Prestador | Escolhe «Sou prestador» e entra | `joao.manuel@angoleva.ao` + qualquer palavra-passe com 6+ caracteres |
 | Registo / recuperação | «Criar conta» ou «Esqueci-me da palavra-passe» | Código de confirmação `123456` |
 
 Atalho: no perfil de cada área existe «Mudar para prestador/cliente».
@@ -28,8 +30,17 @@ Atalho: no perfil de cada área existe «Mudar para prestador/cliente».
 ```bash
 npm run typecheck   # TypeScript
 npm run lint        # ESLint (eslint-config-expo)
-npm test            # Jest: lógica de negócio, stores, kit e fluxos
+npm test            # Jest: lógica de negócio, API (contrato, segurança, tempo real, pagamentos…), stores e ecrãs
+npm run test:e2e    # Playwright: gera o build web e percorre a app no browser
 ```
+
+A suite E2E (`e2e/`) abre todas as rotas e verifica que nenhuma dá erro. Corre também três percursos completos com a API simulada:
+
+- a entrada na app (onboarding, login e localização);
+- o pedido do cliente até ao recibo, com o pagamento por referência Multicaixa confirmado pelo «banco»;
+- o serviço do prestador até o ganho chegar à carteira pelo tempo real.
+
+Usa o Chromium já instalado pelo Playwright (`@playwright/test` 1.56.1).
 
 ## Stack
 
@@ -63,10 +74,12 @@ src/
 
 ### Dados: padrão Repository
 
-Os ecrãs e as stores nunca importam mocks: falam com repositórios (`src/data`). Cada repositório tem um contrato (`AuthRepository`, `RequestRepository`, `ProviderRepository`, `LocationRepository`, `ChatRepository`, `AccountRepository`, `SupportRepository`, `MediaRepository`) e duas implementações:
+Os ecrãs e as stores nunca importam mocks: falam com repositórios (`src/data`). Cada repositório tem um contrato (`AuthRepository`, `RequestRepository`, `ProviderRepository`, `LocationRepository`, `ChatRepository`, `AccountRepository`, `SupportRepository`, `MediaRepository`). A implementação é sempre a da API (`src/data/api`): recebe JSON no formato do backend (`snake_case`, envelopes `{ data }`), valida-o com Zod e converte-o para o domínio com mappers.
 
-- **mock** (por omissão): base de dados em memória semeada a partir de `src/mocks`, com latência, erros de domínio, falhas de rede simuladas e tempo real por subscrição;
-- **http**: esqueleto REST com os endpoints propostos, activado com `EXPO_PUBLIC_DATA_SOURCE=http` e `EXPO_PUBLIC_API_URL`.
+- **mock** (por omissão): quem responde é uma **API simulada dentro da app** (`src/data/mock/server.ts`), sobre dados de demonstração. Simula latência, erros, falhas de rede e tempo real por socket.
+- **http**: o backend real em `EXPO_PUBLIC_API_URL` (`EXPO_PUBLIC_DATA_SOURCE=http`), com tempo real por polling até haver WebSocket.
+
+A configuração está em `.env` (copiar de [.env.example](.env.example)). O contrato que o backend tem de cumprir está em [docs/api.md](docs/api.md).
 
 A sessão (token e perfil) e o fim do onboarding ficam no **armazenamento seguro** (`SecureStorage` + `SessionVault`), retomados no splash. Por omissão é um SecureStore simulado em memória; com `EXPO_PUBLIC_SECURE_STORAGE=device` passa a usar o `expo-secure-store` (Keychain/Keystore) no Android e iOS.
 
@@ -178,4 +191,6 @@ O protótipo anterior (separadores `/legacy`, fluxos `request/`, `transport/`, `
 
 - Os dados mockados vivem em memória (`MockDatabase`) e voltam ao início ao recarregar a app.
 - O armazenamento seguro mock também é em memória: a sessão é retomada enquanto a app estiver aberta (ex.: voltar ao splash), não depois de a fechar. Para persistir de verdade no dispositivo, usar `EXPO_PUBLIC_SECURE_STORAGE=device`.
-- A revisão visual foi feita no browser (Playwright, 390 × 844); as builds Android e iOS foram exportadas mas não testadas em dispositivo — ver [design-qa.md](design-qa.md).
+- A revisão visual e os testes E2E correm no browser (Playwright, 390 × 844). As builds Android e iOS foram exportadas mas não testadas em dispositivo. GPS, câmara, notificações push e WebSocket reais (`device` / `EXPO_PUBLIC_REALTIME_URL`) estão testados com módulos simulados e precisam de validação num telemóvel — ver [design-qa.md](design-qa.md).
+- As notificações push reais precisam de `extra.eas.projectId` no `app.json` (projecto EAS) e de uma development build; no Expo Go não há push remoto.
+- O processador de pagamentos é simulado: a forma da API está fechada (`docs/api.md` → Pagamentos), falta ligar a EMIS / Multicaixa Express e a tokenização de cartões no backend.

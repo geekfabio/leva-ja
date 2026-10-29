@@ -3,17 +3,17 @@ import { MockSecureStorage, SessionVault } from "@/data/storage";
 describe("armazenamento seguro (mock)", () => {
   it("guarda, lê e apaga como o expo-secure-store", async () => {
     const storage = new MockSecureStorage();
-    expect(await storage.getItem("levaja.x")).toBeNull();
-    await storage.setItem("levaja.x", "1");
-    expect(await storage.getItem("levaja.x")).toBe("1");
-    await storage.deleteItem("levaja.x");
-    expect(await storage.getItem("levaja.x")).toBeNull();
+    expect(await storage.getItem("angoleva.x")).toBeNull();
+    await storage.setItem("angoleva.x", "1");
+    expect(await storage.getItem("angoleva.x")).toBe("1");
+    await storage.deleteItem("angoleva.x");
+    expect(await storage.getItem("angoleva.x")).toBeNull();
   });
 
   it("recusa chaves e valores que o nativo não aceita", async () => {
     const storage = new MockSecureStorage();
     await expect(storage.setItem("chave inválida", "1")).rejects.toMatchObject({ code: "validation" });
-    await expect(storage.setItem("levaja.grande", "x".repeat(3000))).rejects.toMatchObject({ code: "validation" });
+    await expect(storage.setItem("angoleva.grande", "x".repeat(3000))).rejects.toMatchObject({ code: "validation" });
   });
 });
 
@@ -32,8 +32,8 @@ describe("SessionVault", () => {
 
   it("descarta dados corrompidos", async () => {
     const storage = new MockSecureStorage();
-    await storage.setItem("levaja.session", "{nao é json");
+    await storage.setItem("angoleva.session", "{nao é json");
     expect(await new SessionVault(storage).load()).toBeNull();
-    expect(storage.keys()).not.toContain("levaja.session");
+    expect(storage.keys()).not.toContain("angoleva.session");
   });
 });

@@ -89,7 +89,7 @@ export default function ReceiptScreen() {
         <View style={{ alignItems: "center", gap: 4 }}>
           <SuccessBurst size={64} />
           <AppText variant="h2" align="center" accessibilityRole="header">
-            Obrigado por escolher a Leva Já
+            Obrigado por escolher a AngoLeva
           </AppText>
           <AppText variant="body" color={colors.muted}>
             Pagamento confirmado

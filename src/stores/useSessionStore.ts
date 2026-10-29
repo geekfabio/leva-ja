@@ -1,11 +1,11 @@
 import { create } from "zustand";
 import type { Client, Role } from "@/types/domain";
-import { demoIdentity, isRepositoryError, repositories, sessionVault, type Session } from "@/data";
+import { demoIdentity, isRepositoryError, onTokensRefreshed, repositories, sessionVault, setAuthTokens, type Session } from "@/data";
 
 type PendingRegistration = { name: string; email: string; phone: string };
 
 /** Utilizador sem sessão (modo API antes do login). */
-const GUEST: Client = { id: "guest", name: "Convidado", email: "", phone: "", initials: "LJ", rating: 0 };
+const GUEST: Client = { id: "guest", name: "Convidado", email: "", phone: "", initials: "AL", rating: 0 };
 
 type SessionState = {
   /** `true` depois de ler a sessão guardada no arranque (o splash espera por isto). */
@@ -39,6 +39,8 @@ type SessionState = {
   updateProfile: (data: Partial<Pick<Client, "name" | "email" | "phone">>) => Promise<void>;
   changePassword: (current: string, next: string) => Promise<void>;
   logout: () => Promise<void>;
+  /** A API recusou o token: termina a sessão local, mantém o perfil para o novo login. */
+  expire: () => Promise<void>;
 };
 
 /** Falhar a escrita no armazenamento seguro não impede a sessão em curso. */
@@ -53,15 +55,23 @@ export const useSessionStore = create<SessionState>((set, get) => {
   const start = (session: Session, extra: Partial<SessionState> = {}) => {
     const role = get().role ?? "client";
     set((s) => ({ ...extra, authenticated: true, role, token: session.token, user: session.user, providerId: session.providerId ?? s.providerId }));
-    return persist(sessionVault().save({ token: session.token, role }));
+    return persist(sessionVault().save({ token: session.token, refreshToken: session.refreshToken, role }));
   };
+
+  // A API renovou os tokens (src/data/http/client.ts): a sessão guardada acompanha.
+  onTokensRefreshed(({ token, refreshToken }) => {
+    const { authenticated, role } = get();
+    if (!authenticated) return;
+    set({ token });
+    persist(sessionVault().save({ token, refreshToken, role: role ?? "client" }));
+  });
 
   return {
     restored: false,
     hasOnboarded: false,
     role: null,
     authenticated: false,
-    token: null,
+    token: demoIdentity?.token ?? null,
     user: demoIdentity?.user ?? GUEST,
     providerId: demoIdentity?.providerId ?? null,
     pendingRegistration: null,
@@ -74,11 +84,20 @@ export const useSessionStore = create<SessionState>((set, get) => {
         const [hasOnboarded, stored] = await Promise.all([vault.hasOnboarded(), vault.load()]);
         if (hasOnboarded) set({ hasOnboarded });
         if (!stored) return;
+        const auth = repositories().auth;
         try {
-          const session = await repositories().auth.restore(stored.token);
+          const session = await auth.restore(stored.token).catch(async (error: unknown) => {
+            // Token de acesso expirado: tenta renovar com o refresh token.
+            if (!(isRepositoryError(error) && error.code === "unauthorized" && stored.refreshToken)) throw error;
+            const fresh = await auth.refresh(stored.refreshToken);
+            await vault.save({ token: fresh.token, refreshToken: fresh.refreshToken, role: stored.role });
+            return fresh;
+          });
+          const refreshToken = session.refreshToken ?? stored.refreshToken;
+          setAuthTokens({ token: session.token, refreshToken });
           set((s) => ({ authenticated: true, role: stored.role, token: session.token, user: session.user, providerId: session.providerId ?? s.providerId }));
         } catch (error) {
-          // Token inválido: apaga-o. Sem rede: mantém-no para a próxima abertura.
+          // Sessão recusada: apaga-a. Sem rede: mantém-na para a próxima abertura.
           if (isRepositoryError(error) && error.code === "unauthorized") await vault.clear();
         }
       } catch (error) {
@@ -124,6 +143,11 @@ export const useSessionStore = create<SessionState>((set, get) => {
       set({ authenticated: false, role: null, token: null });
       await persist(sessionVault().clear());
       if (token) await repositories().auth.logout(token).catch(() => undefined);
+    },
+    expire: async () => {
+      setAuthTokens(null);
+      set({ authenticated: false, token: null });
+      await persist(sessionVault().clear());
     },
   };
 });

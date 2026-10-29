@@ -1,4 +1,4 @@
-/** Biblioteca de componentes da nova experiência Leva Já (as pastas ui/, orders/ e provider/ servem os ecrãs legados). */
+/** Biblioteca de componentes da AngoLeva. */
 export { AppText } from "./core/AppText";
 export { PrimaryButton, SecondaryButton, DangerButton, TextButton } from "./core/Buttons";
 export { BottomAction } from "./core/BottomAction";

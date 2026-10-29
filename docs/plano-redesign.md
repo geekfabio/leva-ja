@@ -1,4 +1,4 @@
-# Plano de redesign — Leva Já
+# Plano de redesign — AngoLeva
 
 Estado: implementação da base, fluxos e componentes realizada; validação visual em navegador/dispositivo pendente por restrições do ambiente. Ver [resultado da implementação](transport-redesign.md).
 
@@ -6,7 +6,7 @@ Actualização de âmbito — 11 de Outubro de 2026: o produto inclui cargas lev
 
 ## Objectivo
 
-Dar continuidade visual e funcional à experiência, desde a entrada até à conclusão de uma assistência, para clientes e parceiros. Usar a Bolt como referência principal para o verde, clareza das acções e simplicidade; Uber e Yango como referências de hierarquia, navegação e informação sobre o serviço. Preservar a identidade Leva Já.
+Dar continuidade visual e funcional à experiência, desde a entrada até à conclusão de uma assistência, para clientes e parceiros. Usar a Bolt como referência principal para o verde, clareza das acções e simplicidade; Uber e Yango como referências de hierarquia, navegação e informação sobre o serviço. Preservar a identidade AngoLeva.
 
 Prioridade: autenticação, pedido do cliente, execução pelo parceiro e pós-serviço. Administração e comércio recebem os padrões comuns; o redesign completo dessas áreas fica numa etapa posterior.
 

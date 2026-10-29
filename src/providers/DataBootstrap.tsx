@@ -1,5 +1,8 @@
 import { PropsWithChildren, useEffect } from "react";
-import { repositories } from "@/data";
+import { router } from "expo-router";
+import { onRealtimeReconnect, onUnauthorized, repositories } from "@/data";
+import { toast } from "@/lib/toast";
+import { usePushNotifications } from "@/features/notifications/usePushNotifications";
 import { useAccountStore } from "@/stores/useAccountStore";
 import { useProviderStore } from "@/stores/useProviderStore";
 import { useServiceStore } from "@/stores/useServiceStore";
@@ -13,11 +16,35 @@ import { useSessionStore } from "@/stores/useSessionStore";
 export function DataBootstrap({ children }: PropsWithChildren) {
   const userId = useSessionStore((s) => s.user.id);
   const providerId = useSessionStore((s) => s.providerId);
+  usePushNotifications();
 
   // Retoma a sessão guardada no armazenamento seguro (uma vez, no arranque).
   useEffect(() => {
     useSessionStore.getState().restore();
   }, []);
+
+  // O tempo real voltou depois de uma quebra: recarrega o que pode ter mudado entretanto.
+  useEffect(
+    () =>
+      onRealtimeReconnect(() => {
+        useServiceStore.getState().hydrate();
+        const { providerId } = useSessionStore.getState();
+        if (providerId) useProviderStore.getState().hydrate(providerId);
+      }),
+    [],
+  );
+
+  // Token recusado pela API (expirado ou revogado): volta ao login.
+  useEffect(
+    () =>
+      onUnauthorized(() => {
+        if (!useSessionStore.getState().authenticated) return;
+        useSessionStore.getState().expire();
+        toast.info({ title: "Sessão expirada", message: "Entra de novo para continuar." });
+        router.replace("/login" as never);
+      }),
+    [],
+  );
 
   useEffect(() => {
     useServiceStore.getState().hydrate();

@@ -15,7 +15,7 @@ export default function LoginScreen() {
   const role = useSessionStore((s) => s.role) ?? "client";
   const { control, handleSubmit, formState, setError } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: role === "provider" ? "joao.manuel@levaja.ao" : "armando@email.com", password: "" },
+    defaultValues: { email: role === "provider" ? "joao.manuel@angoleva.ao" : "armando@email.com", password: "" },
   });
   const submit = handleSubmit(async ({ email, password }) => {
     try {

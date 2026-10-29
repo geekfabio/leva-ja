@@ -1,0 +1,65 @@
+{
+  "data": {
+    "id": "req-30120",
+    "code": "AL-30120",
+    "service_type": "tow",
+    "status": "en_route",
+    "client_id": "cli-armando",
+    "provider_id": "prv-paulo",
+    "client": {
+      "id": "cli-armando",
+      "full_name": "Armando Manuel",
+      "email": "armando@email.com",
+      "phone": "+244 923 456 789",
+      "rating": 4.8,
+      "avatar_url": "https://cdn.angoleva.ao/avatars/cli-armando.jpg"
+    },
+    "provider": {
+      "id": "prv-paulo",
+      "full_name": "Paulo Domingos",
+      "phone": "+244 912 000 222",
+      "rating": 4.9,
+      "reviews_count": 212,
+      "verified": true,
+      "avatar_url": null,
+      "vehicle": {
+        "id": "veh-paulo",
+        "brand": "Isuzu",
+        "model": "NPR Reboque",
+        "plate": "LD-12-34-AB",
+        "color": "Branco",
+        "class": "tow_truck",
+        "category_label": "Reboque plataforma",
+        "capacity_kg": 3500,
+        "year": 2021
+      },
+      "location": { "lat": -8.8147, "lng": 13.2302 }
+    },
+    "pickup": { "id": "plc-maianga", "label": "Largo da Maianga", "district": "Maianga", "city": "Luanda", "lat": -8.8256, "lng": 13.2311 },
+    "dropoff": { "id": "plc-talatona", "label": "Oficina Talatona", "district": "Talatona", "city": "Luanda", "lat": -8.9167, "lng": 13.1833 },
+    "stops": [],
+    "distance_km": 14.2,
+    "duration_min": 32,
+    "created_at": "2026-10-27T09:15:00Z",
+    "scheduled_for": null,
+    "tow_details": { "incident": "mechanical", "brand": "Toyota", "model": "Corolla", "plate": "LD-98-76-CD", "color": "Cinzento", "can_move": false },
+    "cargo_details": null,
+    "moving_details": null,
+    "photos": [{ "id": "ph-1", "url": "https://cdn.angoleva.ao/requests/req-30120/1.jpg", "caption": "Viatura parada" }],
+    "pickup_photos": [],
+    "instructions": "Estou junto à farmácia.",
+    "pricing": { "base_kz": 8000, "distance_kz": 3500, "extras_kz": 1500, "platform_fee_kz": 500, "total_kz": 13500 },
+    "provider_earning_kz": 11050,
+    "proposal": null,
+    "payment_method": "bank_reference",
+    "rating": null,
+    "review": null,
+    "proof": null,
+    "timeline": [
+      { "status": "searching", "at": "2026-10-27T09:15:00Z" },
+      { "status": "assigned", "at": "2026-10-27T09:16:10Z" },
+      { "status": "en_route", "at": "2026-10-27T09:17:00Z" }
+    ],
+    "cancel_reason": null
+  }
+}

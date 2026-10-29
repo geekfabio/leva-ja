@@ -59,7 +59,8 @@ export default function ActiveServiceScreen() {
     else toast.error({ title: "Não foi possível actualizar", message: useServiceStore.getState().lastError ?? undefined });
   };
   const registerPhotos = async () => {
-    const photos = await repositories().media.pickupSet();
+    const photos = await repositories().media.pickupSet().catch(() => []);
+    if (!photos.length) return;
     if (await useServiceStore.getState().addPickupPhotos(request.id, photos)) toast.success({ title: "Fotos registadas", message: "O cliente vai rever e confirmar a recolha." });
   };
 

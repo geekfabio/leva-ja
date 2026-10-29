@@ -1,12 +1,12 @@
 {
   "expo": {
-    "name": "Leva Já",
-    "slug": "leva-ja",
-    "scheme": "levaja",
+    "name": "AngoLeva",
+    "slug": "angoleva",
+    "scheme": "angoleva",
     "version": "0.1.0",
     "icon": "./assets/icons/app-icon.png",
     "splash": {
-      "image": "./assets/brand/leva-ja-mark.png",
+      "image": "./assets/brand/angoleva-mark.png",
       "resizeMode": "contain",
       "backgroundColor": "#053420"
     },
@@ -19,23 +19,40 @@
     "plugins": [
       "expo-router",
       "expo-secure-store",
-      "expo-location",
-      "expo-notifications",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "A AngoLeva usa a tua localização para encontrar ajuda perto de ti e indicar a origem do pedido."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#0A8743"
+        }
+      ],
       "expo-font",
-      "expo-asset"
+      "expo-asset",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "A AngoLeva usa as tuas fotografias para mostrar a carga, a viatura ou a entrega ao prestador.",
+          "cameraPermission": "A AngoLeva usa a câmara para fotografar a carga, a viatura ou o comprovativo de entrega."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
     },
     "android": {
-      "package": "ao.leva.app",
+      "package": "ao.angoleva.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/icons/adaptive-icon.png",
         "backgroundColor": "#34D186"
       }
     },
     "ios": {
-      "bundleIdentifier": "ao.leva.app"
+      "bundleIdentifier": "ao.angoleva.app"
     }
   }
 }

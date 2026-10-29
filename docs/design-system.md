@@ -1,6 +1,6 @@
-# Leva Já — sistema visual
+# AngoLeva — sistema visual
 
-Direcção: interfaces simples de mobilidade, com o verde como elemento principal, inspirado na Bolt. Mantém a marca Leva Já e os fluxos locais de demonstração.
+Direcção: interfaces simples de mobilidade, com o verde como elemento principal, inspirado na Bolt. Mantém a marca AngoLeva e os fluxos locais de demonstração.
 
 ## Paleta e hierarquia
 
