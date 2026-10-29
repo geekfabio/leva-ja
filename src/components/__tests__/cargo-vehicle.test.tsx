@@ -50,3 +50,20 @@ test("o utilizador pode trocar a viatura sugerida; a escolha segue para o pedido
   await waitFor(() => expect(router.push).toHaveBeenCalled());
   expect(useBookingStore.getState().draft.cargo).toMatchObject({ weight: "over500", vehicleClass: "van" });
 });
+
+test("entrega de mercadoria: tuk-tuk para cargas pequenas, troca automática ao subir peso ou volume", async () => {
+  useBookingStore.getState().start("cargo", "goods");
+  render(<CargoStep />);
+  expect(checked(/^Tuk-tuk/)).toBe(true);
+
+  fireEvent.press(screen.getByRole("radio", { name: "101 – 300 kg" }));
+  expect(checked(/^Pickup/)).toBe(true);
+
+  // «Até 100 kg» é também a descrição do cartão do tuk-tuk: o primeiro é o peso.
+  fireEvent.press(screen.getAllByRole("radio", { name: "Até 100 kg" })[0]!);
+  expect(checked(/^Tuk-tuk/)).toBe(true);
+  expect(screen.getByText(/Sugerimos tuk-tuk para até 100 kg e volume pequeno/)).toBeTruthy();
+
+  fireEvent.press(screen.getByRole("radio", { name: "Médio · 1 a 3 m³" }));
+  expect(checked(/^Pickup/)).toBe(true);
+});

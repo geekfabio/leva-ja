@@ -32,7 +32,7 @@ export function useClientSimulation(request: ServiceRequest | undefined) {
       if (request.proposal?.status === "sent") return;
       const t = setTimeout(() => {
         const amount = Math.round((request.price.total - request.price.platformFee + 3500) / 500) * 500;
-        useServiceStore.getState().submitProposal(request.id, amount, "Inclui 2 ajudantes, protecção dos móveis e escadas sem elevador.", simulatedProviderFor(request.kind));
+        useServiceStore.getState().submitProposal(request.id, amount, "Inclui 2 ajudantes, protecção dos móveis e escadas sem elevador.", simulatedProviderFor(request));
       }, step.afterMs);
       return () => clearTimeout(t);
     }
