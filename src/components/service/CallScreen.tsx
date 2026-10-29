@@ -12,7 +12,7 @@ import { PulseRings } from "@/components/map/PulseRings";
 
 function CallToggle({ label, active, onPress, icon }: { label: string; active: boolean; onPress: () => void; icon: React.ReactNode }) {
   return (
-    <Pressable accessibilityRole="switch" accessibilityState={{ checked: active }} accessibilityLabel={label} onPress={onPress} style={{ alignItems: "center", gap: 8 }}>
+    <Pressable accessibilityRole="switch" accessibilityState={{ checked: active }} aria-checked={active} accessibilityLabel={label} onPress={onPress} style={{ alignItems: "center", gap: 8 }}>
       <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: active ? colors.accent : "rgba(255,255,255,0.12)", alignItems: "center", justifyContent: "center", borderWidth: active ? 0 : 1, borderColor: "rgba(255,255,255,0.2)" }}>
         {icon}
       </View>

@@ -19,7 +19,7 @@ export function AvailabilityToggle({ variant = "switch" }: { variant?: "switch" 
     return (
       <Pressable
         accessibilityRole="switch"
-        accessibilityState={{ checked: online }}
+        accessibilityState={{ checked: online }} aria-checked={online}
         accessibilityLabel={online ? "Disponível" : "Indisponível"}
         accessibilityHint="Alterna a disponibilidade para novos pedidos"
         onPress={toggle}
@@ -33,7 +33,7 @@ export function AvailabilityToggle({ variant = "switch" }: { variant?: "switch" 
       </Pressable>
     );
   return (
-    <Pressable accessibilityRole="switch" accessibilityState={{ checked: online }} accessibilityLabel={online ? "Online" : "Offline"} onPress={toggle} style={{ alignItems: "center", gap: 2 }}>
+    <Pressable accessibilityRole="switch" accessibilityState={{ checked: online }} aria-checked={online} accessibilityLabel={online ? "Online" : "Offline"} onPress={toggle} style={{ alignItems: "center", gap: 2 }}>
       <View pointerEvents="none">
         <Switch value={online} color={colors.accent} />
       </View>

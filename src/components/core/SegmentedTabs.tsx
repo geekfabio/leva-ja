@@ -36,7 +36,7 @@ export function SegmentedTabs<T extends string>({
           <ScalePressable
             key={option.value}
             accessibilityRole="tab"
-            accessibilityState={{ selected: active }}
+            accessibilityState={{ selected: active }} aria-selected={active}
             accessibilityLabel={option.label}
             onPress={() => onChange(option.value)}
             style={({ pressed }) => ({

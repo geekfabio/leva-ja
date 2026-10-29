@@ -135,11 +135,25 @@ export const volumeOptions: { value: VolumeSize; label: string; hint: string }[]
   { value: "large", label: "Grande", hint: "Mais de 3 m³" },
 ];
 
-export const cargoVehicleOptions: { value: Exclude<VehicleClass, "tow_truck">; label: string; hint: string; art: "pickup" | "van" | "heavy" }[] = [
-  { value: "pickup", label: "Pickup", hint: "Até 500 kg", art: "pickup" },
-  { value: "van", label: "Carrinha", hint: "Até 1 200 kg", art: "van" },
-  { value: "truck", label: "Camião", hint: "Até 3 t", art: "heavy" },
+export type CargoVehicleClass = Exclude<VehicleClass, "tow_truck">;
+
+export const cargoVehicleOptions: { value: CargoVehicleClass; label: string; hint: string; art: "pickup" | "van" | "heavy"; maxKg: number }[] = [
+  { value: "pickup", label: "Pickup", hint: "Até 500 kg", art: "pickup", maxKg: 500 },
+  { value: "van", label: "Carrinha", hint: "Até 1 200 kg", art: "van", maxKg: 1200 },
+  { value: "truck", label: "Camião", hint: "Até 3 t", art: "heavy", maxKg: 3000 },
 ];
+
+/**
+ * Viatura sugerida para o peso: a mais pequena que leva a carga com folga.
+ * 301–500 kg já vai de carrinha (a pickup ficaria no limite) e mais de 500 kg
+ * de camião, porque não sabemos quanto acima de 500 kg a carga pesa.
+ */
+export const vehicleForWeight: Record<WeightRange, CargoVehicleClass> = {
+  upto100: "pickup",
+  "101to300": "pickup",
+  "301to500": "van",
+  over500: "truck",
+};
 
 export const propertyOptions: { value: PropertyType; label: string }[] = [
   { value: "t0_t1", label: "T0 / T1" },

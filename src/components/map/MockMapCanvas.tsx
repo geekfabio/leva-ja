@@ -146,7 +146,7 @@ export function MockMapCanvas({ markers = [], route, zones = [], pulse, onZonePr
               <Pressable
                 key={`l-${zone.id}`}
                 accessibilityRole="checkbox"
-                accessibilityState={{ checked: zone.active }}
+                accessibilityState={{ checked: zone.active }} aria-checked={zone.active}
                 accessibilityLabel={`Zona ${zone.label}`}
                 onPress={() => onZonePress?.(zone.id)}
                 style={{ position: "absolute", left: c.x - 44, top: c.y - 22, width: 88, alignItems: "center", gap: 4 }}

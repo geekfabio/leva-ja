@@ -7,6 +7,10 @@ test("cliente: pedido de carga do início ao recibo, com pagamento por referênc
   await page.goto("/home");
   await tap(page, "Carga");
   await page.waitForURL(/\/booking\/cargo/);
+  // O peso escolhe a viatura: 301–500 kg → carrinha.
+  await page.getByRole("radio", { name: "301 – 500 kg" }).click();
+  await expect(page.getByRole("radio", { name: /^Carrinha/ })).toBeChecked();
+  await expect(page.getByText(/Sugerimos carrinha/)).toBeVisible();
   await tap(page, "Continuar");
 
   await page.waitForURL(/\/booking\/route/);

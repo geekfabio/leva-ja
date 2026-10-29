@@ -75,7 +75,7 @@ export function SelectionCard({
     <ScalePressable
       accessibilityRole={role}
       accessibilityLabel={description ? `${title}. ${description}` : title}
-      accessibilityState={{ checked: selected, selected }}
+      accessibilityState={{ checked: selected, selected }} aria-checked={selected}
       onPress={onPress}
       style={({ pressed }) => [
         {
@@ -129,7 +129,7 @@ export function ChoiceChip({ label, selected, onPress, icon }: { label: string; 
   return (
     <ScalePressable
       accessibilityRole="radio"
-      accessibilityState={{ checked: selected }}
+      accessibilityState={{ checked: selected }} aria-checked={selected}
       accessibilityLabel={label}
       onPress={onPress}
       style={({ pressed }) => ({
