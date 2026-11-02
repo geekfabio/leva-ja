@@ -31,14 +31,23 @@ import { formatKz } from "@/utils/format";
 import { swap } from "@/features/navigation";
 import { toast } from "@/lib/toast";
 import { colors } from "@/theme/colors";
+import type { ServiceRequest } from "@/types/domain";
 
-const artFor = { tow: "tow", cargo: "pickup", small_move: "van", house_move: "box" } as const;
+const artFor = (request: ServiceRequest) =>
+  request.kind === "cargo" && request.cargo?.vehicleClass === "tuk_tuk"
+    ? "tuk_tuk"
+    : ({ tow: "tow", cargo: "pickup", small_move: "van", house_move: "box" } as const)[request.kind];
 const descriptions = {
   tow: "Reboque plataforma para ligeiros e SUV em Luanda",
   cargo: "Transporte de carga e mudanças com pickup em Luanda",
   small_move: "Carrinha com ajudantes para poucos móveis",
   house_move: "Camião de mudanças com equipa completa",
 };
+
+const descriptionFor = (request: ServiceRequest) =>
+  request.kind === "cargo" && request.cargo?.vehicleClass === "tuk_tuk"
+    ? "Entrega rápida de pequenas mercadorias por tuk-tuk em Luanda"
+    : descriptions[request.kind];
 
 /** 30 · Recibo e avaliação. Também abre recibos do histórico com `?id=`. */
 export default function ReceiptScreen() {
@@ -110,13 +119,13 @@ export default function ReceiptScreen() {
         </View>
         <Divider />
         <View style={{ flexDirection: "row", gap: 12, alignItems: "center" }}>
-          <VehicleImage art={artFor[request.kind]} width={100} height={62} />
+          <VehicleImage art={artFor(request)} width={100} height={62} />
           <View style={{ flex: 1 }}>
             <AppText variant="label" weight="bold">
               {serviceTitle[request.kind]}
             </AppText>
             <AppText variant="caption" color={colors.muted}>
-              {descriptions[request.kind]}
+              {descriptionFor(request)}
             </AppText>
           </View>
         </View>

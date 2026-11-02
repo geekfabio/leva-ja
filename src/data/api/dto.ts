@@ -13,7 +13,7 @@ import { z } from "zod";
 const serviceType = z.enum(["tow", "cargo", "small_move", "house_move"]);
 const serviceStatus = z.enum(["searching", "assigned", "en_route", "arrived", "pickup_confirmed", "in_transit", "delivered", "paid", "rated", "cancelled"]);
 const paymentType = z.enum(["bank_reference", "card", "cash"]);
-const vehicleClass = z.enum(["tow_truck", "pickup", "van", "truck"]);
+const vehicleClass = z.enum(["tow_truck", "tuk_tuk", "pickup", "van", "truck"]);
 const participant = z.enum(["client", "provider", "support"]);
 
 // —— Envelopes ——

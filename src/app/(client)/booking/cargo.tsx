@@ -7,8 +7,8 @@ import { Package, PersonStanding, Sparkles } from "lucide-react-native";
 import { Appear, AppText, Card, ChoiceChip, SelectField, SelectionCard, TextField, ToggleRow } from "@/components/kit";
 import { BookingScaffold } from "@/components/service/BookingScaffold";
 import { VehiclePicker } from "@/components/service/VehiclePicker";
-import { cargoTypeOptions, cargoVehicleOptions, vehicleForWeight, volumeOptions, weightOptions } from "@/features/booking/catalog";
-import type { WeightRange } from "@/types/domain";
+import { cargoTypeOptions, cargoVehicleOptions, goodsVehicleOptions, suggestVehicle, volumeOptions, weightOptions } from "@/features/booking/catalog";
+import type { VolumeSize, WeightRange } from "@/types/domain";
 import { cargoSchema, type CargoForm } from "@/features/booking/schemas";
 import { useBookingStep } from "@/features/booking/useBookingFlow";
 import { illustrations } from "@/theme/images";
@@ -26,24 +26,27 @@ function WeightIcon({ boxes }: { boxes: number }) {
 }
 
 /**
- * 15 · Carga: tipo, peso, volume, viatura e ajudante. Escolher o peso selecciona
- * a viatura adequada (`vehicleForWeight`); o utilizador pode trocá-la depois.
+ * 15 · Carga: tipo, peso, volume, viatura e ajudante. Escolher o peso ou o
+ * volume selecciona a viatura adequada (`suggestVehicle`; na entrega de
+ * mercadoria, tuk-tuk para cargas pequenas); o utilizador pode trocá-la depois.
  */
 export default function CargoStep() {
   const { position, next } = useBookingStep("cargo");
   const draft = useBookingStore((s) => s.draft);
-  const { control, handleSubmit, watch, setValue } = useForm<CargoForm>({
+  const { control, handleSubmit, watch, setValue, getValues } = useForm<CargoForm>({
     resolver: zodResolver(cargoSchema),
     defaultValues: draft.cargo as CargoForm,
   });
   const cargoType = watch("cargoType");
-  /** Peso que originou a última sugestão (para explicar a escolha). */
-  const [suggestedFor, setSuggestedFor] = useState<WeightRange | null>(null);
-  const chooseWeight = (weight: WeightRange) => {
-    const vehicle = vehicleForWeight[weight];
+  const vehicleOptions = draft.variant === "goods" ? goodsVehicleOptions : cargoVehicleOptions;
+  /** Última viatura sugerida e porquê (para explicar a escolha). */
+  const [suggestion, setSuggestion] = useState<{ vehicle: string; reason: string } | null>(null);
+  const suggest = (weight: WeightRange, volume: VolumeSize) => {
+    const vehicle = suggestVehicle(draft.variant, weight, volume);
     setValue("vehicleClass", vehicle, { shouldValidate: true, shouldDirty: true });
-    setSuggestedFor(weight);
-    const label = cargoVehicleOptions.find((o) => o.value === vehicle)?.label;
+    const weightLabel = weightOptions.find((o) => o.value === weight)?.label.toLowerCase();
+    setSuggestion({ vehicle, reason: vehicle === "tuk_tuk" ? `${weightLabel} e volume pequeno` : `${weightLabel}` });
+    const label = vehicleOptions.find((o) => o.value === vehicle)?.label;
     AccessibilityInfo.announceForAccessibility?.(`Viatura sugerida: ${label}`);
   };
   const submit = handleSubmit((values) => {
@@ -104,7 +107,7 @@ export default function CargoStep() {
                     selected={field.value === option.value}
                     onPress={() => {
                       field.onChange(option.value);
-                      chooseWeight(option.value);
+                      suggest(option.value, getValues("volume"));
                     }}
                     style={{ width: "47.8%", alignItems: "flex-start", minHeight: 92 }}
                     media={<WeightIcon boxes={option.boxes} />}
@@ -124,7 +127,15 @@ export default function CargoStep() {
               </AppText>
               <View accessibilityRole="radiogroup" style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
                 {volumeOptions.map((option) => (
-                  <ChoiceChip key={option.value} label={`${option.label} · ${option.hint}`} selected={field.value === option.value} onPress={() => field.onChange(option.value)} />
+                  <ChoiceChip
+                    key={option.value}
+                    label={`${option.label} · ${option.hint}`}
+                    selected={field.value === option.value}
+                    onPress={() => {
+                      field.onChange(option.value);
+                      suggest(getValues("weight"), option.value);
+                    }}
+                  />
                 ))}
               </View>
             </View>
@@ -139,20 +150,19 @@ export default function CargoStep() {
                 Viatura
               </AppText>
               <VehiclePicker
-                options={cargoVehicleOptions}
+                options={vehicleOptions}
                 value={field.value}
                 onChange={(value) => {
                   field.onChange(value);
-                  setSuggestedFor(null);
+                  setSuggestion(null);
                 }}
               />
-              {suggestedFor && vehicleForWeight[suggestedFor] === field.value ? (
-                <Appear key={suggestedFor} from="fade">
+              {suggestion && suggestion.vehicle === field.value ? (
+                <Appear key={`${suggestion.vehicle}-${suggestion.reason}`} from="fade">
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
                     <Sparkles size={16} color={colors.primary} />
                     <AppText variant="caption" color={colors.primary} weight="semibold" style={{ flex: 1 }}>
-                      Sugerimos {cargoVehicleOptions.find((o) => o.value === field.value)?.label.toLowerCase()} para{" "}
-                      {weightOptions.find((o) => o.value === suggestedFor)?.label.toLowerCase()}. Podes trocar.
+                      Sugerimos {vehicleOptions.find((o) => o.value === field.value)?.label.toLowerCase()} para {suggestion.reason}. Podes trocar.
                     </AppText>
                   </View>
                 </Appear>

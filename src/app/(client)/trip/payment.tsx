@@ -30,7 +30,7 @@ import {
 import { paymentKindCopy } from "@/features/payment/copy";
 import { useAccountStore } from "@/stores/useAccountStore";
 import { useServiceStore } from "@/stores/useServiceStore";
-import type { Payment, PaymentMethodKind } from "@/types/domain";
+import type { Payment, PaymentMethodKind, ServiceRequest } from "@/types/domain";
 import { dataSource } from "@/data";
 import { formatTime } from "@/utils/date";
 import { formatDuration, formatKz } from "@/utils/format";
@@ -39,12 +39,10 @@ import { toast } from "@/lib/toast";
 import { colors, radius } from "@/theme/colors";
 
 const icons = { bank_reference: Landmark, card: CreditCard, cash: Banknote };
-const artFor = {
-  tow: "tow",
-  cargo: "pickup",
-  small_move: "van",
-  house_move: "box",
-} as const;
+const artFor = (request: ServiceRequest) =>
+  request.kind === "cargo" && request.cargo?.vehicleClass === "tuk_tuk"
+    ? "tuk_tuk"
+    : ({ tow: "tow", cargo: "pickup", small_move: "van", house_move: "box" } as const)[request.kind];
 
 /**
  * 29 · Serviço concluído e escolha do pagamento. Cartão e numerário confirmam
@@ -176,7 +174,7 @@ export default function PaymentScreen() {
                 }}
               >
                 <VehicleImage
-                  art={artFor[request.kind]}
+                  art={artFor(request)}
                   width={84}
                   height={54}
                 />

@@ -1,4 +1,4 @@
-import { cargoVehicleOptions, vehicleForWeight } from "@/features/booking/catalog";
+import { cargoVehicleOptions, goodsVehicleOptions, suggestVehicle, vehicleForWeight } from "@/features/booking/catalog";
 import { estimatePrice, needsProposal, PLATFORM_FEE, providerEarningFor, recommendVehicle } from "@/features/booking/pricing";
 
 describe("estimativa de preço", () => {
@@ -36,6 +36,13 @@ describe("estimativa de preço", () => {
     expect(needsProposal("house_move")).toBe(true);
     expect(needsProposal("cargo")).toBe(false);
   });
+
+  it("recomenda tuk-tuk e preço mais leve para entregas pequenas", () => {
+    const tukTuk = estimatePrice({ kind: "cargo", distanceKm: 5, cargo: { weight: "upto100", volume: "small", vehicleClass: "tuk_tuk", helper: false } });
+    const pickup = estimatePrice({ kind: "cargo", distanceKm: 5, cargo: { weight: "upto100", volume: "small", vehicleClass: "pickup", helper: false } });
+    expect(recommendVehicle({ kind: "cargo", distanceKm: 5, cargo: { vehicleClass: "tuk_tuk" } }).art).toBe("tuk_tuk");
+    expect(tukTuk.total).toBeLessThan(pickup.total);
+  });
 });
 
 describe("viatura sugerida pelo peso da carga", () => {
@@ -50,5 +57,25 @@ describe("viatura sugerida pelo peso da carga", () => {
       const vehicle = cargoVehicleOptions.find((v) => v.value === vehicleForWeight[range as keyof typeof maxOfRange])!;
       expect(vehicle.maxKg).toBeGreaterThanOrEqual(kg);
     }
+  });
+});
+
+describe("entrega de mercadoria: tuk-tuk para cargas pequenas", () => {
+  it("sugere tuk-tuk até 100 kg e volume pequeno; acima disso, pela regra do peso sem camião", () => {
+    expect(suggestVehicle("goods", "upto100", "small")).toBe("tuk_tuk");
+    expect(suggestVehicle("goods", "upto100", "medium")).toBe("pickup");
+    expect(suggestVehicle("goods", "101to300", "small")).toBe("pickup");
+    expect(suggestVehicle("goods", "301to500", "small")).toBe("van");
+    expect(suggestVehicle("goods", "over500", "large")).toBe("van");
+    // Transporte de carga normal não tem tuk-tuk.
+    expect(suggestVehicle(undefined, "upto100", "small")).toBe("pickup");
+  });
+
+  it("todas as sugestões existem nas opções da variante", () => {
+    for (const weight of ["upto100", "101to300", "301to500", "over500"] as const)
+      for (const volume of ["small", "medium", "large"] as const) {
+        expect(goodsVehicleOptions.map((o) => o.value)).toContain(suggestVehicle("goods", weight, volume));
+        expect(cargoVehicleOptions.map((o) => o.value)).toContain(suggestVehicle(undefined, weight, volume));
+      }
   });
 });

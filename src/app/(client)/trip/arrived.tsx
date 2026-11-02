@@ -11,6 +11,9 @@ import { useActiveClientRequest, useStatusRoute } from "@/features/service/useCl
 import { go } from "@/features/navigation";
 import { colors, radius } from "@/theme/colors";
 
+const artFor = (vehicleClass: "tow_truck" | "tuk_tuk" | "pickup" | "van" | "truck") =>
+  ({ tow_truck: "tow", tuk_tuk: "tuk_tuk", pickup: "pickup", van: "van", truck: "box" } as const)[vehicleClass];
+
 /** 26 · O prestador chegou: confirmar a viatura antes de começar. */
 export default function ArrivedScreen() {
   const request = useActiveClientRequest();
@@ -52,7 +55,7 @@ export default function ArrivedScreen() {
           <PhotoTile photo={{ id: "v", asset: "hilux-street", caption: `${provider.vehicle.brand} ${provider.vehicle.model} com matrícula ${provider.vehicle.plate}` }} size="flex" aspect={2.1} rounded={0} />
         ) : (
           <View style={{ alignItems: "center", backgroundColor: colors.primarySoft, paddingVertical: 12 }}>
-            <VehicleImage art={provider.vehicle.vehicleClass === "tow_truck" ? "tow" : "box"} width={240} height={140} />
+            <VehicleImage art={artFor(provider.vehicle.vehicleClass)} width={240} height={140} />
           </View>
         )}
         <View style={{ flexDirection: "row", alignItems: "center", padding: 14, gap: 10 }}>

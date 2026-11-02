@@ -27,6 +27,12 @@ describe("validação Zod", () => {
     expect(cargoSchema.safeParse({ ...base, vehicleClass: "truck", cargoType: "other" }).success).toBe(false);
   });
 
+  it("tuk-tuk é reservado a pequenas entregas", () => {
+    const delivery = { cargoType: "goods", description: "Encomenda para loja", weight: "upto100", volume: "small", vehicleClass: "tuk_tuk", helper: false } as const;
+    expect(cargoSchema.safeParse(delivery).success).toBe(true);
+    expect(messages(cargoSchema.safeParse({ ...delivery, weight: "101to300" }))).toContain("O tuk-tuk é indicado para entregas pequenas até 100 kg e 1 m³.");
+  });
+
   it("mudança de casa exige tipo de imóvel; agenda exige data e hora", () => {
     const moving = { kind: "house_move", rooms: 2, items: "Sofá e camas", helpers: 2, pickupFloor: 1, deliveryFloor: 0, elevator: true } as const;
     expect(movingSchema.safeParse(moving).success).toBe(false);

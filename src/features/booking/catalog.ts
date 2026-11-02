@@ -26,7 +26,7 @@ export type ServiceDefinition = {
   shortTitle: string;
   description: string;
   icon: "tow" | "pickup" | "van" | "house" | "package";
-  art: "tow" | "pickup" | "van" | "box" | "heavy";
+  art: "tow" | "tuk_tuk" | "pickup" | "van" | "box" | "heavy";
 };
 
 export const serviceCatalog: ServiceDefinition[] = [
@@ -67,9 +67,9 @@ export const serviceCatalog: ServiceDefinition[] = [
     variant: "goods",
     title: "Entrega de mercadoria",
     shortTitle: "Mercadoria",
-    description: "Recolha e entrega de produtos em Luanda e arredores.",
+    description: "Entregas ágeis por tuk-tuk, pickup ou carrinha em Luanda.",
     icon: "package",
-    art: "van",
+    art: "tuk_tuk",
   },
 ];
 
@@ -137,10 +137,19 @@ export const volumeOptions: { value: VolumeSize; label: string; hint: string }[]
 
 export type CargoVehicleClass = Exclude<VehicleClass, "tow_truck">;
 
-export const cargoVehicleOptions: { value: CargoVehicleClass; label: string; hint: string; art: "pickup" | "van" | "heavy"; maxKg: number }[] = [
+export type CargoVehicleOption = { value: CargoVehicleClass; label: string; hint: string; art: "tuk_tuk" | "pickup" | "van" | "heavy"; maxKg: number };
+
+export const cargoVehicleOptions: CargoVehicleOption[] = [
   { value: "pickup", label: "Pickup", hint: "Até 500 kg", art: "pickup", maxKg: 500 },
   { value: "van", label: "Carrinha", hint: "Até 1 200 kg", art: "van", maxKg: 1200 },
   { value: "truck", label: "Camião", hint: "Até 3 t", art: "heavy", maxKg: 3000 },
+];
+
+/** Opções de pequena logística para a variante «Entrega de mercadoria». */
+export const goodsVehicleOptions: CargoVehicleOption[] = [
+  { value: "tuk_tuk", label: "Tuk-tuk", hint: "Até 100 kg", art: "tuk_tuk", maxKg: 100 },
+  { value: "pickup", label: "Pickup", hint: "Até 500 kg", art: "pickup", maxKg: 500 },
+  { value: "van", label: "Carrinha", hint: "Até 1 200 kg", art: "van", maxKg: 1200 },
 ];
 
 /**
@@ -154,6 +163,18 @@ export const vehicleForWeight: Record<WeightRange, CargoVehicleClass> = {
   "301to500": "van",
   over500: "truck",
 };
+
+/**
+ * Sugestão completa. Na entrega de mercadoria, cargas pequenas (até 100 kg e
+ * até 1 m³) vão de tuk-tuk; acima disso vale a regra do peso, sem camião
+ * (a maior opção de mercadoria é a carrinha).
+ */
+export function suggestVehicle(variant: "goods" | undefined, weight: WeightRange, volume: VolumeSize): CargoVehicleClass {
+  if (variant !== "goods") return vehicleForWeight[weight];
+  if (weight === "upto100" && volume === "small") return "tuk_tuk";
+  const byWeight = vehicleForWeight[weight];
+  return byWeight === "truck" ? "van" : byWeight;
+}
 
 export const propertyOptions: { value: PropertyType; label: string }[] = [
   { value: "t0_t1", label: "T0 / T1" },

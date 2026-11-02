@@ -35,7 +35,7 @@ export type CargoType =
 export type WeightRange = "upto100" | "101to300" | "301to500" | "over500";
 export type VolumeSize = "small" | "medium" | "large";
 export type PropertyType = "t0_t1" | "t2" | "t3" | "t4_plus" | "office";
-export type VehicleClass = "tow_truck" | "pickup" | "van" | "truck";
+export type VehicleClass = "tow_truck" | "tuk_tuk" | "pickup" | "van" | "truck";
 
 export type ServiceStatus =
   | "searching"

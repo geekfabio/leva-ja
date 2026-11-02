@@ -44,7 +44,7 @@ export function extrasFor(input: PricingInput) {
   if (input.kind === "cargo" && cargo) {
     extras += { upto100: 0, "101to300": 1500, "301to500": 3000, over500: 6000 }[cargo.weight ?? "upto100"];
     extras += { small: 0, medium: 1000, large: 2500 }[cargo.volume ?? "small"];
-    extras += { pickup: 0, tow_truck: 0, van: 2000, truck: 6000 }[cargo.vehicleClass ?? "pickup"];
+    extras += { tuk_tuk: -1000, pickup: 0, tow_truck: 0, van: 2000, truck: 6000 }[cargo.vehicleClass ?? "pickup"];
     if (cargo.helper) extras += 2000;
   }
   if ((input.kind === "small_move" || input.kind === "house_move") && moving) {
@@ -79,7 +79,7 @@ export const needsProposal = (kind: ServiceKind) => kind === "house_move";
 
 export type VehicleRecommendation = {
   vehicleClass: VehicleClass;
-  art: "tow" | "pickup" | "van" | "box" | "heavy";
+  art: "tow" | "tuk_tuk" | "pickup" | "van" | "box" | "heavy";
   title: string;
   crew: string;
   suitability: string;
@@ -113,6 +113,8 @@ export function recommendVehicle(input: PricingInput): VehicleRecommendation {
   const cls = input.cargo?.vehicleClass ?? "pickup";
   const helper = input.cargo?.helper;
   const crew = helper ? "1 motorista\n+ 1 ajudante" : "1 motorista";
+  if (cls === "tuk_tuk")
+    return { vehicleClass: cls, art: "tuk_tuk", title: "Tuk-tuk de entrega", crew: "1 motorista", suitability: "Entregas rápidas de pequenas mercadorias até 100 kg" };
   if (cls === "truck")
     return { vehicleClass: cls, art: "heavy", title: "Camião de carga", crew, suitability: "Materiais, paletes e grandes volumes" };
   if (cls === "van")
