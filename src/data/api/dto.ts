@@ -258,3 +258,25 @@ export const ProfilePatchDto = z.object({ full_name: z.string().min(1), email: z
 export const RegisterBodyDto = z.object({ full_name: z.string().min(1), email: z.string().email(), phone: z.string(), password: z.string().min(6) });
 export const AddressBodyDto = SavedAddressDto.omit({ id: true });
 export const TicketBodyDto = z.object({ request_id: z.string(), reason: z.string(), description: z.string() });
+
+export const ApplicationVehicleBodyDto = z.object({
+  brand: z.string(),
+  model: z.string(),
+  plate: z.string(),
+  color: z.string(),
+  class: vehicleClass,
+  category_label: z.string(),
+  capacity_kg: z.number().nullable().optional(),
+  year: z.number().int().optional(),
+});
+export const ApplicationBodyDto = z.object({
+  full_name: z.string().min(3),
+  email: z.string().email(),
+  phone: z.string(),
+  service_types: z.array(serviceType).min(1),
+  zone_ids: z.array(z.string()).min(1),
+  vehicle: ApplicationVehicleBodyDto.nullable(),
+});
+
+export const ApplicationDto = z.object({ id: z.string(), code: z.string(), status: z.string() });
+export type ApplicationDto = z.infer<typeof ApplicationDto>;

@@ -67,6 +67,21 @@ function contract(name: string, make: () => Promise<Repositories>) {
       expect(methods.find((m) => m.isDefault)?.id).toBe("pm-cash");
     });
 
+    it("candidaturas: dados válidos ficam pendentes; sem serviços ou zonas é recusado", async () => {
+      await expect(repos.applications.submit({ name: "Ana Neto", email: "ana@angoleva.ao", phone: "923456789", serviceTypes: [], zoneIds: ["zone-luanda"], vehicle: null })).rejects.toMatchObject({
+        code: "validation",
+      });
+      const application = await repos.applications.submit({
+        name: "Ana Neto",
+        email: "ana@angoleva.ao",
+        phone: "923456789",
+        serviceTypes: ["tow"],
+        zoneIds: ["zone-luanda"],
+        vehicle: { brand: "Toyota", model: "Hilux", plate: "LD-12-34-AB", color: "Branco", class: "pickup", categoryLabel: "Pickup aberta" },
+      });
+      expect(application.status).toBe("pending");
+    });
+
     it("autenticação: código errado é recusado; registo confirmado cria o cliente", async () => {
       await repos.auth.register({ name: "Ana Neto", email: "ana@angoleva.ao", phone: "923456789", password: "segredo12" });
       await expect(repos.auth.verifyCode("ana@angoleva.ao", "000000", "register")).rejects.toMatchObject({ code: "validation" });
