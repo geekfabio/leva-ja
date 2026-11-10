@@ -4,9 +4,8 @@ import { useIsFocused } from "@react-navigation/native";
 import type { ServiceRequest, ServiceStatus } from "@/types/domain";
 import { useAccountStore } from "@/stores/useAccountStore";
 import { useRequest, useServiceStore } from "@/stores/useServiceStore";
-import { simulatedProviderFor } from "@/data";
+import { repositories } from "@/data";
 import { swap } from "@/features/navigation";
-import { needsProposal } from "@/features/booking/pricing";
 import { clientAutoAdvance, clientScreenFor } from "./stateMachine";
 
 /** Pedido activo do cliente (o último criado ou aberto a partir do histórico). */
@@ -27,18 +26,29 @@ export function useClientSimulation(request: ServiceRequest | undefined) {
     if (!request || !autoAdvance || !focused) return;
     const step = clientAutoAdvance[request.status];
     if (!step) return;
-    // Mudança de casa: o prestador simulado envia uma proposta em vez de aceitar logo.
-    if (request.status === "searching" && needsProposal(request.kind)) {
-      if (request.proposal?.status === "sent") return;
-      const t = setTimeout(() => {
-        const amount = Math.round((request.price.total - request.price.platformFee + 3500) / 500) * 500;
-        useServiceStore.getState().submitProposal(request.id, amount, "Inclui 2 ajudantes, protecção dos móveis e escadas sem elevador.", simulatedProviderFor(request));
-      }, step.afterMs);
-      return () => clearTimeout(t);
-    }
     const t = setTimeout(() => useServiceStore.getState().transition(request.id, step.to, "system"), step.afterMs);
     return () => clearTimeout(t);
-  }, [request?.id, request?.status, request?.proposal?.status, autoAdvance, focused, request]);
+  }, [request?.id, request?.status, autoAdvance, focused]);
+}
+
+/**
+ * Enquanto o pedido estiver atribuído, lê periodicamente `request.provider.coords`
+ * (posição real do prestador, devolvida pela API em cada pedido) para o
+ * acompanhamento no mapa poder animar entre leituras sucessivas.
+ */
+export function useProviderLocationPolling(request: ServiceRequest | undefined, intervalMs = 3500) {
+  const focused = useIsFocused();
+  useEffect(() => {
+    if (!request || !focused || !["assigned", "en_route"].includes(request.status)) return;
+    const tick = () => {
+      repositories()
+        .requests.get(request.id)
+        .then((r) => useServiceStore.getState().upsert(r))
+        .catch(() => undefined);
+    };
+    const t = setInterval(tick, intervalMs);
+    return () => clearInterval(t);
+  }, [request?.id, request?.status, focused, intervalMs]);
 }
 
 /** Mantém o cliente no ecrã certo: se o estado mudar, troca para o ecrã correspondente. */

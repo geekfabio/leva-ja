@@ -5,8 +5,9 @@ import { AppText, ContactActions, IconButton, ProviderCard, ServiceTimeline, Tex
 import { MapSheetLayout } from "@/components/service/MapSheetLayout";
 import { NoActiveRequest } from "@/components/service/NoActiveRequest";
 import { clientAutoAdvance } from "@/features/service/stateMachine";
-import { useActiveClientRequest, useClientSimulation, useStageProgress, useStatusRoute } from "@/features/service/useClientSimulation";
-import { approachStart, mockRoute, pointAlong } from "@/utils/geo";
+import { useActiveClientRequest, useClientSimulation, useProviderLocationPolling, useStageProgress, useStatusRoute } from "@/features/service/useClientSimulation";
+import { useAnimatedProviderPosition } from "@/features/service/useProviderPosition";
+import { approachStart } from "@/utils/geo";
 import { unreadCount, useChatStore } from "@/stores/useChatStore";
 import { go } from "@/features/navigation";
 import { toast } from "@/lib/toast";
@@ -14,17 +15,17 @@ import { colors } from "@/theme/colors";
 
 const ETA_MIN = 8;
 
-/** 23 · Acompanhamento em tempo real: prestador a caminho. */
+/** 23 · Acompanhamento em tempo real: posição real do prestador a caminho. */
 export default function TrackingScreen() {
   const request = useActiveClientRequest();
   useClientSimulation(request);
   useStatusRoute(request, ["assigned", "en_route"]);
+  useProviderLocationPolling(request);
   const progress = useStageProgress(request, "en_route", clientAutoAdvance.en_route!.afterMs);
   const unread = useChatStore((s) => unreadCount(request ? s.threads[request.id] : undefined, "client"));
   const provider = request?.provider;
+  const position = useAnimatedProviderPosition(provider?.coords);
   if (!request || !provider) return <NoActiveRequest />;
-  const route = mockRoute(approachStart(request.origin.coords), request.origin.coords);
-  const position = request.status === "en_route" ? pointAlong(route, progress) : approachStart(request.origin.coords);
   const eta = request.status === "en_route" ? Math.max(1, Math.round(ETA_MIN * (1 - progress))) : ETA_MIN;
   const step = request.status === "assigned" ? 0 : eta <= 2 ? 2 : 1;
 
@@ -34,7 +35,7 @@ export default function TrackingScreen() {
       map={{
         route: { from: approachStart(request.origin.coords), to: request.origin.coords },
         markers: [
-          { id: "v", kind: "vehicle", coords: position, icon: request.kind === "tow" ? "tow" : "cargo" },
+          { id: "v", kind: "vehicle", coords: position ?? approachStart(request.origin.coords), icon: request.kind === "tow" ? "tow" : "cargo" },
           { id: "o", kind: "destination", coords: request.origin.coords, label: request.origin.area },
         ],
       }}

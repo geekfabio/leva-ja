@@ -25,5 +25,8 @@ export const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 
 /** Agenda um efeito "do servidor" (validações, respostas, transferências). */
 export function later(ms: number, effect: () => void) {
-  return setTimeout(effect, mockRuntime.latencyMs === 0 ? Math.min(ms, 10) : ms);
+  const timer = setTimeout(effect, mockRuntime.latencyMs === 0 ? Math.min(ms, 10) : ms);
+  // Em Node (testes), não impede o processo de terminar enquanto a simulação ainda decorre.
+  (timer as unknown as { unref?: () => void }).unref?.();
+  return timer;
 }

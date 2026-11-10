@@ -1,14 +1,14 @@
 import { useCallback } from "react";
 import { Pressable, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
-import { ArrowLeft, BadgeCheck, ChevronRight, Coins, MapPin, Package, Users } from "lucide-react-native";
-import { AppHeader, AppText, CountdownRing, DangerButton, EmptyState, IconButton, IconCircle, InfoNote, PhotoTile, PrimaryButton, ScreenContainer, ServiceIcon, VehicleImage, AnimatedAmount } from "@/components/kit";
+import { ArrowLeft, BadgeCheck, ChevronRight, Coins, Handshake, MapPin, Package, Users } from "lucide-react-native";
+import { AppHeader, AppText, CountdownRing, DangerButton, EmptyState, IconButton, IconCircle, InfoNote, NegotiationWidget, PhotoTile, PrimaryButton, ScreenContainer, SecondaryButton, ServiceIcon, VehicleImage, AnimatedAmount } from "@/components/kit";
 import { MapSheetLayout } from "@/components/service/MapSheetLayout";
 import { serviceTitle } from "@/features/booking/catalog";
 import { describeLoad } from "@/features/booking/factory";
-import { needsProposal } from "@/features/booking/pricing";
 import { useProviderStore } from "@/stores/useProviderStore";
 import { useRequest, useServiceStore } from "@/stores/useServiceStore";
+import { useRequestNegotiations, useNegotiationActions } from "@/features/service/useNegotiations";
 import { formatFloor, formatKm } from "@/utils/format";
 import { swap } from "@/features/navigation";
 import { toast } from "@/lib/toast";
@@ -39,6 +39,8 @@ export default function NewRequestScreen() {
     toast.info({ title: "Pedido expirado", message: "O pedido foi passado a outro prestador." });
     if (router.canGoBack()) router.back();
   }, [id]);
+  const { negotiations, reload: reloadNegotiations } = useRequestNegotiations(request?.id, { active: request?.status === "searching" });
+  const actions = useNegotiationActions(request?.id ?? "", reloadNegotiations);
   if (!request || request.status !== "searching")
     return (
       <ScreenContainer header={<AppHeader />}>
@@ -46,10 +48,9 @@ export default function NewRequestScreen() {
       </ScreenContainer>
     );
   const client = clientOf(request);
-  const proposal = needsProposal(request.kind);
+  const mine = negotiations.find((n) => n.providerId === me.id && n.status === "pending");
   const helpers = request.cargo?.helper ? 1 : (request.moving?.helpers ?? 0);
   const accept = async () => {
-    if (proposal) return swap(`/partner/proposal/${request.id}`);
     if (await useServiceStore.getState().accept(request.id, me.id)) {
       toast.success({ title: "Pedido aceite", message: `Dirige-te a ${request.origin.area}.` });
       swap(`/partner/active/${request.id}`);
@@ -59,6 +60,19 @@ export default function NewRequestScreen() {
     useProviderStore.getState().decline(request.id);
     toast.info("Pedido recusado");
     router.back();
+  };
+  const negotiate = async () => {
+    if (!(await actions.open("down"))) toast.error({ title: "Não foi possível abrir a negociação" });
+  };
+  const adjust = (negotiationId: string, direction: "up" | "down") => actions.adjust(negotiationId, direction);
+  const acceptNegotiation = async (negotiationId: string) => {
+    if (await actions.accept(negotiationId)) {
+      toast.success({ title: "Negociação aceite", message: `Dirige-te a ${request.origin.area}.` });
+      swap(`/partner/active/${request.id}`);
+    } else toast.error({ title: "Não foi possível aceitar" });
+  };
+  const declineNegotiation = async (negotiationId: string) => {
+    if (!(await actions.decline(negotiationId))) toast.error({ title: "Não foi possível recusar" });
   };
 
   return (
@@ -75,10 +89,25 @@ export default function NewRequestScreen() {
       footer={
         <View style={{ gap: 8 }}>
           {!online ? <InfoNote tone="warning">Estás indisponível. Fica disponível para aceitar pedidos.</InfoNote> : null}
-          <View style={{ flexDirection: "row", gap: 10 }}>
-            <DangerButton tone="outline" style={{ flex: 1 }} label="Recusar" onPress={decline} />
-            <PrimaryButton style={{ flex: 1.3 }} label={proposal ? "Propor valor" : "Aceitar pedido"} disabled={!online} onPress={accept} />
-          </View>
+          {mine ? (
+            <NegotiationWidget
+              negotiation={mine}
+              side="provider"
+              platformFee={request.price.platformFee}
+              pending={actions.pendingKey?.endsWith(mine.id) ?? false}
+              onAdjust={(direction) => adjust(mine.id, direction)}
+              onAccept={() => acceptNegotiation(mine.id)}
+              onDecline={() => declineNegotiation(mine.id)}
+            />
+          ) : (
+            <>
+              <View style={{ flexDirection: "row", gap: 10 }}>
+                <DangerButton tone="outline" style={{ flex: 1 }} label="Recusar" onPress={decline} />
+                <PrimaryButton style={{ flex: 1.3 }} label="Aceitar pedido" disabled={!online} onPress={accept} />
+              </View>
+              <SecondaryButton label="Negociar preço" icon={<Handshake size={20} color={colors.primary} />} disabled={!online || actions.pendingKey === "open"} onPress={negotiate} />
+            </>
+          )}
         </View>
       }
     >
@@ -152,7 +181,7 @@ export default function NewRequestScreen() {
       <View style={{ flexDirection: "row", alignItems: "center", gap: 14, backgroundColor: colors.primarySoft, borderRadius: radius.lg, padding: 16 }}>
         <Coins size={30} color={colors.ink} />
         <View>
-          <AppText variant="caption">{proposal ? "Valor sugerido (podes ajustar)" : "Estimativa de ganho"}</AppText>
+          <AppText variant="caption">Estimativa de ganho</AppText>
 <AnimatedAmount value={request.providerEarning} weight="extrabold" style={{ fontSize: 32, lineHeight: 38 }} />
         </View>
       </View>

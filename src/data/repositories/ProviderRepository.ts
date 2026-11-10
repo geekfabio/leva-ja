@@ -1,4 +1,4 @@
-import type { Provider, ProviderDocument, Review, ServiceKind, Transaction, Vehicle, Zone } from "@/types/domain";
+import type { Coordinates, Provider, ProviderDocument, Review, ServiceKind, Transaction, Vehicle, Zone } from "@/types/domain";
 import type { Unsubscribe } from "./types";
 
 export type Coverage = { zones: string[]; services: ServiceKind[] };
@@ -24,6 +24,8 @@ export interface ProviderRepository {
   saveCoverage(providerId: string, coverage: Coverage): Promise<Coverage>;
   submitDocument(providerId: string, documentId: string): Promise<ProviderDocument>;
   decline(providerId: string, requestId: string): Promise<void>;
+  /** GPS real do prestador (o acompanhamento do cliente lê `request.provider.coords`). */
+  updateLocation(providerId: string, coords: Coordinates): Promise<void>;
   withdraw(providerId: string, amount: number): Promise<Transaction>;
   earnings(providerId: string): Promise<EarningsSummary>;
   reviews(providerId: string): Promise<Review[]>;

@@ -20,7 +20,7 @@ type Tab = "all" | "new" | "ongoing";
 const kinds: ServiceKind[] = ["tow", "cargo", "small_move", "house_move"];
 const distances = [5, 10, 20];
 
-const ongoing = (r: ServiceRequest) => (r.status === "searching" && r.proposal?.status === "sent") || ["assigned", "en_route", "arrived", "pickup_confirmed", "in_transit"].includes(r.status);
+const ongoing = (r: ServiceRequest) => ["assigned", "en_route", "arrived", "pickup_confirmed", "in_transit"].includes(r.status);
 
 /** 37 · Caixa de pedidos com filtros (novos, em curso, tipo e distância). */
 export default function ProviderRequests() {
@@ -37,7 +37,7 @@ export default function ProviderRequests() {
   const list = tab === "new" ? fresh : tab === "ongoing" ? current : [...current, ...fresh];
   const loading = nearby.isLoading || mine.isLoading;
   const error = nearby.isError || mine.isError;
-  const open = (r: ServiceRequest) => go(r.status === "searching" ? (r.proposal?.status === "sent" ? `/partner/proposal/${r.id}` : `/partner/request/${r.id}`) : `/partner/active/${r.id}`);
+  const open = (r: ServiceRequest) => go(r.status === "searching" ? `/partner/request/${r.id}` : `/partner/active/${r.id}`);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -80,7 +80,7 @@ export default function ProviderRequests() {
               request={request}
               distanceKm={distanceKm}
               onPress={() => open(request)}
-              badge={request.status === "searching" && request.proposal?.status !== "sent" ? undefined : { label: request.proposal?.status === "sent" && request.status === "searching" ? "Proposta enviada" : statusLabel[request.status], tone: "info" }}
+              badge={request.status === "searching" ? undefined : { label: statusLabel[request.status], tone: "info" }}
             />
             </Appear>
           ))

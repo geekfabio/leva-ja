@@ -1,21 +1,21 @@
 import { useEffect, useState } from "react";
 import { View } from "react-native";
-import { ArrowRight } from "lucide-react-native";
-import { AppText, Avatar, BrandLogo, Card, ChoiceChip, ConfirmDialog, DotsIndicator, IconCircle, InfoNote, PrimaryButton, SecondaryButton, ServiceIcon } from "@/components/kit";
+import { AppText, Avatar, BrandLogo, Card, ChoiceChip, ConfirmDialog, DotsIndicator, IconCircle, NegotiationWidget, SecondaryButton, ServiceIcon } from "@/components/kit";
 import { MapSheetLayout } from "@/components/service/MapSheetLayout";
 import { NoActiveRequest } from "@/components/service/NoActiveRequest";
 import { serviceTitle } from "@/features/booking/catalog";
 import { useActiveClientRequest, useClientSimulation, useStatusRoute } from "@/features/service/useClientSimulation";
+import { useNegotiationActions, useRequestNegotiations } from "@/features/service/useNegotiations";
 import { useServiceStore } from "@/stores/useServiceStore";
 import { useAccountStore } from "@/stores/useAccountStore";
-import { formatKz, formatRating } from "@/utils/format";
+import { formatRating } from "@/utils/format";
 import { swap } from "@/features/navigation";
 import { toast } from "@/lib/toast";
 import { colors, radius } from "@/theme/colors";
 
 const reasons = ["Já não preciso", "Demora demasiado", "Enganei-me nos dados", "Outro motivo"];
 
-/** 21 · A procurar prestador (e proposta de preço nas mudanças de casa). */
+/** 21 · A procurar prestador: negociações de preço abertas por diferentes prestadores. */
 export default function MatchingScreen() {
   const request = useActiveClientRequest();
   useClientSimulation(request);
@@ -24,19 +24,27 @@ export default function MatchingScreen() {
   const [dot, setDot] = useState(0);
   const [confirm, setConfirm] = useState(false);
   const [reason, setReason] = useState(reasons[0]!);
+  const { negotiations, reload: reloadNegotiations } = useRequestNegotiations(request?.id, { active: request?.status === "searching" });
+  const actions = useNegotiationActions(request?.id ?? "", reloadNegotiations);
   useEffect(() => {
     const t = setInterval(() => setDot((d) => (d + 1) % 3), 600);
     return () => clearInterval(t);
   }, []);
   if (!request) return <NoActiveRequest />;
-  const proposal = request.proposal?.status === "sent" ? request.proposal : undefined;
-  const proposer = request?.provider;
+  const pending = negotiations.filter((n) => n.status === "pending");
 
   const cancel = async () => {
     setConfirm(false);
     if (!(await useServiceStore.getState().cancel(request.id, reason))) return toast.error({ title: "Não foi possível cancelar", message: useServiceStore.getState().lastError ?? undefined });
     toast.info({ title: "Pedido cancelado", message: "Não foi cobrado nenhum valor." });
     swap("/home");
+  };
+
+  const accept = async (negotiationId: string) => {
+    if (!(await actions.accept(negotiationId))) toast.error({ title: "Não foi possível aceitar a negociação" });
+  };
+  const decline = async (negotiationId: string) => {
+    if (!(await actions.decline(negotiationId))) toast.error({ title: "Não foi possível recusar" });
   };
 
   return (
@@ -48,40 +56,37 @@ export default function MatchingScreen() {
           <BrandLogo size="sm" />
         </View>
       }
-      footer={
-        proposal ? (
-          <>
-            <PrimaryButton label="Aceitar proposta" onPress={() => useServiceStore.getState().answerProposal(request.id, true)} trailingIcon={<ArrowRight size={22} color={colors.white} />} />
-            <SecondaryButton label="Recusar e procurar outro" onPress={() => useServiceStore.getState().answerProposal(request.id, false)} />
-          </>
-        ) : (
-          <SecondaryButton label="Cancelar pedido" onPress={() => setConfirm(true)} />
-        )
-      }
+      footer={<SecondaryButton label="Cancelar pedido" onPress={() => setConfirm(true)} />}
     >
-      {proposal && proposer ? (
+      {pending.length ? (
         <>
           <AppText variant="h2" align="center" accessibilityRole="header">
-            Recebeste uma proposta
+            {pending.length === 1 ? "Recebeste uma proposta de preço" : `Recebeste ${pending.length} propostas de preço`}
           </AppText>
-          <Card style={{ gap: 12 }}>
-            <View style={{ flexDirection: "row", gap: 12, alignItems: "center" }}>
-              <Avatar name={proposer.name} initials={proposer.initials} photo={proposer.avatar} size={52} verified />
-              <View style={{ flex: 1 }}>
-                <AppText variant="title">{proposer.name}</AppText>
-                <AppText variant="caption" color={colors.muted}>
-                  ★ {formatRating(proposer.rating)} · {proposer.vehicle.categoryLabel}
-                </AppText>
-              </View>
-              <AppText variant="h2" color={colors.primary}>
-                {formatKz(proposal.amount + request.price.platformFee)}
-              </AppText>
+          {pending.map((negotiation) => (
+            <View key={negotiation.id} style={{ gap: 8 }}>
+              {negotiation.provider ? (
+                <View style={{ flexDirection: "row", gap: 10, alignItems: "center" }}>
+                  <Avatar name={negotiation.provider.name} initials={negotiation.provider.initials} photo={negotiation.provider.avatar} size={40} verified />
+                  <View style={{ flex: 1 }}>
+                    <AppText variant="title">{negotiation.provider.name}</AppText>
+                    <AppText variant="caption" color={colors.muted}>
+                      ★ {formatRating(negotiation.provider.rating)} · {negotiation.provider.vehicle.categoryLabel}
+                    </AppText>
+                  </View>
+                </View>
+              ) : null}
+              <NegotiationWidget
+                negotiation={negotiation}
+                side="client"
+                platformFee={request.price.platformFee}
+                pending={actions.pendingKey?.endsWith(negotiation.id) ?? false}
+                onAdjust={(direction) => actions.adjust(negotiation.id, direction)}
+                onAccept={() => accept(negotiation.id)}
+                onDecline={() => decline(negotiation.id)}
+              />
             </View>
-            <InfoNote>{`“${proposal.reason}”`}</InfoNote>
-            <AppText variant="caption" color={colors.muted}>
-              Estimativa inicial: {formatKz(request.price.total)}. O total inclui {formatKz(request.price.platformFee)} de taxa de plataforma.
-            </AppText>
-          </Card>
+          ))}
         </>
       ) : (
         <>

@@ -3,11 +3,11 @@ import { View } from "react-native";
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ChevronRight, LocateFixed, Navigation, Radio, SlidersHorizontal, Wallet } from "lucide-react-native";
-import { AppText, Avatar, Card, EmptyState, ErrorState, IconButton, IconCircle, LoadingState, MapPreview, OrderCard, PrimaryButton, SecondaryButton, VehicleImage, type MapMarker, Appear, AnimatedAmount } from "@/components/kit";
+import { AppText, Avatar, Card, EmptyState, ErrorState, IconButton, IconCircle, LoadingState, MapPreview, OrderCard, PrimaryButton, VehicleImage, type MapMarker, Appear, AnimatedAmount } from "@/components/kit";
 import { AvailabilityToggle } from "@/components/partner/AvailabilityToggle";
 import { serviceTitle } from "@/features/booking/catalog";
 import { statusLabel } from "@/features/service/stateMachine";
-import { usePendingProposal, useProviderActiveRequest } from "@/features/provider/useProviderActive";
+import { useProviderActiveRequest } from "@/features/provider/useProviderActive";
 import { useFinanceSummary, useNearbyRequests } from "@/services/queries";
 import { useProviderStore } from "@/stores/useProviderStore";
 import { formatKz } from "@/utils/format";
@@ -24,7 +24,6 @@ export default function ProviderDashboard() {
   const nearby = useNearbyRequests();
   const finance = useFinanceSummary();
   const active = useProviderActiveRequest();
-  const proposal = usePendingProposal();
   const snapPoints = useMemo(() => ["62%", "92%"], []);
   const list = online ? (nearby.data ?? []) : [];
   const markers: MapMarker[] = [
@@ -64,8 +63,6 @@ export default function ProviderDashboard() {
           </View>
           {active ? (
             <PrimaryButton label={`${serviceTitle[active.kind]} · ${statusLabel[active.status]}`} icon={<Radio size={20} color={colors.white} />} trailingIcon={<ChevronRight size={20} color={colors.white} />} onPress={() => go(`/partner/active/${active.id}`)} accessibilityHint="Abre o serviço em curso" />
-          ) : proposal ? (
-            <SecondaryButton label="Proposta enviada · a aguardar cliente" onPress={() => go(`/partner/proposal/${proposal.id}`)} />
           ) : null}
           <Card onPress={() => go("/partner/vehicle")} accessibilityLabel={`${vehicle.brand} ${vehicle.model}, ${vehicle.plate}. Ver viatura`} style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
             <VehicleImage art="pickup" width={110} height={64} />
