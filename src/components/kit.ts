@@ -28,6 +28,7 @@ export { ServiceCard, ServiceCatalogCard, ServiceTile } from "./service/ServiceC
 export { PriceSummary, AmountHighlight } from "./service/PriceSummary";
 export { ServiceTimeline, RouteTimeline } from "./service/ServiceTimeline";
 export { ContactActions } from "./service/ContactActions";
+export { NegotiationWidget } from "./service/NegotiationWidget";
 export { ProviderCard, VehicleRow, PlateTag, ClientLine, RouteSummary } from "./service/People";
 export { OrderCard } from "./service/OrderCard";
 export { DeliveryProofForm, DeliveryProofSummary } from "./service/DeliveryProof";

@@ -166,6 +166,25 @@ export type PriceProposal = {
   status: "sent" | "accepted" | "declined";
 };
 
+export type NegotiationSide = "client" | "provider";
+export type NegotiationStatus = "pending" | "accepted" | "declined" | "cancelled";
+
+/** Negociação de preço (todos os tipos de serviço): passos de 50 Kz, dentro de ±15% da estimativa. */
+export type Negotiation = {
+  id: string;
+  requestId: string;
+  providerId: string;
+  /** Resumo do prestador (nome, viatura, avaliação), para o cartão no ecrã do cliente. */
+  provider?: Provider;
+  amount: number;
+  minAmount: number;
+  maxAmount: number;
+  by: NegotiationSide;
+  status: NegotiationStatus;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type ServiceRequest = {
   id: string;
   code: string;

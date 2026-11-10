@@ -1,15 +1,24 @@
-import type { DeliveryProofData, PaymentMethodKind, Photo, ServiceRequest, ServiceStatus, Transaction } from "@/types/domain";
+import type { DeliveryProofData, Negotiation, NegotiationSide, PaymentMethodKind, Photo, ServiceRequest, ServiceStatus, Transaction } from "@/types/domain";
 import { buildRequest, type RequestInput } from "@/features/booking/factory";
 import { providerEarningFor } from "@/features/booking/pricing";
-import { canTransition, transitionActor } from "@/features/service/stateMachine";
+import { canTransition, clientAutoAdvance, transitionActor } from "@/features/service/stateMachine";
 import { serviceTitle } from "@/features/booking/catalog";
 import { placeList } from "@/mocks/places";
-import { roadDistanceKm } from "@/utils/geo";
+import { approachStart, mockRoute, pointAlong, roadDistanceKm } from "@/utils/geo";
 import type { NearbyRequest, RequestActor, RequestQuery, RequestRepository } from "../repositories/RequestRepository";
 import { RepositoryError } from "../repositories/types";
 import { db, type MockDatabase } from "./database";
 import { Emitter } from "./events";
-import { simulate } from "./runtime";
+import { later, simulate } from "./runtime";
+
+const NEGOTIATION_STEP = 50;
+/** ±15% do preço estimado do serviço (sem taxa de plataforma), arredondado a 50 Kz. */
+const NEGOTIATION_RANGE = 0.15;
+const roundToStep = (value: number) => Math.round(value / NEGOTIATION_STEP) * NEGOTIATION_STEP;
+const clampToStep = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+const negotiationBounds = (service: number) => ({ min: roundToStep(service * (1 - NEGOTIATION_RANGE)), max: roundToStep(service * (1 + NEGOTIATION_RANGE)) });
+const otherSide = (side: NegotiationSide): NegotiationSide => (side === "provider" ? "client" : "provider");
+const randomId = (prefix: string) => `${prefix}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
 
 /** Prestador que a simulação atribui a cada serviço, incluindo entregas leves por tuk-tuk. */
 export const simulatedProviderFor = (input: Pick<ServiceRequest, "kind" | "cargo"> | ServiceRequest["kind"]) => {
@@ -85,7 +94,10 @@ export class MockRequestRepository implements RequestRepository {
       if (!canTransition(r.status, to)) throw new RepositoryError("invalid_transition", `Não é possível passar de ${r.status} para ${to}.`);
       const expected = transitionActor[to];
       if (actor !== "system" && expected && expected !== actor) throw new RepositoryError("forbidden", "Esta acção pertence ao outro interveniente.");
-      return this.save({ ...this.advance(r, to), providerId: to === "assigned" ? (r.providerId ?? simulatedProviderFor(r)) : r.providerId });
+      if (to === "assigned") this.database.cancelPendingNegotiations(id);
+      const saved = this.save({ ...this.advance(r, to), providerId: to === "assigned" ? (r.providerId ?? simulatedProviderFor(r)) : r.providerId });
+      if (to === "assigned") this.driveToOrigin(saved);
+      return saved;
     });
   }
 
@@ -94,8 +106,35 @@ export class MockRequestRepository implements RequestRepository {
       const r = this.find(id);
       if (r.status !== "searching") throw new RepositoryError("invalid_transition", "Este pedido já não está disponível.");
       if (!this.database.providerRecord(providerId).online) throw new RepositoryError("forbidden", "Fica disponível para aceitar pedidos.");
-      return this.save({ ...this.advance(r, "assigned"), providerId });
+      this.database.cancelPendingNegotiations(id);
+      const saved = this.save({ ...this.advance(r, "assigned"), providerId });
+      this.driveToOrigin(saved);
+      return saved;
     });
+  }
+
+  /**
+   * Aproximação simulada do prestador ao ponto de recolha (só na fase mock): o
+   * mesmo `request.provider.coords` que o ecrã de acompanhamento lê, para a
+   * animação ter sentido também em modo de demonstração.
+   */
+  private driveToOrigin(r: ServiceRequest) {
+    if (!r.providerId) return;
+    const { providerId, origin } = r;
+    const epoch = this.database.epoch;
+    const totalMs = (clientAutoAdvance.assigned?.afterMs ?? 2500) + (clientAutoAdvance.en_route?.afterMs ?? 15000);
+    const route = mockRoute(approachStart(origin.coords), origin.coords);
+    const startedAt = Date.now();
+    const tick = () => {
+      if (this.database.epoch !== epoch) return;
+      const provider = this.database.providers.get(providerId);
+      const current = this.database.requests.get(r.id);
+      if (!provider || !current || !["assigned", "en_route"].includes(current.status)) return;
+      const progress = Math.min(1, (Date.now() - startedAt) / totalMs);
+      provider.coords = pointAlong(route, progress);
+      if (progress < 1) later(900, tick);
+    };
+    later(900, tick);
   }
 
   cancel(id: string, reason: string) {
@@ -119,8 +158,86 @@ export class MockRequestRepository implements RequestRepository {
       const r = this.find(id);
       if (!r.proposal || r.proposal.status !== "sent") throw new RepositoryError("invalid_transition", "Não há proposta por responder.");
       if (!accepted) return this.save({ ...r, providerId: undefined, proposal: { ...r.proposal, status: "declined" } });
+      this.database.cancelPendingNegotiations(id);
       const price = { ...r.price, total: r.proposal.amount + r.price.platformFee, extras: r.proposal.amount - r.price.base - r.price.distance };
-      return this.save({ ...this.advance(r, "assigned"), price, providerEarning: providerEarningFor(price), proposal: { ...r.proposal, status: "accepted" } });
+      const saved = this.save({ ...this.advance(r, "assigned"), price, providerEarning: providerEarningFor(price), proposal: { ...r.proposal, status: "accepted" } });
+      this.driveToOrigin(saved);
+      return saved;
+    });
+  }
+
+  negotiations(requestId: string) {
+    return simulate(() => this.database.negotiationsFor(requestId));
+  }
+
+  /**
+   * Só um prestador abre, com o pedido em `searching` e o próprio prestador
+   * `online`; devolve a já aberta se existir. `providerId` vem da sessão (API
+   * simulada em `server.ts`); sem ele (uso directo do mock), usa o prestador
+   * simulado do tipo de serviço.
+   */
+  openNegotiation(requestId: string, direction: "up" | "down", providerId?: string) {
+    return simulate(() => {
+      const r = this.find(requestId);
+      const pid = providerId ?? simulatedProviderFor(r);
+      if (r.status !== "searching") throw new RepositoryError("invalid_transition", "Este pedido já não aceita negociações.");
+      if (!this.database.providerRecord(pid).online) throw new RepositoryError("forbidden", "Fica disponível para negociar.");
+      const open = this.database.negotiationsFor(requestId).find((n) => n.providerId === pid && n.status === "pending");
+      if (open) return open;
+      const service = r.price.total - r.price.platformFee;
+      const { min, max } = negotiationBounds(service);
+      const at = now();
+      const negotiation: Negotiation = {
+        id: randomId("neg"),
+        requestId,
+        providerId: pid,
+        amount: clampToStep(service + (direction === "up" ? NEGOTIATION_STEP : -NEGOTIATION_STEP), min, max),
+        minAmount: min,
+        maxAmount: max,
+        by: "provider",
+        status: "pending",
+        createdAt: at,
+        updatedAt: at,
+      };
+      return this.database.saveNegotiation(negotiation);
+    });
+  }
+
+  /** Move o valor ±50 Kz dentro de `minAmount`/`maxAmount`; `by` vem de quem chamou (sessão em `server.ts`). */
+  adjustNegotiation(requestId: string, negotiationId: string, direction: "up" | "down", by?: NegotiationSide) {
+    return simulate(() => {
+      const n = this.database.negotiation(negotiationId);
+      if (n.requestId !== requestId) throw new RepositoryError("not_found", "Negociação não encontrada.");
+      if (n.status !== "pending") throw new RepositoryError("invalid_transition", "Esta negociação já não está em aberto.");
+      const amount = clampToStep(n.amount + (direction === "up" ? NEGOTIATION_STEP : -NEGOTIATION_STEP), n.minAmount, n.maxAmount);
+      return this.database.saveNegotiation({ ...n, amount, by: by ?? otherSide(n.by), updatedAt: now() });
+    });
+  }
+
+  /** Só quem não fez a última proposta (`by`) pode aceitar; cancela as outras negociações pendentes do pedido. */
+  acceptNegotiation(requestId: string, negotiationId: string, by?: NegotiationSide) {
+    return simulate(() => {
+      const n = this.database.negotiation(negotiationId);
+      if (n.requestId !== requestId) throw new RepositoryError("not_found", "Negociação não encontrada.");
+      if (n.status !== "pending") throw new RepositoryError("invalid_transition", "Esta negociação já não está em aberto.");
+      const side = by ?? otherSide(n.by);
+      if (side === n.by) throw new RepositoryError("invalid_transition", "Não podes aceitar a tua própria proposta.");
+      const r = this.find(requestId);
+      const price = { ...r.price, total: n.amount + r.price.platformFee, extras: n.amount - r.price.base - r.price.distance };
+      this.database.saveNegotiation({ ...n, status: "accepted", updatedAt: now() });
+      this.database.cancelPendingNegotiations(requestId, negotiationId);
+      const saved = this.save({ ...this.advance(r, "assigned"), providerId: n.providerId, price, providerEarning: providerEarningFor(price) });
+      this.driveToOrigin(saved);
+      return saved;
+    });
+  }
+
+  declineNegotiation(requestId: string, negotiationId: string) {
+    return simulate(() => {
+      const n = this.database.negotiation(negotiationId);
+      if (n.requestId !== requestId) throw new RepositoryError("not_found", "Negociação não encontrada.");
+      if (n.status !== "pending") throw new RepositoryError("invalid_transition", "Esta negociação já não está em aberto.");
+      return this.database.saveNegotiation({ ...n, status: "declined", updatedAt: now() });
     });
   }
 

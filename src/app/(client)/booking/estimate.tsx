@@ -5,7 +5,7 @@ import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { ArrowRight, Info, Package, ShieldCheck, UserRound } from "lucide-react-native";
 import { AppHeader, AppText, BrandLogo, Card, Divider, EmptyState, InfoNote, MapPreview, PriceSummary, PrimaryButton, RouteSummary, ScreenContainer, SheetModal, VehicleImage, AnimatedAmount } from "@/components/kit";
 import { bookingSteps, serviceTitle } from "@/features/booking/catalog";
-import { estimatePrice, needsProposal, recommendVehicle } from "@/features/booking/pricing";
+import { estimatePrice, recommendVehicle } from "@/features/booking/pricing";
 import { draftIssues } from "@/features/booking/validation";
 import { repositories } from "@/data";
 import { useBookingStore } from "@/stores/useBookingStore";
@@ -26,7 +26,6 @@ export default function EstimateStep() {
   const input = { kind: draft.kind, distanceKm, tow: draft.tow, cargo: draft.cargo, moving: draft.moving };
   const price = estimatePrice(input);
   const vehicle = recommendVehicle(input);
-  const proposal = needsProposal(draft.kind);
 
   const confirm = useMutation({
     mutationFn: async () => {
@@ -105,7 +104,7 @@ export default function EstimateStep() {
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
             <AnimatedAmount value={price.total} weight="extrabold" color={colors.primary} style={{ fontSize: 40, lineHeight: 48, letterSpacing: -1, flex: 1 }} />
             <AppText variant="tiny" color={colors.muted} style={{ maxWidth: 130 }}>
-              {proposal ? "Valor indicativo: o prestador envia a proposta final." : "O valor pode variar ligeiramente conforme o local de carga."}
+              Valor indicativo: podes negociar com o prestador antes de confirmares.
             </AppText>
           </View>
         </Card>

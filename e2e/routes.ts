@@ -30,7 +30,6 @@ export const routes = [
   "/partner/history",
   "/partner/profile",
   "/partner/proof/req-prv-1",
-  "/partner/proposal/req-near-2",
   "/partner/request/req-near-1",
   "/partner/requests",
   "/partner/transactions",

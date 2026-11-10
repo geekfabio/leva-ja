@@ -3,6 +3,7 @@ import { View } from "react-native";
 import { LoadingState } from "@/components/core/States";
 import { useProviderStore } from "@/stores/useProviderStore";
 import { useSessionStore } from "@/stores/useSessionStore";
+import { useLocationReporting } from "@/features/provider/useLocationReporting";
 import { colors } from "@/theme/colors";
 import { useScreenTransition, useStackOptions, webScreenLayout } from "@/components/core/ScreenTransitions";
 
@@ -14,6 +15,7 @@ export default function ProviderLayout() {
   const fade = useScreenTransition("fade");
   const providerId = useSessionStore((s) => s.providerId);
   const ready = useProviderStore((s) => !!s.profile && s.providerId === providerId);
+  useLocationReporting();
   // Sem prestador na sessão (modo API sem login): pede autenticação.
   if (!providerId) return <Redirect href={"/login" as never} />;
   // Os ecrãs só aparecem depois de o ProviderRepository devolver o perfil.
