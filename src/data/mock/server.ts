@@ -1,6 +1,6 @@
 import { AxiosError, type AxiosAdapter, type AxiosResponse, type InternalAxiosRequestConfig } from "axios";
 import { z } from "zod";
-import type { ServiceRequest, ServiceStatus } from "@/types/domain";
+import type { Negotiation, NegotiationSide, ServiceRequest, ServiceStatus } from "@/types/domain";
 import * as Dto from "../api/dto";
 import * as map from "../api/mappers";
 import type { RealtimeChannel } from "../api/realtime";
@@ -11,6 +11,7 @@ import { db, type MockDatabase, type SessionRecord } from "./database";
 import { Emitter } from "./events";
 import { pushFor, type PushMessage } from "@/features/notifications/push";
 import { createMockRepositories } from "./index";
+import { MockRequestRepository } from "./MockRequestRepository";
 
 /**
  * API simulada: o "backend" da fase mock. Responde aos endpoints de
@@ -85,6 +86,8 @@ export type MockServerOptions = {
 
 export function createMockServer(database: MockDatabase = db, { simulation = true }: MockServerOptions = {}) {
   const repos = createMockRepositories(database);
+  /** Métodos de negociação (fora do contrato `RequestRepository`: a identidade do prestador vem da sessão). */
+  const negotiationRepo = repos.requests as MockRequestRepository;
   const routes: Route[] = [];
   const add = (method: string, path: string, handler: Handler, options: RouteOptions = {}) => {
     const keys: string[] = [];
@@ -143,6 +146,17 @@ export function createMockServer(database: MockDatabase = db, { simulation = tru
   const assignedProvider = (ctx: Context, id: string) => (!!ctx.session.providerId && request(id).providerId === ctx.session.providerId) || deny();
   const requestClient = (ctx: Context, id: string) => request(id).clientId === ctx.session.user.id || deny();
   const thread = (ctx: Context, id: string) => id.startsWith("support-") || canSee(ctx.session, request(id)) || deny();
+  /** Quem está a chamar, numa negociação: o cliente dono do pedido ou o prestador dela; outra pessoa é recusada. */
+  const negotiationSide = (ctx: Context, n: Negotiation): NegotiationSide => {
+    if (ctx.session.providerId && ctx.session.providerId === n.providerId) return "provider";
+    if (ctx.session.user.id === request(n.requestId).clientId) return "client";
+    return deny();
+  };
+  const findNegotiation = async (requestId: string, negotiationId: string) => {
+    const found = (await negotiationRepo.negotiations(requestId)).find((n) => n.id === negotiationId);
+    if (!found) throw new RepositoryError("not_found", "Negociação não encontrada.");
+    return found;
+  };
 
   /** Sessão no formato da API, com a validade real do token de acesso. */
   const sessionOut = (session: Session) => {
@@ -239,6 +253,37 @@ export function createMockServer(database: MockDatabase = db, { simulation = tru
     requestClient(ctx, id);
     return repos.requests.answerProposal(id, input(z.object({ accepted: z.boolean() }), body).accepted);
   });
+
+  // —— Negociação de preço (todos os tipos de serviço) ——
+  add("get", "/requests/:id/negotiations", async (ctx) => {
+    const r = request(ctx.params.id!);
+    if (!canSee(ctx.session, r)) deny();
+    const all = await negotiationRepo.negotiations(ctx.params.id!);
+    const visible = ctx.session.user.id === r.clientId ? all : all.filter((n) => n.providerId === ctx.session.providerId);
+    return list(visible.map((n) => map.fromNegotiation({ ...n, provider: database.providers.get(n.providerId) })));
+  });
+  add("post", "/requests/:id/negotiations", async (ctx) => {
+    if (!ctx.session.providerId) deny("Só um prestador pode negociar.");
+    const { direction } = input(Dto.NegotiationDirectionBodyDto, ctx.body);
+    return ok(map.fromNegotiation(await negotiationRepo.openNegotiation(ctx.params.id!, direction, ctx.session.providerId)));
+  }, { created: true });
+  add("post", "/requests/:id/negotiations/:negotiationId/adjust", async (ctx) => {
+    const n = await findNegotiation(ctx.params.id!, ctx.params.negotiationId!);
+    const by = negotiationSide(ctx, n);
+    const { direction } = input(Dto.NegotiationDirectionBodyDto, ctx.body);
+    return ok(map.fromNegotiation(await negotiationRepo.adjustNegotiation(ctx.params.id!, ctx.params.negotiationId!, direction, by)));
+  });
+  add("post", "/requests/:id/negotiations/:negotiationId/accept", async (ctx) => {
+    const n = await findNegotiation(ctx.params.id!, ctx.params.negotiationId!);
+    const by = negotiationSide(ctx, n);
+    return ok(map.fromServiceRequest(await negotiationRepo.acceptNegotiation(ctx.params.id!, ctx.params.negotiationId!, by)));
+  });
+  add("post", "/requests/:id/negotiations/:negotiationId/decline", async (ctx) => {
+    const n = await findNegotiation(ctx.params.id!, ctx.params.negotiationId!);
+    negotiationSide(ctx, n);
+    return ok(map.fromNegotiation(await negotiationRepo.declineNegotiation(ctx.params.id!, ctx.params.negotiationId!)));
+  });
+
   requestAction("/pickup-photos", (id, body, ctx) => {
     assignedProvider(ctx, id);
     return repos.requests.addPickupPhotos(id, input(z.object({ photos: z.array(Dto.PhotoDto) }), body).photos.map(map.toPhoto));
@@ -267,6 +312,7 @@ export function createMockServer(database: MockDatabase = db, { simulation = tru
   add("get", "/providers/:id/state", async ({ params }) => ok(map.fromProviderState(await repos.providers.getState(params.id!))));
   add("get", "/providers/:id/nearby-requests", async ({ params }) => list((await repos.requests.nearby(params.id!)).map(map.fromNearbyRequest)));
   add("put", "/providers/:id/availability", ({ params, body }) => repos.providers.setOnline(params.id!, input(z.object({ online: z.boolean() }), body).online));
+  add("put", "/providers/:id/location", ({ params, body }) => repos.providers.updateLocation(params.id!, map.toCoordinates(input(Dto.LocationDto, body))));
   add("patch", "/providers/:id/vehicle", async ({ params, body }) =>
     ok(map.fromVehicle(await repos.providers.updateVehicle(params.id!, map.toVehiclePatch(input(Dto.VehiclePatchDto, body))))),
   );
