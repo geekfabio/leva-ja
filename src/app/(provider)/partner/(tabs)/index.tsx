@@ -3,7 +3,7 @@ import { View } from "react-native";
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ChevronRight, LocateFixed, Navigation, Radio, SlidersHorizontal, Wallet } from "lucide-react-native";
-import { AppText, Avatar, Card, EmptyState, ErrorState, IconButton, IconCircle, LoadingState, MapPreview, OrderCard, PrimaryButton, VehicleImage, type MapMarker, Appear, AnimatedAmount } from "@/components/kit";
+import { AppText, Avatar, Card, EmptyState, ErrorState, IconButton, IconCircle, LoadingState, LocationPermissionBanner, MapPreview, OrderCard, PrimaryButton, VehicleImage, type MapMarker, Appear, AnimatedAmount } from "@/components/kit";
 import { AvailabilityToggle } from "@/components/partner/AvailabilityToggle";
 import { serviceTitle } from "@/features/booking/catalog";
 import { statusLabel } from "@/features/service/stateMachine";
@@ -49,6 +49,7 @@ export default function ProviderDashboard() {
       </View>
       <BottomSheet index={0} snapPoints={snapPoints} enableDynamicSizing={false} backgroundStyle={{ borderRadius: 28, backgroundColor: colors.background }} handleIndicatorStyle={{ backgroundColor: colors.borderStrong, width: 44 }}>
         <BottomSheetScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32, gap: 14 }}>
+          <LocationPermissionBanner />
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
             <Avatar name={me.name} initials={me.initials} photo={me.avatar} size={56} verified />
             <View style={{ flex: 1 }}>

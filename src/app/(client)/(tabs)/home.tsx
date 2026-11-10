@@ -3,7 +3,7 @@ import { View } from "react-native";
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ArrowRight, Bell, ChevronRight, Radio, UserRound } from "lucide-react-native";
-import { AppText, BrandLogo, EmptyState, ErrorState, IconButton, LoadingState, MapPreview, PrimaryButton, ServiceCard, ServiceTile, type MapMarker, Appear } from "@/components/kit";
+import { AppText, BrandLogo, EmptyState, ErrorState, IconButton, LoadingState, LocationPermissionBanner, MapPreview, PrimaryButton, ServiceCard, ServiceTile, type MapMarker, Appear } from "@/components/kit";
 import { serviceCatalog, serviceTitle } from "@/features/booking/catalog";
 import { startBooking } from "@/features/booking/useBookingFlow";
 import { clientScreenFor, isActiveStatus, statusLabel } from "@/features/service/stateMachine";
@@ -49,6 +49,7 @@ export default function ClientHome() {
       </View>
       <BottomSheet ref={sheet} index={0} snapPoints={snapPoints} enableDynamicSizing={false} backgroundStyle={{ borderRadius: 28, backgroundColor: colors.background }} handleIndicatorStyle={{ backgroundColor: colors.borderStrong, width: 44 }}>
         <BottomSheetScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 110, gap: 14 }}>
+          <LocationPermissionBanner />
           <View>
             <AppText variant="h1" accessibilityRole="header">
               Olá, {firstName}
