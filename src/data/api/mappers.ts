@@ -27,7 +27,7 @@ import { initialsOf } from "@/utils/format";
 import type { Session } from "../repositories/AuthRepository";
 import type { ChatEvent } from "../repositories/ChatRepository";
 import type { NearbyVehicle } from "../repositories/LocationRepository";
-import type { Coverage, EarningsSummary, ProviderState } from "../repositories/ProviderRepository";
+import type { CashBalance, Coverage, EarningsSummary, ProviderState } from "../repositories/ProviderRepository";
 import type { NearbyRequest } from "../repositories/RequestRepository";
 import type { EmergencyContact, TicketInput } from "../repositories/SupportRepository";
 import type * as Dto from "./dto";
@@ -382,6 +382,19 @@ export const fromProviderState = (s: ProviderState): Dto.ProviderStateDto => ({
   documents: s.documents.map(fromDocument),
   wallet: { balance_kz: s.wallet.balance, transactions: s.wallet.transactions.map(fromTransaction), payout_account: { ...s.wallet.payout } },
   declined_request_ids: s.declined,
+});
+
+export const toCashBalance = (dto: Dto.ProviderCashBalanceDto): CashBalance => ({
+  owedKz: dto.owed_kz,
+  depositedKz: dto.deposited_kz,
+  balanceKz: dto.balance_kz,
+  blocked: dto.blocked,
+});
+export const fromCashBalance = (b: CashBalance): Dto.ProviderCashBalanceDto => ({
+  owed_kz: b.owedKz,
+  deposited_kz: b.depositedKz,
+  balance_kz: b.balanceKz,
+  blocked: b.blocked,
 });
 
 export const toEarnings = (dto: D<typeof Dto.EarningsDto>): EarningsSummary => ({ today: dto.today_kz, todayCount: dto.today_count, week: dto.week_kz, completed: dto.completed_count, chart: dto.last_7_days_kz });

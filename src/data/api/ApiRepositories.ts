@@ -128,6 +128,7 @@ export function createApiRepositories({ realtime, pollIntervalMs = env.pollInter
       updateLocation: (providerId, coords) => none(http.put(`/providers/${providerId}/location`, map.fromCoordinates(coords))),
       withdraw: async (providerId, amount) => map.toTransaction(await one(Dto.TransactionDto, http.post(`/providers/${providerId}/withdrawals`, { amount_kz: amount }), "levantamento")),
       earnings: async (providerId) => map.toEarnings(await one(Dto.EarningsDto, http.get(`/providers/${providerId}/earnings`), "ganhos")),
+      cashBalance: async (providerId) => map.toCashBalance(await one(Dto.ProviderCashBalanceDto, http.get(`/providers/${providerId}/balance`), "saldo de numerário")),
       reviews: async (providerId) => (await many(Dto.ReviewDto, http.get(`/providers/${providerId}/reviews`), "avaliações")).map(map.toReview),
       subscribe: (providerId, listener) =>
         channel.subscribe(`providers/${providerId}`, (payload) => {

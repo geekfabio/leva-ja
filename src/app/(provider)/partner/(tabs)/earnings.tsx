@@ -2,11 +2,11 @@ import { useRef, useState } from "react";
 import { Pressable, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
-import { CalendarDays, ChartColumn, ChevronDown, FileText, Landmark, List, Settings, Upload, Wallet } from "lucide-react-native";
+import { CalendarDays, ChartColumn, ChevronDown, CircleAlert, FileText, Landmark, List, Settings, Upload, Wallet } from "lucide-react-native";
 import { AppText, BrandLogo, Card, EarningsChart, ErrorState, IconButton, IconCircle, InfoNote, LoadingState, PrimaryButton, ProviderMetric, ScreenContainer, SecondaryButton, SheetModal, Skeleton, TextField, AnimatedAmount } from "@/components/kit";
 import { NotificationBell, ProviderSummaryCard } from "@/components/partner/ProviderHeader";
 import { withdrawSchema } from "@/features/provider/schemas";
-import { useFinanceSummary } from "@/services/queries";
+import { useCashBalance, useFinanceSummary } from "@/services/queries";
 import { useProviderStore } from "@/stores/useProviderStore";
 import { formatMonthYear } from "@/utils/date";
 import { formatKz, formatNumber, parseAmount } from "@/utils/format";
@@ -19,6 +19,7 @@ const weekLabels = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 /** 38 · Ganhos: gráfico semanal, métricas, saldo e levantamento simulado. */
 export default function EarningsScreen() {
   const { data, isLoading, isError, refetch, isRefetching } = useFinanceSummary();
+  const { data: cashBalance } = useCashBalance();
   const balance = useProviderStore((s) => s.balance);
   const bankAccount = useProviderStore((s) => s.payout) ?? { bank: "—", iban: "—", holder: "—" };
   const withdrawSheet = useRef<BottomSheetModal>(null);
@@ -95,6 +96,25 @@ export default function EarningsScreen() {
               <PrimaryButton size="md" label="Pedir levantamento" icon={<Upload size={20} color={colors.white} />} disabled={balance < 1000} onPress={() => { setAmount(balance); withdrawSheet.current?.present(); }} />
               <SecondaryButton size="md" label="Ver transacções" icon={<List size={20} color={colors.primary} />} onPress={() => go("/partner/transactions")} />
             </View>
+            {cashBalance && cashBalance.owedKz > 0 ? (
+              <View style={{ backgroundColor: colors.dangerSoft, borderRadius: radius.lg, padding: 16, gap: 10 }} accessible accessibilityLabel={`Saldo de numerário: deves ${formatKz(cashBalance.owedKz)}${cashBalance.blocked ? ", estás indisponível até depositares" : ""}`}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                  <IconCircle size={48} tone="danger">
+                    <CircleAlert size={24} color={colors.white} />
+                  </IconCircle>
+                  <View style={{ flex: 1 }}>
+                    <AppText variant="label" weight="bold">
+                      Saldo de numerário
+                    </AppText>
+                    <AppText variant="body">Deves {formatKz(cashBalance.owedKz)} à AngoLeva por corridas pagas em numerário.</AppText>
+                  </View>
+                </View>
+                {cashBalance.blocked ? (
+                  <InfoNote tone="warning">Estás indisponível para novos pedidos até depositares. Contacta o suporte para regularizares o saldo.</InfoNote>
+                ) : null}
+                <SecondaryButton size="md" label="Contactar suporte" onPress={() => go("/help/chat")} />
+              </View>
+            ) : null}
           </>
         )}
       </ScreenContainer>

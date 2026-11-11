@@ -1,4 +1,5 @@
-import { repositories, resetMockDatabase, setAuthTokens } from "@/data";
+import { repositories, resetMockDatabase, setAuthTokens, setRepositories } from "@/data";
+import { RepositoryError } from "@/data/repositories/types";
 import { DEMO_TOKEN } from "@/data/mock/demo";
 import { useServiceStore } from "@/stores/useServiceStore";
 import { useProviderStore } from "@/stores/useProviderStore";
@@ -81,6 +82,29 @@ describe("ciclo de vida partilhado cliente ↔ prestador (stores sobre repositó
     expect(await store.rate(id, 5, "Excelente")).toBe(true);
     expect(find(id).timeline.map((e) => e.status)).toEqual(["searching", "assigned", "en_route", "arrived", "pickup_confirmed", "in_transit", "delivered", "paid", "rated"]);
     expect(useServiceStore.getState().activeClientRequestId).toBeNull();
+  });
+
+  it("ficar disponível recusado (ex.: saldo de numerário em falta) devolve o interruptor ao estado real", async () => {
+    await useProviderStore.getState().setOnline(false);
+    expect(useProviderStore.getState().online).toBe(false);
+
+    const real = repositories();
+    setRepositories({
+      ...real,
+      providers: {
+        ...real.providers,
+        setOnline: async () => {
+          throw new RepositoryError("validation", "Saldo de numerário em falta.");
+        },
+      },
+    });
+    try {
+      expect(await useProviderStore.getState().setOnline(true)).toBe(false);
+      expect(useProviderStore.getState().online).toBe(false);
+      expect(useProviderStore.getState().lastError).toMatch(/saldo/i);
+    } finally {
+      setRepositories(real);
+    }
   });
 
   it("não aceita pedidos quando o prestador está indisponível", async () => {

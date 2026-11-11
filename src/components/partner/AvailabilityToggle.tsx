@@ -6,9 +6,13 @@ import { colors } from "@/theme/colors";
 import { AppText } from "@/components/core/AppText";
 import { toast } from "@/lib/toast";
 
-function toggle() {
+async function toggle() {
   const next = !useProviderStore.getState().online;
-  useProviderStore.getState().setOnline(next);
+  const ok = await useProviderStore.getState().setOnline(next);
+  if (!ok) {
+    toast.error({ title: "Não foi possível", message: useProviderStore.getState().lastError ?? "Tenta novamente." });
+    return;
+  }
   toast.info(next ? { title: "Estás disponível", message: "Vais receber pedidos próximos." } : { title: "Estás indisponível", message: "Não vais receber novos pedidos." });
 }
 

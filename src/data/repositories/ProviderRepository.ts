@@ -5,6 +5,8 @@ export type Coverage = { zones: string[]; services: ServiceKind[] };
 export type PayoutAccount = { bank: string; iban: string; holder: string };
 export type Wallet = { balance: number; transactions: Transaction[]; payout: PayoutAccount };
 export type EarningsSummary = { today: number; todayCount: number; week: number; completed: number; chart: number[] };
+/** O que o prestador deve à plataforma por corridas em numerário (único meio de pagamento por agora). */
+export type CashBalance = { owedKz: number; depositedKz: number; balanceKz: number; blocked: boolean };
 
 export type ProviderState = {
   profile: Provider;
@@ -28,6 +30,7 @@ export interface ProviderRepository {
   updateLocation(providerId: string, coords: Coordinates): Promise<void>;
   withdraw(providerId: string, amount: number): Promise<Transaction>;
   earnings(providerId: string): Promise<EarningsSummary>;
+  cashBalance(providerId: string): Promise<CashBalance>;
   reviews(providerId: string): Promise<Review[]>;
   /** Alterações de estado (validação de documentos, levantamentos concluídos, novos ganhos). */
   subscribe(providerId: string, listener: (state: ProviderState) => void): Unsubscribe;

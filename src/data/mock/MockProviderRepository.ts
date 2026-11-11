@@ -134,6 +134,16 @@ export class MockProviderRepository implements ProviderRepository {
     });
   }
 
+  /**
+   * O mock não modela pagamentos em numerário nem depósitos administrativos
+   * (isso só existe no backend real, ligado ao painel de Facturação): o
+   * prestador simulado nunca fica bloqueado, para a demonstração não
+   * depender de um fluxo que a app não consegue simular por si só.
+   */
+  cashBalance(_providerId: string) {
+    return simulate(() => ({ owedKz: 0, depositedKz: 0, balanceKz: 0, blocked: false }));
+  }
+
   reviews(providerId: string) {
     return simulate(() => clone(providerReviews.filter((r) => [...this.database.requests.values()].some((q) => q.id === r.requestId && q.providerId === providerId))));
   }

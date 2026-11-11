@@ -87,9 +87,13 @@ export const useProviderStore = create<ProviderStoreState>((set, get) => {
         declined: state.declined,
       }),
 
-    setOnline: (online) => {
+    setOnline: async (online) => {
+      const previous = get().online;
       set({ online });
-      return run(() => repo().setOnline(id(), online));
+      const ok = await run(() => repo().setOnline(id(), online));
+      // O pedido pode ser recusado (ex.: saldo de numerário em falta) — o interruptor volta ao estado real.
+      if (!ok) set({ online: previous });
+      return ok;
     },
     updateVehicle: (values) => run(() => repo().updateVehicle(id(), values)),
     saveCoverage: (zones, services) => run(() => repo().saveCoverage(id(), { zones, services })),

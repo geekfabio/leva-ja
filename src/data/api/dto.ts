@@ -211,6 +211,9 @@ export type ProviderStateDto = z.infer<typeof ProviderStateDto>;
 
 export const EarningsDto = z.object({ today_kz: z.number(), today_count: z.number().int(), week_kz: z.number(), completed_count: z.number().int(), last_7_days_kz: z.array(z.number()) });
 
+export const ProviderCashBalanceDto = z.object({ owed_kz: z.number(), deposited_kz: z.number(), balance_kz: z.number(), blocked: z.boolean() });
+export type ProviderCashBalanceDto = z.infer<typeof ProviderCashBalanceDto>;
+
 export const ReviewDto = z.object({ id: z.string(), request_id: z.string(), author_name: z.string(), rating: z.number(), comment: z.string(), created_at: z.string() });
 
 export const NearbyVehicleDto = z.object({ id: z.string(), lat: z.number(), lng: z.number(), type: z.enum(["tow", "cargo", "move"]) });

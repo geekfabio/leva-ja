@@ -325,6 +325,7 @@ export function createMockServer(database: MockDatabase = db, { simulation = tru
     ok(map.fromTransaction(await repos.providers.withdraw(params.id!, input(z.object({ amount_kz: z.number() }), body).amount_kz))),
   );
   add("get", "/providers/:id/earnings", async ({ params }) => ok(map.fromEarnings(await repos.providers.earnings(params.id!))));
+  add("get", "/providers/:id/balance", async ({ params }) => ok(map.fromCashBalance(await repos.providers.cashBalance(params.id!))));
   add("get", "/providers/:id/reviews", async ({ params }) => list((await repos.providers.reviews(params.id!)).map(map.fromReview)));
   add("get", "/zones", async () => list((await repos.providers.listZones()).map(map.fromZone)));
 
