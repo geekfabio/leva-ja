@@ -50,6 +50,28 @@ describe("formato da API → domínio (fixtures escritas à mão, como as do bac
     });
   });
 
+  it("candidatura a prestador: corpo de fio no formato esperado pela API", () => {
+    const withVehicle = map.fromApplicationInput({
+      name: "Ana Neto",
+      email: "ana@angoleva.ao",
+      phone: "923456789",
+      serviceTypes: ["tow", "cargo"],
+      zoneIds: ["zone-luanda"],
+      vehicle: { brand: "Toyota", model: "Hilux", plate: "LD-12-34-AB", color: "Branco", class: "pickup", categoryLabel: "Pickup aberta", capacityKg: 1200, year: 2020 },
+    });
+    expect(Dto.ApplicationBodyDto.parse(withVehicle)).toEqual({
+      full_name: "Ana Neto",
+      email: "ana@angoleva.ao",
+      phone: "923456789",
+      service_types: ["tow", "cargo"],
+      zone_ids: ["zone-luanda"],
+      vehicle: { brand: "Toyota", model: "Hilux", plate: "LD-12-34-AB", color: "Branco", class: "pickup", category_label: "Pickup aberta", capacity_kg: 1200, year: 2020 },
+    });
+
+    const withoutVehicle = map.fromApplicationInput({ name: "Ana Neto", email: "ana@angoleva.ao", phone: "923456789", serviceTypes: ["tow"], zoneIds: ["zone-luanda"], vehicle: null });
+    expect(Dto.ApplicationBodyDto.parse(withoutVehicle).vehicle).toBeNull();
+  });
+
   it("erro: a mensagem do servidor chega ao ecrã", () => {
     const config = { headers: new AxiosHeaders() } as InternalAxiosRequestConfig;
     const error = new AxiosError("409", "ERR_BAD_REQUEST", config, {}, { status: 409, statusText: "", data: errorFixture, headers: {}, config });

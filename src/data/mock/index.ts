@@ -1,6 +1,7 @@
 import type { Repositories } from "../repositories";
 import { db } from "./database";
 import { MockAccountRepository } from "./MockAccountRepository";
+import { MockApplicationsRepository } from "./MockApplicationsRepository";
 import { MockAuthRepository } from "./MockAuthRepository";
 import { MockChatRepository } from "./MockChatRepository";
 import { MockDiscountRepository } from "./MockDiscountRepository";
@@ -15,6 +16,7 @@ import { MockSupportRepository } from "./MockSupportRepository";
 export function createMockRepositories(database = db): Repositories {
   const requests = new MockRequestRepository(database);
   return {
+    applications: new MockApplicationsRepository(),
     auth: new MockAuthRepository(database),
     requests,
     providers: new MockProviderRepository(database),

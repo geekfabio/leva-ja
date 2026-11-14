@@ -183,6 +183,31 @@ export function createMockServer(database: MockDatabase = db, { simulation = tru
   add("post", "/auth/refresh", async ({ body }) => ok(sessionOut(await repos.auth.refresh(input(z.object({ refresh_token: z.string() }), body).refresh_token))), {
     public: true,
   });
+  // —— Candidaturas a prestador (sem conta) ——
+  add("post", "/applications", async ({ body }) => {
+    const data = input(Dto.ApplicationBodyDto, body);
+    await repos.applications.submit({
+      name: data.full_name,
+      email: data.email,
+      phone: data.phone,
+      serviceTypes: data.service_types,
+      zoneIds: data.zone_ids,
+      vehicle: data.vehicle
+        ? {
+            brand: data.vehicle.brand,
+            model: data.vehicle.model,
+            plate: data.vehicle.plate,
+            color: data.vehicle.color,
+            class: data.vehicle.class,
+            categoryLabel: data.vehicle.category_label,
+            capacityKg: data.vehicle.capacity_kg ?? null,
+            year: data.vehicle.year,
+          }
+        : null,
+    });
+    return ok({ id: `app-${Date.now()}`, code: `CA-${1000 + Math.floor(Math.random() * 9000)}`, status: "pending" });
+  }, { public: true, created: true });
+
   add("get", "/auth/me", async ({ token }) => {
     const session = await repos.auth.restore(token);
     return ok({ user: map.fromClient(session.user), provider_id: session.providerId ?? null });
@@ -339,7 +364,8 @@ export function createMockServer(database: MockDatabase = db, { simulation = tru
   );
   add("get", "/providers/:id/balance", async ({ params }) => ok(map.fromCashBalance(await repos.providers.cashBalance(params.id!))));
   add("get", "/providers/:id/reviews", async ({ params }) => list((await repos.providers.reviews(params.id!)).map(map.fromReview)));
-  add("get", "/zones", async () => list((await repos.providers.listZones()).map(map.fromZone)));
+  // Público: a candidatura a prestador (sem conta) precisa de escolher zonas antes do login.
+  add("get", "/zones", async () => list((await repos.providers.listZones()).map(map.fromZone)), { public: true });
 
   // —— Localização ——
   add("get", "/locations/current", async () => ok(map.fromPlace(await repos.locations.currentLocation())));

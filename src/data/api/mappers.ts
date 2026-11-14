@@ -27,6 +27,7 @@ import type {
 } from "@/types/domain";
 import type { RequestInput } from "@/features/booking/factory";
 import { initialsOf } from "@/utils/format";
+import type { ApplicationInput } from "../repositories/ApplicationsRepository";
 import type { Session } from "../repositories/AuthRepository";
 import type { ChatEvent } from "../repositories/ChatRepository";
 import type { NearbyVehicle } from "../repositories/LocationRepository";
@@ -521,4 +522,22 @@ export const fromReferralSummary = (s: ReferralSummary): Dto.ReferralSummaryDto 
   invited_count: s.invitedCount,
   available_kz: s.available,
   rewards: s.rewards.map((r) => ({ id: r.id, kind: r.kind, amount_kz: r.amount, used: r.used, created_at: r.at })),
+export const fromApplicationInput = (a: ApplicationInput): D<typeof Dto.ApplicationBodyDto> => ({
+  full_name: a.name,
+  email: a.email,
+  phone: a.phone,
+  service_types: a.serviceTypes,
+  zone_ids: a.zoneIds,
+  vehicle: a.vehicle
+    ? {
+        brand: a.vehicle.brand,
+        model: a.vehicle.model,
+        plate: a.vehicle.plate,
+        color: a.vehicle.color,
+        class: a.vehicle.class,
+        category_label: a.vehicle.categoryLabel,
+        capacity_kg: a.vehicle.capacityKg ?? null,
+        year: a.vehicle.year,
+      }
+    : null,
 });
