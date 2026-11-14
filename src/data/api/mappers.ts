@@ -522,6 +522,8 @@ export const fromReferralSummary = (s: ReferralSummary): Dto.ReferralSummaryDto 
   invited_count: s.invitedCount,
   available_kz: s.available,
   rewards: s.rewards.map((r) => ({ id: r.id, kind: r.kind, amount_kz: r.amount, used: r.used, created_at: r.at })),
+});
+
 export const fromApplicationInput = (a: ApplicationInput): D<typeof Dto.ApplicationBodyDto> => ({
   full_name: a.name,
   email: a.email,
