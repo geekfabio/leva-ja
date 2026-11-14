@@ -1,4 +1,5 @@
 export * from "./types";
+export type * from "./ApplicationsRepository";
 export type * from "./AuthRepository";
 export type * from "./RequestRepository";
 export type * from "./ProviderRepository";
@@ -11,6 +12,7 @@ export type * from "./NotificationRepository";
 export type * from "./PaymentRepository";
 
 import type { AccountRepository } from "./AccountRepository";
+import type { ApplicationsRepository } from "./ApplicationsRepository";
 import type { AuthRepository } from "./AuthRepository";
 import type { ChatRepository } from "./ChatRepository";
 import type { LocationRepository } from "./LocationRepository";
@@ -24,6 +26,7 @@ import type { SupportRepository } from "./SupportRepository";
 /** Conjunto de repositórios que a app consome. */
 export type Repositories = {
   auth: AuthRepository;
+  applications: ApplicationsRepository;
   requests: RequestRepository;
   providers: ProviderRepository;
   locations: LocationRepository;

@@ -63,6 +63,13 @@ export function createApiRepositories({ realtime, pollIntervalMs = env.pollInter
   setTokenRefresher(refresh);
 
   return {
+    applications: {
+      submit: async (input) => {
+        const application = await one(Dto.ApplicationDto, http.post("/applications", map.fromApplicationInput(input)), "candidatura");
+        return { status: application.status };
+      },
+    },
+
     auth: {
       login: (email, password, role) => startSession(http.post("/auth/login", { email, password, role })),
       register: (input) => none(http.post("/auth/register", { full_name: input.name, email: input.email, phone: input.phone, password: input.password })),

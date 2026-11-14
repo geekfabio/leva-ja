@@ -152,6 +152,18 @@ Há três tópicos, e cada mensagem traz JSON no formato acima:
 - Quando um pedido recebe 401, a app chama `POST /auth/refresh` uma única vez, mesmo com vários pedidos a falhar em paralelo, e repete os pedidos. Guarda os tokens novos.
 - No arranque, se `/auth/me` recusar o token guardado, a app tenta primeiro renovar.
 
+## Candidaturas a prestador
+
+| Método | Caminho | Corpo | Resposta |
+| --- | --- | --- | --- |
+| POST | `/applications` (público) | `ApplicationBody` | `201`, `{ data: { id, code, status: "pending", … } }` |
+
+`ApplicationBody` = `{ full_name, email, phone, service_types: ServiceType[], zone_ids: string[], vehicle: ApplicationVehicle | null }`, com `ApplicationVehicle` = `{ brand, model, plate, color, class: VehicleClass, category_label, capacity_kg?, year? }`.
+
+- Quem escolhe «Sou prestador» na app e ainda não tem conta preenche este formulário; não há password nesta fase — a candidatura fica `pending` em `provider_applications`, sem criar conta.
+- Um administrador revê a candidatura no painel web e aprova-a ou rejeita-a. Na aprovação, o servidor cria a conta de prestador e envia um email ao candidato com uma password temporária; o candidato entra depois por `POST /auth/login`, sem alterações a este fluxo.
+- A app só lê `status` da resposta para mostrar a confirmação; não guarda o resto.
+
 ## Regras de acesso
 
 O servidor decide sempre com base no token. A API simulada aplica estas regras (`src/data/mock/server.ts`, testadas em `api-security.test.ts`):
@@ -228,7 +240,7 @@ O que acontece em cada método:
 | GET | `/providers/:id/nearby-requests` | — | lista de `{ request: ServiceRequest, distance_km }`: pedidos em `searching` compatíveis com a cobertura e não recusados |
 | PUT | `/providers/:id/availability` | `{ online }` | 204 |
 | PATCH | `/providers/:id/vehicle` | campos de `vehicle`, sem `id` | `Vehicle` |
-| GET | `/zones` | — | lista de `{ id, name, lat, lng, radius_km }` |
+| GET | `/zones` (público) | — | lista de `{ id, name, lat, lng, radius_km }`. Público porque a candidatura a prestador (ver «Candidaturas») escolhe zonas antes de haver conta. |
 | PUT | `/providers/:id/coverage` | `{ zone_ids, service_types }` | a cobertura gravada; 422 se uma das listas vier vazia |
 | POST | `/providers/:id/documents/:documentId` | — (o ficheiro vai para `/uploads`) | o documento em `pending`; o servidor valida depois e publica em `providers/<id>` |
 | POST | `/providers/:id/declined` | `{ request_id }` | 204 |

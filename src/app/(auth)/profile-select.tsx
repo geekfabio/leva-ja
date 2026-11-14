@@ -4,7 +4,7 @@ import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
 import { ArrowLeft, ArrowRight } from "lucide-react-native";
-import { AppText, IconButton, PrimaryButton, SelectionCard } from "@/components/kit";
+import { AppText, IconButton, PrimaryButton, SelectionCard, TextButton } from "@/components/kit";
 import { illustrations } from "@/theme/images";
 import { useSessionStore } from "@/stores/useSessionStore";
 import { go, swap } from "@/features/navigation";
@@ -17,7 +17,7 @@ export default function ProfileSelectScreen() {
   const [role, setRole] = useState<Role>(current ?? "client");
   const confirm = () => {
     useSessionStore.getState().setRole(role);
-    go("/login");
+    go(role === "provider" ? "/apply" : "/login");
   };
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -54,9 +54,25 @@ export default function ProfileSelectScreen() {
       </View>
       <SafeAreaView edges={["bottom"]} style={{ paddingHorizontal: 20, paddingTop: 12, paddingBottom: 12, gap: 10 }}>
         <PrimaryButton label="Continuar" onPress={confirm} trailingIcon={<ArrowRight size={22} color={colors.white} />} />
-        <AppText variant="caption" color={colors.muted} align="center">
-          Podes alterar mais tarde nas definições.
-        </AppText>
+        {role === "provider" ? (
+          <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center" }}>
+            <AppText variant="caption" color={colors.muted}>
+              Já és prestador aprovado?
+            </AppText>
+            <TextButton
+              size="sm"
+              label="Entrar"
+              onPress={() => {
+                useSessionStore.getState().setRole(role);
+                go("/login");
+              }}
+            />
+          </View>
+        ) : (
+          <AppText variant="caption" color={colors.muted} align="center">
+            Podes alterar mais tarde nas definições.
+          </AppText>
+        )}
       </SafeAreaView>
     </View>
   );

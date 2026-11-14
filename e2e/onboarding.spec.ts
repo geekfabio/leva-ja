@@ -21,11 +21,34 @@ test.describe("entrada na app", () => {
     errors.expectNone();
   });
 
-  test("prestador: login até ao painel", async ({ page }) => {
+  test("prestador: candidatura a partir da escolha de perfil", async ({ page }) => {
     const errors = trackErrors(page);
     await page.goto("/profile-select");
     await tap(page, "Sou prestador");
     await tap(page, "Continuar");
+    await page.waitForURL(/\/apply$/);
+    await page.getByPlaceholder("Nome completo").fill("Ana Neto");
+    await page.getByPlaceholder("Email").fill("ana.neto@angoleva.ao");
+    await page.getByPlaceholder("Telefone").fill("923456789");
+    await tap(page, "Continuar");
+    await page.waitForURL(/\/apply-services/);
+    await tap(page, "Reboque de viatura");
+    await tap(page, "Luanda");
+    await tap(page, "Continuar");
+    await page.waitForURL(/\/apply-vehicle/);
+    await tap(page, "Não tenho viatura própria agora");
+    await tap(page, "Enviar candidatura");
+    await page.waitForURL(/\/apply-sent/);
+    await expect(page.getByText("Candidatura enviada")).toBeVisible({ timeout: 10_000 });
+    errors.expectNone();
+  });
+
+  test("prestador já aprovado: entra directamente sem candidatura", async ({ page }) => {
+    const errors = trackErrors(page);
+    await page.goto("/profile-select");
+    await tap(page, "Sou prestador");
+    await tap(page, "Entrar");
+    await page.waitForURL(/\/login/);
     await page.getByPlaceholder("Email").fill("joao.manuel@angoleva.ao");
     await page.getByPlaceholder("Palavra-passe").fill("segredo12");
     await tap(page, "Entrar");
