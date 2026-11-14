@@ -147,7 +147,28 @@ export type PriceBreakdown = {
   distance: number;
   extras: number;
   platformFee: number;
+  /** Preço completo do serviço; o cliente paga `total - (discount ?? 0)`. */
   total: number;
+  /** Desconto de um código promocional ou de um convite (pago pela plataforma). */
+  discount?: number;
+  discountLabel?: string;
+};
+
+/** Resultado de validar um código promocional para um pedido. */
+export type PromoPreview = { code: string; discount: number; label: string };
+
+export type ReferralReward = { id: string; kind: "invitee" | "inviter"; amount: number; used: boolean; at: string };
+/** Convites do cliente: o seu código, o que cada lado ganha e os descontos por usar. */
+export type ReferralSummary = {
+  enabled: boolean;
+  code: string;
+  inviteeDiscount: number;
+  inviterDiscount: number;
+  /** Já usou o código de outra pessoa. */
+  redeemed: boolean;
+  invitedCount: number;
+  available: number;
+  rewards: ReferralReward[];
 };
 
 export type ServiceEvent = { status: ServiceStatus; at: string };
@@ -230,7 +251,7 @@ export type ChatMessage = {
   read: boolean;
 };
 
-export type TransactionKind = "earning" | "withdrawal" | "fee";
+export type TransactionKind = "earning" | "withdrawal" | "fee" | "bonus" | "adjustment";
 export type Transaction = {
   id: string;
   kind: TransactionKind;

@@ -3,7 +3,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import {
   ArrowLeftRight,
   CircleHelp,
-  CreditCard,
+  Gift,
   History,
   MapPin,
   Pencil,
@@ -107,9 +107,10 @@ export default function AccountScreen() {
           </Appear>
           <Appear index={2} delay={120}>
             <ListRow
-              icon={<CreditCard {...icon} />}
-              title="Métodos de pagamento"
-              onPress={() => go("/payment-methods")}
+              icon={<Gift {...icon} />}
+              title="Convidar amigos"
+              subtitle="Partilha o teu código e ganha descontos"
+              onPress={() => go("/invite")}
             />
           </Appear>
           <Appear index={3} delay={120}>

@@ -24,6 +24,7 @@ export const queryKeys = {
   nearbyVehicles: (c?: Coordinates) => ["locations", "vehicles", c?.latitude, c?.longitude] as const,
   help: (q: string, c?: string) => ["support", q, c ?? "all"] as const,
   emergency: ["support", "emergency"] as const,
+  referral: ["account", "referral"] as const,
 };
 
 const myProviderId = () => useSessionStore.getState().providerId ?? "";
@@ -51,7 +52,7 @@ export const useCashBalance = () => {
   return useQuery({ queryKey: queryKeys.cashBalance(providerId), queryFn: () => repositories().providers.cashBalance(providerId) });
 };
 
-export const useTransactions = (filter: "all" | "earning" | "withdrawal") => {
+export const useTransactions = (filter: "all" | "earning" | "bonus") => {
   const providerId = useSessionStore((s) => s.providerId) ?? "";
   return useQuery({
     queryKey: queryKeys.transactions(providerId, filter),
@@ -92,3 +93,5 @@ export const useHelpSearch = (query: string, category?: HelpTopic["category"]) =
   useQuery({ queryKey: queryKeys.help(query, category), queryFn: () => repositories().support.searchHelp(query, category), placeholderData: (prev) => prev });
 
 export const useEmergencyContacts = () => useQuery({ queryKey: queryKeys.emergency, queryFn: () => repositories().support.emergencyContacts() });
+
+export const useReferral = () => useQuery({ queryKey: queryKeys.referral, queryFn: () => repositories().discounts.referral() });

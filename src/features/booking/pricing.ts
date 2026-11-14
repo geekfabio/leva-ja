@@ -69,6 +69,9 @@ export function estimatePrice(input: PricingInput): PriceBreakdown {
   };
 }
 
+/** O que o cliente entrega ao prestador: o total menos o desconto (código promocional ou convite). */
+export const payable = (price: PriceBreakdown) => Math.max(0, price.total - (price.discount ?? 0));
+
 export function providerEarningFor(price: PriceBreakdown) {
   const service = price.total - price.platformFee;
   return Math.floor((service * (1 - PROVIDER_COMMISSION)) / 500) * 500;

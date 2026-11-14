@@ -194,6 +194,19 @@ export function createApiRepositories({ realtime, pollIntervalMs = env.pollInter
       get: async (paymentId) => map.toPayment(await one(Dto.PaymentDto, http.get(`/payments/${paymentId}`), "pagamento")),
     },
 
+    discounts: {
+      validatePromo: async (check) =>
+        map.toPromoPreview(
+          await one(
+            Dto.PromoPreviewDto,
+            http.post("/promotions/validate", { code: check.code, service_type: check.kind, pickup: map.fromCoordinates(check.origin), total_kz: check.total }),
+            "código promocional",
+          ),
+        ),
+      referral: async () => map.toReferralSummary(await one(Dto.ReferralSummaryDto, http.get("/referrals/me"), "convites")),
+      redeemReferral: async (code) => map.toReferralSummary(await one(Dto.ReferralSummaryDto, http.post("/referrals/redeem", { code }), "convites")),
+    },
+
     notifications: {
       registerDevice: (device) => none(http.post("/devices", { push_token: device.token, platform: device.platform, role: device.role })),
       unregisterDevice: (token) => none(http.delete(`/devices/${encodeURIComponent(token)}`)),

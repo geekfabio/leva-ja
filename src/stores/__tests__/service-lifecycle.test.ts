@@ -73,12 +73,14 @@ describe("ciclo de vida partilhado cliente ↔ prestador (stores sobre repositó
 
     const balance = useProviderStore.getState().balance;
     expect(await store.submitProof(id, { photos: deliveryPhotos, signedBy: "Armando Manuel", goodCondition: true })).toBe(true);
-    expect(find(id).status).toBe("delivered");
+    // Numerário: o cliente paga ao prestador na entrega, por isso o pedido fica logo pago, sem passo de pagamento.
+    expect(find(id).status).toBe("paid");
+    expect(find(id).paymentMethod).toBe("cash");
     // A carteira é actualizada pelo repositório e chega à store pela subscrição.
     await eventually(() => useProviderStore.getState().balance === balance + find(id).providerEarning);
+    // A plataforma dá um bónus por corrida: aparece nas transacções, sem mexer no saldo.
+    expect(useProviderStore.getState().transactions.some((t) => t.kind === "bonus" && t.id === `bonus-${id}`)).toBe(true);
 
-    expect(await store.rate(id, 5)).toBe(false);
-    expect(await store.pay(id, "card")).toBe(true);
     expect(await store.rate(id, 5, "Excelente")).toBe(true);
     expect(find(id).timeline.map((e) => e.status)).toEqual(["searching", "assigned", "en_route", "arrived", "pickup_confirmed", "in_transit", "delivered", "paid", "rated"]);
     expect(useServiceStore.getState().activeClientRequestId).toBeNull();

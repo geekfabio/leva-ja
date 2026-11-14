@@ -140,8 +140,15 @@ export class MockProviderRepository implements ProviderRepository {
    * prestador simulado nunca fica bloqueado, para a demonstração não
    * depender de um fluxo que a app não consegue simular por si só.
    */
-  cashBalance(_providerId: string) {
-    return simulate(() => ({ owedKz: 0, depositedKz: 0, balanceKz: 0, blocked: false }));
+  cashBalance(providerId: string) {
+    return simulate(() => {
+      // Só os bónus contam: é o que a plataforma deve ao prestador na demonstração.
+      const bonusKz = this.database
+        .providerRecord(providerId)
+        .wallet.transactions.filter((t) => t.kind === "bonus" && t.status === "completed")
+        .reduce((sum, t) => sum + t.amount, 0);
+      return { owedKz: 0, depositedKz: 0, creditsKz: bonusKz, bonusKz, balanceKz: bonusKz, blocked: false };
+    });
   }
 
   reviews(providerId: string) {

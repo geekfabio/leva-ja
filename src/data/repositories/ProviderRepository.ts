@@ -3,10 +3,15 @@ import type { Unsubscribe } from "./types";
 
 export type Coverage = { zones: string[]; services: ServiceKind[] };
 export type PayoutAccount = { bank: string; iban: string; holder: string };
-export type Wallet = { balance: number; transactions: Transaction[]; payout: PayoutAccount };
+/** `payout` só existe depois de o prestador indicar uma conta bancária. */
+export type Wallet = { balance: number; transactions: Transaction[]; payout: PayoutAccount | null };
 export type EarningsSummary = { today: number; todayCount: number; week: number; completed: number; chart: number[] };
-/** O que o prestador deve à plataforma por corridas em numerário (único meio de pagamento por agora). */
-export type CashBalance = { owedKz: number; depositedKz: number; balanceKz: number; blocked: boolean };
+/**
+ * Contas do prestador com a plataforma, com as corridas pagas em numerário.
+ * `balanceKz` = depósitos + créditos (bónus por corrida e descontos que a
+ * plataforma assume) − o que o prestador deve. Negativo bloqueia novos pedidos.
+ */
+export type CashBalance = { owedKz: number; depositedKz: number; creditsKz: number; bonusKz: number; balanceKz: number; blocked: boolean };
 
 export type ProviderState = {
   profile: Provider;

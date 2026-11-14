@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { tap, trackErrors } from "./helpers";
 
-test("cliente: pedido de carga do início ao recibo, com pagamento por referência Multicaixa", async ({ page }) => {
+test("cliente: pedido de carga do início ao recibo, pago em numerário, sem ecrã de pagamento", async ({ page }) => {
   test.slow();
   const errors = trackErrors(page);
   await page.goto("/home");
@@ -34,12 +34,8 @@ test("cliente: pedido de carga do início ao recibo, com pagamento por referênc
   await page.waitForURL(/\/trip\/(pickup|in-transit)/);
   if (page.url().includes("/trip/pickup")) await tap(page, "Confirmar recolha");
 
-  await page.waitForURL(/\/trip\/payment/, { timeout: 60_000 });
-  await tap(page, "Referência bancária");
-  await tap(page, "Continuar para pagamento");
-  await expect(page.getByText("11223")).toBeVisible();
-  // O "banco" confirma ao fim de alguns segundos e o ecrã segue sozinho para o recibo.
-  await page.waitForURL(/\/trip\/receipt/, { timeout: 30_000 });
+  // Pagamento em numerário: não há ecrã de pagamento, a entrega leva directamente ao recibo.
+  await page.waitForURL(/\/trip\/receipt/, { timeout: 60_000 });
   await expect(page.getByText("Obrigado por escolher a AngoLeva")).toBeVisible();
   errors.expectNone();
 });

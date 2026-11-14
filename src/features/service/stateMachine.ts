@@ -28,7 +28,8 @@ export const transitionActor: Partial<Record<ServiceStatus, Role | "system">> = 
   pickup_confirmed: "client",
   in_transit: "provider",
   delivered: "provider",
-  paid: "client",
+  // Pagamento em numerário: o servidor fecha o pedido como pago na entrega.
+  paid: "system",
   rated: "client",
 };
 
@@ -99,7 +100,7 @@ export const clientScreenFor: Record<ServiceStatus, string> = {
   arrived: "/trip/arrived",
   pickup_confirmed: "/trip/in-transit",
   in_transit: "/trip/in-transit",
-  delivered: "/trip/payment",
+  delivered: "/trip/receipt",
   paid: "/trip/receipt",
   rated: "/trip/receipt",
   cancelled: "/trips",

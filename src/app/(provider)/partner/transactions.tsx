@@ -7,7 +7,7 @@ import { dayGroupLabel } from "@/utils/date";
 import type { Transaction } from "@/types/domain";
 import { colors } from "@/theme/colors";
 
-type Filter = "all" | "earning" | "withdrawal";
+type Filter = "all" | "earning" | "bonus";
 
 /** 39 · Transacções agrupadas por dia, com filtros. */
 export default function TransactionsScreen() {
@@ -33,7 +33,7 @@ export default function TransactionsScreen() {
           options={[
             { value: "all", label: "Todos" },
             { value: "earning", label: "Recebidos" },
-            { value: "withdrawal", label: "Levantamentos" },
+            { value: "bonus", label: "Bónus" },
           ]}
         />
         {isLoading ? (
@@ -54,7 +54,7 @@ export default function TransactionsScreen() {
             </View>
           ))
         ) : (
-          <EmptyState title="Sem transacções" description="Os teus ganhos e levantamentos aparecem aqui." />
+          <EmptyState title="Sem transacções" description="Os teus ganhos e bónus aparecem aqui." />
         )}
       </ScreenContainer>
     </View>

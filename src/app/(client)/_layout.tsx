@@ -2,7 +2,7 @@ import { Stack } from "expo-router";
 import { useScreenTransition, useStackOptions, webScreenLayout, type TransitionKind } from "@/components/core/ScreenTransitions";
 
 /** Ecrãs trocados pela mudança de estado do serviço: esbatem em vez de deslizar. */
-const statusScreens = ["trip/matching", "trip/found", "trip/arrived", "trip/in-transit", "trip/payment", "trip/receipt"];
+const statusScreens = ["trip/matching", "trip/found", "trip/arrived", "trip/in-transit", "trip/receipt"];
 const modalScreens = ["trip/call", "sos"];
 const kindFor = (route: string): TransitionKind => (statusScreens.includes(route) || route === "trip/call" ? "fade" : route === "sos" ? "modal" : "push");
 const screenLayout = webScreenLayout(kindFor);

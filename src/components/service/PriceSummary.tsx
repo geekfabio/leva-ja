@@ -1,5 +1,6 @@
 import { View } from "react-native";
 import type { PriceBreakdown } from "@/types/domain";
+import { payable } from "@/features/booking/pricing";
 import { formatKz } from "@/utils/format";
 import { colors } from "@/theme/colors";
 import { AppText } from "@/components/core/AppText";
@@ -29,10 +30,20 @@ export function PriceSummary({ price, totalLabel = "Total", detailed = false }: 
           <AppText variant="body">{formatKz(value)}</AppText>
         </View>
       ))}
+      {price.discount ? (
+        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+          <AppText variant="body" color={colors.primary}>
+            {price.discountLabel ?? "Desconto"}
+          </AppText>
+          <AppText variant="body" color={colors.primary}>
+            −{formatKz(price.discount)}
+          </AppText>
+        </View>
+      ) : null}
       <Divider />
       <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
         <AppText variant="title">{totalLabel}</AppText>
-        <AppText variant="title">{formatKz(price.total)}</AppText>
+        <AppText variant="title">{formatKz(payable(price))}</AppText>
       </View>
     </View>
   );

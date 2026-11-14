@@ -11,6 +11,7 @@ import { db, type MockDatabase, type SessionRecord } from "./database";
 import { Emitter } from "./events";
 import { pushFor, type PushMessage } from "@/features/notifications/push";
 import { createMockRepositories } from "./index";
+import { MockDiscountRepository } from "./MockDiscountRepository";
 import { MockRequestRepository } from "./MockRequestRepository";
 
 /**
@@ -325,6 +326,17 @@ export function createMockServer(database: MockDatabase = db, { simulation = tru
     ok(map.fromTransaction(await repos.providers.withdraw(params.id!, input(z.object({ amount_kz: z.number() }), body).amount_kz))),
   );
   add("get", "/providers/:id/earnings", async ({ params }) => ok(map.fromEarnings(await repos.providers.earnings(params.id!))));
+  // —— Descontos: código promocional e convites (do cliente autenticado) ——
+  const discountRepo = repos.discounts as MockDiscountRepository;
+  add("post", "/promotions/validate", async (ctx) => {
+    const body = input(z.object({ code: z.string().min(1), service_type: z.string(), pickup: z.object({ lat: z.number(), lng: z.number() }), total_kz: z.number() }), ctx.body);
+    const check = { code: body.code, kind: body.service_type as ServiceRequest["kind"], origin: map.toCoordinates(body.pickup), total: body.total_kz };
+    return ok(map.fromPromoPreview(await discountRepo.validatePromo(check, ctx.session.user.id)));
+  });
+  add("get", "/referrals/me", async (ctx) => ok(map.fromReferralSummary(await discountRepo.referral(ctx.session.user.id))));
+  add("post", "/referrals/redeem", async (ctx) =>
+    ok(map.fromReferralSummary(await discountRepo.redeemReferral(input(z.object({ code: z.string().min(1) }), ctx.body).code, ctx.session.user.id))),
+  );
   add("get", "/providers/:id/balance", async ({ params }) => ok(map.fromCashBalance(await repos.providers.cashBalance(params.id!))));
   add("get", "/providers/:id/reviews", async ({ params }) => list((await repos.providers.reviews(params.id!)).map(map.fromReview)));
   add("get", "/zones", async () => list((await repos.providers.listZones()).map(map.fromZone)));
