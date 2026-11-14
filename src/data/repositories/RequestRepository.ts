@@ -1,5 +1,6 @@
 import type {
   DeliveryProofData,
+  Negotiation,
   Photo,
   Role,
   ServiceRequest,
@@ -34,6 +35,15 @@ export interface RequestRepository {
   cancel(id: string, reason: string): Promise<ServiceRequest>;
   submitProposal(id: string, providerId: string, amount: number, reason: string): Promise<ServiceRequest>;
   answerProposal(id: string, accepted: boolean): Promise<ServiceRequest>;
+  /** Negociações abertas de um pedido: todas para o cliente, só a própria para um prestador. */
+  negotiations(requestId: string): Promise<Negotiation[]>;
+  /** Só um prestador pode abrir, com o pedido "searching" e o próprio prestador online. */
+  openNegotiation(requestId: string, direction: "up" | "down"): Promise<Negotiation>;
+  /** Move o valor ±50 Kz, dentro de min/max; qualquer um dos dois lados pode chamar. */
+  adjustNegotiation(requestId: string, negotiationId: string, direction: "up" | "down"): Promise<Negotiation>;
+  /** Só quem não fez a última proposta pode aceitar; cancela as outras negociações pendentes do pedido. */
+  acceptNegotiation(requestId: string, negotiationId: string): Promise<ServiceRequest>;
+  declineNegotiation(requestId: string, negotiationId: string): Promise<Negotiation>;
   addPickupPhotos(id: string, photos: Photo[]): Promise<ServiceRequest>;
   submitProof(id: string, proof: Omit<DeliveryProofData, "at">): Promise<ServiceRequest>;
   rate(id: string, rating: number, review?: string): Promise<ServiceRequest>;

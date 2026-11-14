@@ -9,9 +9,3 @@ export function useProviderActiveRequest() {
     s.requests.find((r) => r.providerId === providerId && r.status !== "searching" && isActiveStatus(r.status) && r.status !== "delivered"),
   );
 }
-
-/** Proposta enviada pelo prestador e ainda sem resposta do cliente. */
-export function usePendingProposal() {
-  const providerId = useSessionStore((s) => s.providerId);
-  return useServiceStore((s) => s.requests.find((r) => r.providerId === providerId && r.status === "searching" && r.proposal?.status === "sent"));
-}

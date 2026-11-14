@@ -7,6 +7,7 @@ import type {
   DeliveryProofData,
   HelpTopic,
   MovingDetails,
+  Negotiation,
   Payment,
   PaymentMethod,
   Photo,
@@ -254,6 +255,33 @@ export const fromServiceRequest = (r: ServiceRequest): Dto.ServiceRequestDto => 
 
 export const toNearbyRequest = (dto: D<typeof Dto.NearbyRequestDto>): NearbyRequest => ({ request: toServiceRequest(dto.request), distanceKm: dto.distance_km });
 export const fromNearbyRequest = (n: NearbyRequest): D<typeof Dto.NearbyRequestDto> => ({ request: fromServiceRequest(n.request), distance_km: n.distanceKm });
+
+export const toNegotiation = (dto: Dto.NegotiationDto): Negotiation => ({
+  id: dto.id,
+  requestId: dto.request_id,
+  providerId: dto.provider_id,
+  provider: dto.provider ? toProvider(dto.provider) : undefined,
+  amount: dto.amount_kz,
+  minAmount: dto.min_kz,
+  maxAmount: dto.max_kz,
+  by: dto.by,
+  status: dto.status,
+  createdAt: dto.created_at,
+  updatedAt: dto.updated_at,
+});
+export const fromNegotiation = (n: Negotiation): Dto.NegotiationDto => ({
+  id: n.id,
+  request_id: n.requestId,
+  provider_id: n.providerId,
+  provider: n.provider ? fromProvider(n.provider) : null,
+  amount_kz: n.amount,
+  min_kz: n.minAmount,
+  max_kz: n.maxAmount,
+  by: n.by,
+  status: n.status,
+  created_at: n.createdAt,
+  updated_at: n.updatedAt,
+});
 
 // —— Corpos de pedidos (app → API) ——
 

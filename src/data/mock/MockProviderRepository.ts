@@ -1,4 +1,4 @@
-import type { ProviderDocument, Transaction, Vehicle } from "@/types/domain";
+import type { Coordinates, ProviderDocument, Transaction, Vehicle } from "@/types/domain";
 import { weeklyEarnings } from "@/mocks/finance";
 import { availableZones } from "@/mocks/provider";
 import { providerReviews } from "@/mocks/reviews";
@@ -77,6 +77,15 @@ export class MockProviderRepository implements ProviderRepository {
       });
       return clone(doc) as ProviderDocument;
     });
+  }
+
+  /** GPS real do prestador: actualiza a posição simulada (lida depois via `request.provider.coords`). */
+  updateLocation(providerId: string, coords: Coordinates) {
+    return simulate(() => {
+      const profile = this.database.providers.get(providerId);
+      if (!profile) throw new RepositoryError("not_found", "Prestador não encontrado.");
+      profile.coords = { ...coords };
+    }, 0);
   }
 
   decline(providerId: string, requestId: string) {

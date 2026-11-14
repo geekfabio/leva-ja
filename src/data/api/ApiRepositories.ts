@@ -102,6 +102,14 @@ export function createApiRepositories({ realtime, pollIntervalMs = env.pollInter
       submitProposal: async (id, providerId, amount, reason) =>
         map.toServiceRequest(await one(Dto.ServiceRequestDto, http.post(`/requests/${id}/proposal`, { provider_id: providerId, amount_kz: amount, reason }), "pedido")),
       answerProposal: async (id, accepted) => map.toServiceRequest(await one(Dto.ServiceRequestDto, http.post(`/requests/${id}/proposal/answer`, { accepted }), "pedido")),
+      negotiations: async (requestId) => (await many(Dto.NegotiationDto, http.get(`/requests/${requestId}/negotiations`), "negociações")).map(map.toNegotiation),
+      openNegotiation: async (requestId, direction) => map.toNegotiation(await one(Dto.NegotiationDto, http.post(`/requests/${requestId}/negotiations`, { direction }), "negociação")),
+      adjustNegotiation: async (requestId, negotiationId, direction) =>
+        map.toNegotiation(await one(Dto.NegotiationDto, http.post(`/requests/${requestId}/negotiations/${negotiationId}/adjust`, { direction }), "negociação")),
+      acceptNegotiation: async (requestId, negotiationId) =>
+        map.toServiceRequest(await one(Dto.ServiceRequestDto, http.post(`/requests/${requestId}/negotiations/${negotiationId}/accept`), "pedido")),
+      declineNegotiation: async (requestId, negotiationId) =>
+        map.toNegotiation(await one(Dto.NegotiationDto, http.post(`/requests/${requestId}/negotiations/${negotiationId}/decline`), "negociação")),
       addPickupPhotos: async (id, photos) =>
         map.toServiceRequest(await one(Dto.ServiceRequestDto, http.post(`/requests/${id}/pickup-photos`, { photos: photos.map(map.fromPhoto) }), "pedido")),
       submitProof: async (id, proof) => map.toServiceRequest(await one(Dto.ServiceRequestDto, http.post(`/requests/${id}/proof`, map.fromProofInput(proof)), "pedido")),
@@ -124,6 +132,7 @@ export function createApiRepositories({ realtime, pollIntervalMs = env.pollInter
       saveCoverage: async (providerId, coverage) => map.toCoverage(await one(Dto.CoverageDto, http.put(`/providers/${providerId}/coverage`, map.fromCoverage(coverage)), "cobertura")),
       submitDocument: async (providerId, documentId) => map.toDocument(await one(Dto.DocumentDto, http.post(`/providers/${providerId}/documents/${documentId}`), "documento")),
       decline: (providerId, requestId) => none(http.post(`/providers/${providerId}/declined`, { request_id: requestId })),
+      updateLocation: (providerId, coords) => none(http.put(`/providers/${providerId}/location`, map.fromCoordinates(coords))),
       withdraw: async (providerId, amount) => map.toTransaction(await one(Dto.TransactionDto, http.post(`/providers/${providerId}/withdrawals`, { amount_kz: amount }), "levantamento")),
       earnings: async (providerId) => map.toEarnings(await one(Dto.EarningsDto, http.get(`/providers/${providerId}/earnings`), "ganhos")),
       reviews: async (providerId) => (await many(Dto.ReviewDto, http.get(`/providers/${providerId}/reviews`), "avaliações")).map(map.toReview),

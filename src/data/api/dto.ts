@@ -144,6 +144,22 @@ export type ServiceRequestDto = z.infer<typeof ServiceRequestDto>;
 
 export const NearbyRequestDto = z.object({ request: ServiceRequestDto, distance_km: z.number() });
 
+export const NegotiationDto = z.object({
+  id: z.string(),
+  request_id: z.string(),
+  provider_id: z.string(),
+  /** Resumo do prestador para o cartão no ecrã do cliente; opcional para não exigir mudança no contrato. */
+  provider: ProviderDto.nullable().optional(),
+  amount_kz: z.number(),
+  min_kz: z.number(),
+  max_kz: z.number(),
+  by: z.enum(["client", "provider"]),
+  status: z.enum(["pending", "accepted", "declined", "cancelled"]),
+  created_at: z.string(),
+  updated_at: z.string(),
+});
+export type NegotiationDto = z.infer<typeof NegotiationDto>;
+
 export const SessionDto = z.object({
   access_token: z.string(),
   token_type: z.literal("Bearer"),
@@ -280,3 +296,4 @@ export const ApplicationBodyDto = z.object({
 
 export const ApplicationDto = z.object({ id: z.string(), code: z.string(), status: z.string() });
 export type ApplicationDto = z.infer<typeof ApplicationDto>;
+export const NegotiationDirectionBodyDto = z.object({ direction: z.enum(["up", "down"]) });

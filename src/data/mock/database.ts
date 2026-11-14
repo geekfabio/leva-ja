@@ -1,6 +1,7 @@
-import type { ChatMessage, Client, Payment, PaymentMethod, Provider, SavedAddress, ServiceRequest } from "@/types/domain";
+import type { ChatMessage, Client, Negotiation, Payment, PaymentMethod, Provider, SavedAddress, ServiceRequest } from "@/types/domain";
 import type { ProviderState } from "../repositories/ProviderRepository";
 import type { Session } from "../repositories/AuthRepository";
+import { RepositoryError } from "../repositories/types";
 import { clients, providers } from "@/mocks/people";
 import { seedRequests } from "@/mocks/requests";
 import { initialBalance, initialTransactions, bankAccount } from "@/mocks/finance";
@@ -22,6 +23,9 @@ export class MockDatabase {
   clients = new Map<string, Client>();
   providers = new Map<string, Provider>();
   requests = new Map<string, ServiceRequest>();
+  negotiations = new Map<string, Negotiation>();
+  /** Incrementado em cada `reset()`, para as simulações em curso (rota do prestador) pararem de actuar sobre dados antigos. */
+  epoch = 0;
   providerState = new Map<string, ProviderRecord>();
   threads = new Map<string, ChatMessage[]>();
   addresses = new Map<string, SavedAddress[]>();
@@ -63,10 +67,12 @@ export class MockDatabase {
     this.pending = new Map();
     this.tickets = [];
     this.payments = new Map();
+    this.negotiations = new Map();
   }
 
   reset() {
     this.seed();
+    this.epoch += 1;
   }
 
   /** Pedido com cliente e prestador incluídos, como numa resposta da API. */
@@ -76,6 +82,31 @@ export class MockDatabase {
       client: this.clients.get(request.clientId),
       provider: request.providerId ? this.providers.get(request.providerId) : undefined,
     });
+  }
+
+  negotiationsFor(requestId: string) {
+    return clone([...this.negotiations.values()].filter((n) => n.requestId === requestId).sort((a, b) => a.createdAt.localeCompare(b.createdAt)));
+  }
+
+  negotiation(id: string) {
+    const found = this.negotiations.get(id);
+    if (!found) throw new RepositoryError("not_found", "Negociação não encontrada.");
+    return clone(found);
+  }
+
+  saveNegotiation(negotiation: Negotiation) {
+    this.negotiations.set(negotiation.id, clone(negotiation));
+    return clone(negotiation);
+  }
+
+  /** Ao atribuir o pedido (negociação aceite ou aceitação directa), as outras negociações pendentes caem. */
+  cancelPendingNegotiations(requestId: string, exceptId?: string) {
+    const updatedAt = new Date().toISOString();
+    for (const n of this.negotiations.values()) {
+      if (n.requestId === requestId && n.status === "pending" && n.id !== exceptId) {
+        this.negotiations.set(n.id, { ...n, status: "cancelled", updatedAt });
+      }
+    }
   }
 
   providerRecord(providerId: string) {
