@@ -8,6 +8,7 @@ import { initialBalance, initialTransactions, bankAccount } from "@/mocks/financ
 import { initialDocuments, initialServices, initialZones } from "@/mocks/provider";
 import { initialAddresses, initialPaymentMethods } from "@/mocks/account";
 import { clone } from "./runtime";
+import type { MockReward } from "./discounts";
 import { DEMO_CLIENT, DEMO_PROVIDER_ID, DEMO_TOKEN } from "./demo";
 
 type ProviderRecord = Omit<ProviderState, "profile">;
@@ -39,6 +40,10 @@ export class MockDatabase {
   devices = new Map<string, { userId: string; providerId?: string; role: "client" | "provider"; platform: string }>();
   /** Refresh tokens → token de acesso que renovam. */
   refreshTokens = new Map<string, string>();
+  /** Descontos (ver discounts.ts): usos do código promocional, quem convidou quem e os descontos ganhos. */
+  promoUses: { code: string; clientId: string; requestId: string }[] = [];
+  referredBy = new Map<string, string>();
+  rewards: MockReward[] = [];
 
   constructor() {
     this.seed();
@@ -68,6 +73,9 @@ export class MockDatabase {
     this.tickets = [];
     this.payments = new Map();
     this.negotiations = new Map();
+    this.promoUses = [];
+    this.referredBy = new Map();
+    this.rewards = [];
   }
 
   reset() {

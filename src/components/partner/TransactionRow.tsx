@@ -1,5 +1,5 @@
 import { View } from "react-native";
-import { Landmark } from "lucide-react-native";
+import { Gift, Landmark } from "lucide-react-native";
 import type { Transaction } from "@/types/domain";
 import { formatTime } from "@/utils/date";
 import { formatSignedKz } from "@/utils/format";
@@ -26,7 +26,13 @@ export function TransactionRow({ transaction }: { transaction: Transaction }) {
       style={[{ flexDirection: "row", alignItems: "center", gap: 14, padding: 14, borderRadius: radius.lg, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }, shadow.card]}
     >
       <IconCircle size={48}>
-        {transaction.kind === "withdrawal" ? <Landmark size={24} color={colors.ink} /> : <ServiceIcon kind={transaction.serviceKind ?? "cargo"} size={24} />}
+        {transaction.kind === "withdrawal" ? (
+          <Landmark size={24} color={colors.ink} />
+        ) : transaction.kind === "bonus" ? (
+          <Gift size={24} color={colors.primary} />
+        ) : (
+          <ServiceIcon kind={transaction.serviceKind ?? "cargo"} size={24} />
+        )}
       </IconCircle>
       <View style={{ flex: 1, gap: 2 }}>
         <AppText variant="label" weight="bold">

@@ -104,7 +104,15 @@ export const MovingDetailsDto = z.object({
   time: z.string().nullable(),
 });
 
-export const PricingDto = z.object({ base_kz: z.number(), distance_kz: z.number(), extras_kz: z.number(), platform_fee_kz: z.number(), total_kz: z.number() });
+export const PricingDto = z.object({
+  base_kz: z.number(),
+  distance_kz: z.number(),
+  extras_kz: z.number(),
+  platform_fee_kz: z.number(),
+  total_kz: z.number(),
+  discount_kz: z.number().optional(),
+  discount_label: z.string().optional(),
+});
 
 export const ProofDto = z.object({ photos: z.array(PhotoDto), signed_by: z.string(), good_condition: z.boolean(), notes: z.string().nullable(), delivered_at: z.string() });
 
@@ -174,7 +182,7 @@ export const MeDto = z.object({ user: ClientDto, provider_id: z.string().nullabl
 
 export const TransactionDto = z.object({
   id: z.string(),
-  type: z.enum(["earning", "withdrawal", "fee"]),
+  type: z.enum(["earning", "withdrawal", "fee", "bonus", "adjustment"]),
   title: z.string(),
   amount_kz: z.number(),
   created_at: z.string(),
@@ -187,8 +195,8 @@ export const DocumentDto = z.object({
   id: z.string(),
   title: z.string(),
   kind: z.enum(["license", "id", "vehicle", "insurance"]),
-  valid_until: z.string(),
-  status: z.enum(["verified", "pending", "expired", "needs_update"]),
+  valid_until: z.string().nullable(),
+  status: z.enum(["verified", "pending", "expired", "needs_update", "rejected"]),
 });
 
 export const ZoneDto = z.object({ id: z.string(), name: z.string(), lat: z.number(), lng: z.number(), radius_km: z.number() });
@@ -203,13 +211,38 @@ export const ProviderStateDto = z.object({
   wallet: z.object({
     balance_kz: z.number(),
     transactions: z.array(TransactionDto),
-    payout_account: z.object({ bank: z.string(), iban: z.string(), holder: z.string() }),
+    payout_account: z.object({ bank: z.string(), iban: z.string(), holder: z.string() }).nullable(),
   }),
   declined_request_ids: z.array(z.string()),
 });
 export type ProviderStateDto = z.infer<typeof ProviderStateDto>;
 
 export const EarningsDto = z.object({ today_kz: z.number(), today_count: z.number().int(), week_kz: z.number(), completed_count: z.number().int(), last_7_days_kz: z.array(z.number()) });
+
+export const ProviderCashBalanceDto = z.object({
+  owed_kz: z.number(),
+  deposited_kz: z.number(),
+  credits_kz: z.number().default(0),
+  bonus_kz: z.number().default(0),
+  balance_kz: z.number(),
+  blocked: z.boolean(),
+});
+export type ProviderCashBalanceDto = z.infer<typeof ProviderCashBalanceDto>;
+
+export const PromoPreviewDto = z.object({ code: z.string(), discount_kz: z.number(), label: z.string() });
+export type PromoPreviewDto = z.infer<typeof PromoPreviewDto>;
+
+export const ReferralSummaryDto = z.object({
+  enabled: z.boolean(),
+  code: z.string(),
+  invitee_discount_kz: z.number(),
+  inviter_discount_kz: z.number(),
+  redeemed: z.boolean(),
+  invited_count: z.number().int(),
+  available_kz: z.number(),
+  rewards: z.array(z.object({ id: z.string(), kind: z.enum(["invitee", "inviter"]), amount_kz: z.number(), used: z.boolean(), created_at: z.string() })),
+});
+export type ReferralSummaryDto = z.infer<typeof ReferralSummaryDto>;
 
 export const ReviewDto = z.object({ id: z.string(), request_id: z.string(), author_name: z.string(), rating: z.number(), comment: z.string(), created_at: z.string() });
 
@@ -266,6 +299,7 @@ export const CreateRequestBodyDto = z.object({
   photos: z.array(PhotoDto),
   instructions: z.string().nullable(),
   payment_method: paymentType.nullable(),
+  promo_code: z.string().nullable().default(null),
 });
 
 export const ProofBodyDto = ProofDto.omit({ delivered_at: true });

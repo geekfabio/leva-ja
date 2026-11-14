@@ -24,7 +24,7 @@ import { NoActiveRequest } from "@/components/service/NoActiveRequest";
 import { SuccessBurst } from "@/components/service/SuccessBurst";
 import { serviceTitle } from "@/features/booking/catalog";
 import { describeLoad } from "@/features/booking/factory";
-import { paymentKindCopy } from "@/features/payment/copy";
+import { payable } from "@/features/booking/pricing";
 import { useRequest, useServiceStore } from "@/stores/useServiceStore";
 import { formatLongDateTime, formatShortDateTime, formatTime } from "@/utils/date";
 import { formatKz } from "@/utils/format";
@@ -114,7 +114,7 @@ export default function ReceiptScreen() {
             </AppText>
           </View>
           <AppText variant="h3" color={colors.primary}>
-            {formatKz(request.price.total)}
+            {formatKz(payable(request.price))}
           </AppText>
         </View>
         <Divider />
@@ -173,7 +173,7 @@ export default function ReceiptScreen() {
           ["Detalhes", describeLoad(request) || "—"],
           ["Prestador", provider ? `${provider.name} · ${provider.vehicle.plate}` : "—"],
           ["Distância", `${request.distanceKm} km`],
-          ["Pagamento", request.paymentMethod ? paymentKindCopy[request.paymentMethod].title : "—"],
+          ["Pagamento", "Numerário, entregue ao prestador"],
         ].map(([k, v]) => (
           <View key={k} style={{ flexDirection: "row", justifyContent: "space-between", gap: 16 }}>
             <AppText variant="body" color={colors.muted}>

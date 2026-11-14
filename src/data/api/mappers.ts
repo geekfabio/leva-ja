@@ -21,6 +21,9 @@ import type {
   Transaction,
   Vehicle,
   Zone,
+  PriceBreakdown,
+  PromoPreview,
+  ReferralSummary,
 } from "@/types/domain";
 import type { RequestInput } from "@/features/booking/factory";
 import { initialsOf } from "@/utils/format";
@@ -28,7 +31,7 @@ import type { ApplicationInput } from "../repositories/ApplicationsRepository";
 import type { Session } from "../repositories/AuthRepository";
 import type { ChatEvent } from "../repositories/ChatRepository";
 import type { NearbyVehicle } from "../repositories/LocationRepository";
-import type { Coverage, EarningsSummary, ProviderState } from "../repositories/ProviderRepository";
+import type { CashBalance, Coverage, EarningsSummary, ProviderState } from "../repositories/ProviderRepository";
 import type { NearbyRequest } from "../repositories/RequestRepository";
 import type { EmergencyContact, TicketInput } from "../repositories/SupportRepository";
 import type * as Dto from "./dto";
@@ -42,6 +45,23 @@ import type * as Dto from "./dto";
 type D<T extends z.ZodTypeAny> = z.infer<T>;
 const orNull = <T>(value: T | undefined) => (value === undefined ? null : value);
 const orUndefined = <T>(value: T | null) => (value === null ? undefined : value);
+
+const toPrice = (dto: D<typeof Dto.PricingDto>): PriceBreakdown => ({
+  base: dto.base_kz,
+  distance: dto.distance_kz,
+  extras: dto.extras_kz,
+  platformFee: dto.platform_fee_kz,
+  total: dto.total_kz,
+  ...(dto.discount_kz ? { discount: dto.discount_kz, discountLabel: dto.discount_label } : {}),
+});
+const fromPrice = (p: PriceBreakdown): D<typeof Dto.PricingDto> => ({
+  base_kz: p.base,
+  distance_kz: p.distance,
+  extras_kz: p.extras,
+  platform_fee_kz: p.platformFee,
+  total_kz: p.total,
+  ...(p.discount ? { discount_kz: p.discount, discount_label: p.discountLabel } : {}),
+});
 
 // —— Lugares e fotografias ——
 
@@ -209,7 +229,7 @@ export const toServiceRequest = (dto: Dto.ServiceRequestDto): ServiceRequest => 
   photos: dto.photos.map(toPhoto),
   pickupPhotos: dto.pickup_photos.map(toPhoto),
   instructions: orUndefined(dto.instructions),
-  price: { base: dto.pricing.base_kz, distance: dto.pricing.distance_kz, extras: dto.pricing.extras_kz, platformFee: dto.pricing.platform_fee_kz, total: dto.pricing.total_kz },
+  price: toPrice(dto.pricing),
   providerEarning: dto.provider_earning_kz,
   proposal: dto.proposal ? { amount: dto.proposal.amount_kz, reason: dto.proposal.reason, status: dto.proposal.status } : undefined,
   paymentMethod: orUndefined(dto.payment_method),
@@ -242,7 +262,7 @@ export const fromServiceRequest = (r: ServiceRequest): Dto.ServiceRequestDto => 
   photos: r.photos.map(fromPhoto),
   pickup_photos: r.pickupPhotos.map(fromPhoto),
   instructions: orNull(r.instructions),
-  pricing: { base_kz: r.price.base, distance_kz: r.price.distance, extras_kz: r.price.extras, platform_fee_kz: r.price.platformFee, total_kz: r.price.total },
+  pricing: fromPrice(r.price),
   provider_earning_kz: r.providerEarning,
   proposal: r.proposal ? { amount_kz: r.proposal.amount, reason: r.proposal.reason, status: r.proposal.status } : null,
   payment_method: orNull(r.paymentMethod),
@@ -300,6 +320,7 @@ export const fromCreateRequest = (input: CreateRequestInput) => ({
   photos: (input.photos ?? []).map(fromPhoto),
   instructions: orNull(input.instructions),
   payment_method: orNull(input.paymentMethod),
+  promo_code: orNull(input.promoCode),
 });
 export type CreateRequestBody = ReturnType<typeof fromCreateRequest>;
 
@@ -316,6 +337,7 @@ export const toCreateRequest = (body: CreateRequestBody): CreateRequestInput => 
   photos: body.photos.map(toPhoto),
   instructions: orUndefined(body.instructions),
   paymentMethod: orUndefined(body.payment_method),
+  promoCode: orUndefined(body.promo_code),
 });
 
 export const fromProofInput = (p: Omit<DeliveryProofData, "at">) => ({ photos: p.photos.map(fromPhoto), signed_by: p.signedBy, good_condition: p.goodCondition, notes: orNull(p.notes) });
@@ -359,7 +381,14 @@ export const fromTransaction = (t: Transaction): Dto.TransactionDto => ({
   service_type: orNull(t.serviceKind),
 });
 
-export const toDocument = (dto: D<typeof Dto.DocumentDto>): ProviderDocument => ({ id: dto.id, title: dto.title, icon: dto.kind, validUntil: dto.valid_until, state: dto.status });
+// A API diz "rejected" onde a app mostra "precisa de actualização"; um documento ainda sem validade fica com a data vazia.
+export const toDocument = (dto: D<typeof Dto.DocumentDto>): ProviderDocument => ({
+  id: dto.id,
+  title: dto.title,
+  icon: dto.kind,
+  validUntil: dto.valid_until ?? "",
+  state: dto.status === "rejected" ? "needs_update" : dto.status,
+});
 export const fromDocument = (d: ProviderDocument): D<typeof Dto.DocumentDto> => ({ id: d.id, title: d.title, kind: d.icon, valid_until: d.validUntil, status: d.state });
 
 export const toZone = (dto: D<typeof Dto.ZoneDto>): Zone => ({ id: dto.id, name: dto.name, coords: { latitude: dto.lat, longitude: dto.lng }, radiusKm: dto.radius_km });
@@ -373,7 +402,7 @@ export const toProviderState = (dto: Dto.ProviderStateDto): ProviderState => ({
   online: dto.online,
   coverage: toCoverage(dto.coverage),
   documents: dto.documents.map(toDocument),
-  wallet: { balance: dto.wallet.balance_kz, transactions: dto.wallet.transactions.map(toTransaction), payout: { ...dto.wallet.payout_account } },
+  wallet: { balance: dto.wallet.balance_kz, transactions: dto.wallet.transactions.map(toTransaction), payout: dto.wallet.payout_account ? { ...dto.wallet.payout_account } : null },
   declined: dto.declined_request_ids,
 });
 export const fromProviderState = (s: ProviderState): Dto.ProviderStateDto => ({
@@ -381,8 +410,25 @@ export const fromProviderState = (s: ProviderState): Dto.ProviderStateDto => ({
   online: s.online,
   coverage: fromCoverage(s.coverage),
   documents: s.documents.map(fromDocument),
-  wallet: { balance_kz: s.wallet.balance, transactions: s.wallet.transactions.map(fromTransaction), payout_account: { ...s.wallet.payout } },
+  wallet: { balance_kz: s.wallet.balance, transactions: s.wallet.transactions.map(fromTransaction), payout_account: s.wallet.payout ? { ...s.wallet.payout } : null },
   declined_request_ids: s.declined,
+});
+
+export const toCashBalance = (dto: Dto.ProviderCashBalanceDto): CashBalance => ({
+  owedKz: dto.owed_kz,
+  depositedKz: dto.deposited_kz,
+  creditsKz: dto.credits_kz,
+  bonusKz: dto.bonus_kz,
+  balanceKz: dto.balance_kz,
+  blocked: dto.blocked,
+});
+export const fromCashBalance = (b: CashBalance): Dto.ProviderCashBalanceDto => ({
+  owed_kz: b.owedKz,
+  deposited_kz: b.depositedKz,
+  credits_kz: b.creditsKz,
+  bonus_kz: b.bonusKz,
+  balance_kz: b.balanceKz,
+  blocked: b.blocked,
 });
 
 export const toEarnings = (dto: D<typeof Dto.EarningsDto>): EarningsSummary => ({ today: dto.today_kz, todayCount: dto.today_count, week: dto.week_kz, completed: dto.completed_count, chart: dto.last_7_days_kz });
@@ -454,6 +500,28 @@ export const fromEmergencyContact = (c: EmergencyContact): D<typeof Dto.Emergenc
 export const fromTicketInput = (t: TicketInput) => ({ request_id: t.requestId, reason: t.reason, description: t.description });
 export const toTicketInput = (body: ReturnType<typeof fromTicketInput>): TicketInput => ({ requestId: body.request_id, reason: body.reason, description: body.description });
 
+export const toPromoPreview = (dto: Dto.PromoPreviewDto): PromoPreview => ({ code: dto.code, discount: dto.discount_kz, label: dto.label });
+export const fromPromoPreview = (p: PromoPreview): Dto.PromoPreviewDto => ({ code: p.code, discount_kz: p.discount, label: p.label });
+
+export const toReferralSummary = (dto: Dto.ReferralSummaryDto): ReferralSummary => ({
+  enabled: dto.enabled,
+  code: dto.code,
+  inviteeDiscount: dto.invitee_discount_kz,
+  inviterDiscount: dto.inviter_discount_kz,
+  redeemed: dto.redeemed,
+  invitedCount: dto.invited_count,
+  available: dto.available_kz,
+  rewards: dto.rewards.map((r) => ({ id: r.id, kind: r.kind, amount: r.amount_kz, used: r.used, at: r.created_at })),
+});
+export const fromReferralSummary = (s: ReferralSummary): Dto.ReferralSummaryDto => ({
+  enabled: s.enabled,
+  code: s.code,
+  invitee_discount_kz: s.inviteeDiscount,
+  inviter_discount_kz: s.inviterDiscount,
+  redeemed: s.redeemed,
+  invited_count: s.invitedCount,
+  available_kz: s.available,
+  rewards: s.rewards.map((r) => ({ id: r.id, kind: r.kind, amount_kz: r.amount, used: r.used, created_at: r.at })),
 export const fromApplicationInput = (a: ApplicationInput): D<typeof Dto.ApplicationBodyDto> => ({
   full_name: a.name,
   email: a.email,

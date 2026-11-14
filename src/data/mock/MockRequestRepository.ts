@@ -8,6 +8,7 @@ import { approachStart, mockRoute, pointAlong, roadDistanceKm } from "@/utils/ge
 import type { NearbyRequest, RequestActor, RequestQuery, RequestRepository } from "../repositories/RequestRepository";
 import { RepositoryError } from "../repositories/types";
 import { db, type MockDatabase } from "./database";
+import { DEMO_DRIVER_BONUS, discountFor, recordDiscount, releaseDiscount, rewardInviter } from "./discounts";
 import { Emitter } from "./events";
 import { later, simulate } from "./runtime";
 
@@ -85,7 +86,13 @@ export class MockRequestRepository implements RequestRepository {
   }
 
   create(input: Omit<RequestInput, "status" | "id">) {
-    return simulate(() => this.save(buildRequest({ ...input, status: "searching" })));
+    return simulate(() => {
+      const request = buildRequest({ ...input, status: "searching" });
+      const applied = discountFor(this.database, request.clientId, request.price.total, input.promoCode);
+      if (!applied) return this.save(request);
+      recordDiscount(this.database, request, applied);
+      return this.save({ ...request, price: { ...request.price, discount: applied.discount, discountLabel: applied.label } });
+    });
   }
 
   transition(id: string, to: ServiceStatus, actor: RequestActor) {
@@ -97,7 +104,7 @@ export class MockRequestRepository implements RequestRepository {
       if (to === "assigned") this.database.cancelPendingNegotiations(id);
       const saved = this.save({ ...this.advance(r, to), providerId: to === "assigned" ? (r.providerId ?? simulatedProviderFor(r)) : r.providerId });
       if (to === "assigned") this.driveToOrigin(saved);
-      return saved;
+      return to === "delivered" ? this.settleIfCash(saved) : saved;
     });
   }
 
@@ -141,6 +148,7 @@ export class MockRequestRepository implements RequestRepository {
     return simulate(() => {
       const r = this.find(id);
       if (!canTransition(r.status, "cancelled")) throw new RepositoryError("invalid_transition", "Já não é possível cancelar após a recolha.");
+      releaseDiscount(this.database, id);
       return this.save({ ...this.advance(r, "cancelled"), cancelReason: reason });
     });
   }
@@ -249,10 +257,17 @@ export class MockRequestRepository implements RequestRepository {
     return simulate(() => {
       const r = this.find(id);
       if (r.status !== "in_transit") throw new RepositoryError("invalid_transition", "O comprovativo só se regista durante o transporte.");
-      const saved = this.save({ ...this.advance(r, "delivered"), proof: { ...proof, at: now() } });
+      const delivered = this.save({ ...this.advance(r, "delivered"), proof: { ...proof, at: now() } });
       if (r.providerId) this.creditProvider(r);
-      return saved;
+      return this.settleIfCash(delivered);
     });
+  }
+
+  /** Numerário: o cliente paga ao prestador na entrega, por isso o pedido fica logo pago (como no backend). */
+  private settleIfCash(delivered: ServiceRequest) {
+    if (delivered.paymentMethod !== "cash") return delivered;
+    rewardInviter(this.database, delivered.clientId);
+    return this.save(this.advance(this.find(delivered.id), "paid"));
   }
 
   /** O "servidor" credita o ganho na carteira do prestador quando a entrega é confirmada. */
@@ -262,6 +277,8 @@ export class MockRequestRepository implements RequestRepository {
     const tx: Transaction = { id: `tx-${r.id}`, kind: "earning", title: serviceTitle[r.kind], amount: r.providerEarning, at: now(), status: "completed", serviceKind: r.kind };
     wallet.transactions.unshift(tx);
     wallet.balance += tx.amount;
+    // O bónus da plataforma não entra no saldo: fica como crédito do prestador (ver cashBalance).
+    wallet.transactions.unshift({ id: `bonus-${r.id}`, kind: "bonus", title: `Bónus · ${serviceTitle[r.kind]}`, amount: DEMO_DRIVER_BONUS, at: now(), status: "completed", serviceKind: r.kind });
     providerChanges.emit(r.providerId!, r.providerId!);
   }
 
@@ -269,6 +286,7 @@ export class MockRequestRepository implements RequestRepository {
     return simulate(() => {
       const r = this.find(id);
       if (r.status !== "delivered") throw new RepositoryError("invalid_transition", "O pagamento só é possível após a entrega.");
+      rewardInviter(this.database, r.clientId);
       return this.save({ ...this.advance(r, "paid"), paymentMethod: method });
     });
   }

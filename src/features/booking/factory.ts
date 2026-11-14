@@ -34,6 +34,8 @@ export type RequestInput = {
   rating?: number;
   review?: string;
   paymentMethod?: ServiceRequest["paymentMethod"];
+  /** Código promocional a aplicar (validado pelo servidor). */
+  promoCode?: string;
 };
 
 /** Cria um pedido completo (distância, preço, ganho e cronologia) a partir dos dados do formulário. */

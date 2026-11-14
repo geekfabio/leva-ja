@@ -12,6 +12,8 @@ export type BookingDraft = {
   stops: Place[];
   photos: Photo[];
   instructions: string;
+  /** Código promocional já validado no passo da estimativa. */
+  promoCode?: string;
 };
 
 const emptyDraft = (kind: ServiceKind, variant?: "goods"): BookingDraft => ({

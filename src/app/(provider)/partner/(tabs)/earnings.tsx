@@ -2,26 +2,25 @@ import { useRef, useState } from "react";
 import { Pressable, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
-import { CalendarDays, ChartColumn, ChevronDown, FileText, Landmark, List, Settings, Upload, Wallet } from "lucide-react-native";
-import { AppText, BrandLogo, Card, EarningsChart, ErrorState, IconButton, IconCircle, InfoNote, LoadingState, PrimaryButton, ProviderMetric, ScreenContainer, SecondaryButton, SheetModal, Skeleton, TextField, AnimatedAmount } from "@/components/kit";
+import { CalendarDays, ChartColumn, ChevronDown, CircleAlert, FileText, Gift, List, Settings, Wallet } from "lucide-react-native";
+import { AppText, BrandLogo, Card, EarningsChart, ErrorState, IconButton, IconCircle, InfoNote, LoadingState, ProviderMetric, ScreenContainer, SecondaryButton, SheetModal, Skeleton, AnimatedAmount } from "@/components/kit";
 import { NotificationBell, ProviderSummaryCard } from "@/components/partner/ProviderHeader";
-import { withdrawSchema } from "@/features/provider/schemas";
-import { useFinanceSummary } from "@/services/queries";
-import { useProviderStore } from "@/stores/useProviderStore";
+import { useCashBalance, useFinanceSummary } from "@/services/queries";
 import { formatMonthYear } from "@/utils/date";
-import { formatKz, formatNumber, parseAmount } from "@/utils/format";
+import { formatKz } from "@/utils/format";
 import { go } from "@/features/navigation";
 import { toast } from "@/lib/toast";
 import { colors, radius } from "@/theme/colors";
 
 const weekLabels = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 
-/** 38 · Ganhos: gráfico semanal, métricas, saldo e levantamento simulado. */
+/**
+ * 38 · Ganhos: gráfico semanal, métricas e contas com a plataforma. O prestador
+ * recebe em numerário, por isso aqui só vê quanto fez; não há levantamentos.
+ */
 export default function EarningsScreen() {
   const { data, isLoading, isError, refetch, isRefetching } = useFinanceSummary();
-  const balance = useProviderStore((s) => s.balance);
-  const bankAccount = useProviderStore((s) => s.payout) ?? { bank: "—", iban: "—", holder: "—" };
-  const withdrawSheet = useRef<BottomSheetModal>(null);
+  const { data: cashBalance } = useCashBalance();
   const monthSheet = useRef<BottomSheetModal>(null);
   const months = Array.from({ length: 4 }, (_, i) => {
     const d = new Date();
@@ -29,21 +28,9 @@ export default function EarningsScreen() {
     return formatMonthYear(d);
   });
   const [month, setMonth] = useState(months[0]!);
-  const [amount, setAmount] = useState(0);
-  const [error, setError] = useState<string>();
-  const [sending, setSending] = useState(false);
-
-  const withdraw = async () => {
-    const result = withdrawSchema(balance).safeParse({ amount, iban: bankAccount.iban });
-    if (!result.success) return setError(result.error.issues[0]?.message);
-    setError(undefined);
-    setSending(true);
-    const ok = await useProviderStore.getState().withdraw(amount);
-    setSending(false);
-    if (!ok) return setError(useProviderStore.getState().lastError ?? "Não foi possível pedir o levantamento.");
-    withdrawSheet.current?.dismiss();
-    toast.success({ title: "Levantamento pedido", message: `${formatKz(amount)} para ${bankAccount.bank} (simulado).` });
-  };
+  // Positivo: a plataforma deve ao prestador (bónus, descontos que ela assume). Negativo: o prestador deve taxas.
+  const owing = cashBalance ? Math.max(0, -cashBalance.balanceKz) : 0;
+  const credit = cashBalance ? Math.max(0, cashBalance.balanceKz) : 0;
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -87,14 +74,57 @@ export default function EarningsScreen() {
                 <IconCircle size={64} tone="white">
                   <Wallet size={30} color={colors.ink} />
                 </IconCircle>
-                <View accessible accessibilityLabel={`Saldo disponível: ${formatKz(balance)}`}>
-                  <AppText variant="body">Saldo disponível</AppText>
-                  <AnimatedAmount value={balance} weight="extrabold" style={{ fontSize: 32, lineHeight: 40 }} />
+                <View style={{ flex: 1 }} accessible accessibilityLabel={`Ganhos desta semana: ${formatKz(data.week)}, recebidos em numerário`}>
+                  <AppText variant="body">Ganhos desta semana</AppText>
+                  <AnimatedAmount value={data.week} weight="extrabold" style={{ fontSize: 32, lineHeight: 40 }} />
+                  <AppText variant="caption" color={colors.muted}>
+                    Recebes em numerário, directamente do cliente.
+                  </AppText>
                 </View>
               </View>
-              <PrimaryButton size="md" label="Pedir levantamento" icon={<Upload size={20} color={colors.white} />} disabled={balance < 1000} onPress={() => { setAmount(balance); withdrawSheet.current?.present(); }} />
               <SecondaryButton size="md" label="Ver transacções" icon={<List size={20} color={colors.primary} />} onPress={() => go("/partner/transactions")} />
             </View>
+            {cashBalance && cashBalance.bonusKz > 0 ? (
+              <Card style={{ flexDirection: "row", alignItems: "center", gap: 12 }} accessibilityLabel={`Bónus da AngoLeva: ${formatKz(cashBalance.bonusKz)}`}>
+                <IconCircle size={48}>
+                  <Gift size={24} color={colors.primary} />
+                </IconCircle>
+                <View style={{ flex: 1 }}>
+                  <AppText variant="label" weight="bold">
+                    Bónus da AngoLeva
+                  </AppText>
+                  <AppText variant="caption" color={colors.muted}>
+                    Somado por cada corrida entregue.
+                  </AppText>
+                </View>
+                <AppText variant="title" color={colors.primary}>
+                  {formatKz(cashBalance.bonusKz)}
+                </AppText>
+              </Card>
+            ) : null}
+            {owing > 0 ? (
+              <View style={{ backgroundColor: colors.dangerSoft, borderRadius: radius.lg, padding: 16, gap: 10 }} accessible accessibilityLabel={`Contas com a AngoLeva: deves ${formatKz(owing)}${cashBalance?.blocked ? ", estás indisponível até depositares" : ""}`}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                  <IconCircle size={48} tone="danger">
+                    <CircleAlert size={24} color={colors.white} />
+                  </IconCircle>
+                  <View style={{ flex: 1 }}>
+                    <AppText variant="label" weight="bold">
+                      Contas com a AngoLeva
+                    </AppText>
+                    <AppText variant="body">Deves {formatKz(owing)} de taxas das corridas pagas em numerário.</AppText>
+                  </View>
+                </View>
+                {cashBalance?.blocked ? (
+                  <InfoNote tone="warning">Estás indisponível para novos pedidos até depositares. Contacta o suporte para regularizares o saldo.</InfoNote>
+                ) : null}
+                <SecondaryButton size="md" label="Contactar suporte" onPress={() => go("/help/chat")} />
+              </View>
+            ) : credit > 0 ? (
+              <InfoNote tone="soft" title="Contas com a AngoLeva">
+                {`A AngoLeva deve-te ${formatKz(credit)} (bónus e descontos que os clientes não te pagaram em numerário). Este valor abate às taxas das próximas corridas.`}
+              </InfoNote>
+            ) : null}
           </>
         )}
       </ScreenContainer>
@@ -102,22 +132,6 @@ export default function EarningsScreen() {
         {months.map((m) => (
           <SecondaryButton key={m} tone={m === month ? "soft" : "outline"} size="md" label={m} onPress={() => { setMonth(m); monthSheet.current?.dismiss(); toast.info("Os dados do período são simulados"); }} />
         ))}
-      </SheetModal>
-      <SheetModal ref={withdrawSheet} title="Pedir levantamento">
-        <TextField label="Valor" large keyboardType="number-pad" suffix={<AppText variant="h3" color={colors.muted}>Kz</AppText>} value={amount ? formatNumber(amount) : ""} onChangeText={(t) => setAmount(parseAmount(t))} error={error} hint={`Disponível: ${formatKz(balance)}`} />
-        <Card tone="muted" style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-          <Landmark size={24} color={colors.ink} />
-          <View style={{ flex: 1 }}>
-            <AppText variant="label" weight="bold">
-              {bankAccount.bank} · {bankAccount.holder}
-            </AppText>
-            <AppText variant="caption" color={colors.muted}>
-              {bankAccount.iban}
-            </AppText>
-          </View>
-        </Card>
-        <InfoNote>A transferência é simulada e fica concluída em poucos segundos.</InfoNote>
-        <PrimaryButton label="Confirmar levantamento" loading={sending} onPress={withdraw} />
       </SheetModal>
     </View>
   );

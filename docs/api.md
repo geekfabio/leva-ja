@@ -315,8 +315,24 @@ Na demonstração, a API simulada entrega as notificações por um serviço inte
 
 A app tira a foto (câmara ou, sem câmara, galeria; `src/data/device/DeviceCamera.ts`) e envia-a. O `url` devolvido é o que vai nos pedidos (`photos[].url`). Na demonstração (`EXPO_PUBLIC_CAMERA=simulated`), as fotos são imagens de exemplo empacotadas, referidas por chave; o `imageSource` aceita as duas formas.
 
+## Pagamento em numerário, descontos e convites
+
+Por agora o único meio de pagamento é dinheiro em mão: a app cria todos os pedidos com `payment_method: "cash"` e não tem ecrã de pagamento. O servidor passa o pedido a `paid` na entrega (`POST /requests/:id/proof`) e o cliente segue directamente para o recibo. Os endpoints de pagamento por referência e cartão continuam no contrato, sem uso.
+
+| Método | Caminho | Corpo | Resposta |
+| --- | --- | --- | --- |
+| POST | `/requests` | aceita `promo_code` (opcional) | o pedido, com `pricing.discount_kz` e `pricing.discount_label` quando há desconto; 422 se o código não se aplicar |
+| POST | `/promotions/validate` | `{ code, service_type, pickup: { lat, lng }, total_kz }` | `{ data: { code, discount_kz, label } }`; 422 com o motivo |
+| GET | `/referrals/me` | — | `{ data: { enabled, code, invitee_discount_kz, inviter_discount_kz, redeemed, invited_count, available_kz, rewards[] } }` |
+| POST | `/referrals/redeem` | `{ code }` | o mesmo resumo; 422 se o código for inválido, próprio, repetido ou o cliente já tiver pedidos concluídos |
+| GET | `/providers/:id/balance` | — | `{ data: { owed_kz, deposited_kz, credits_kz, bonus_kz, balance_kz, blocked } }` |
+
+`pricing.total_kz` é sempre o preço completo; o cliente entrega ao prestador `total_kz - discount_kz`. Sem `promo_code`, o servidor aplica sozinho o desconto de convite mais antigo por usar (um desconto por pedido). O desconto e o bónus por corrida (transacção `bonus` na carteira) são pagos pela plataforma: contam como crédito do prestador em `balance_kz`.
+
+Na demonstração, o código `LUANDA10` dá 10 % (até 1 500 Kz, uma vez por cliente), os convites valem 500 Kz para cada lado e o bónus é de 250 Kz por corrida (`src/data/mock/discounts.ts`).
+
 ## Ainda por integrar
 
-- **WebSocket:** mesmos tópicos e mensagens que o socket da API simulada.
+- **WebSocket:** o backend já o serve em `/realtime` (versão básica, sem «a escrever…»); falta definir `EXPO_PUBLIC_REALTIME_URL` no ambiente e validar num telemóvel. Sem a variável, a app continua em polling.
 - **Notificações push:** registo do token Expo e envio pelo servidor.
-- **Processador de pagamentos real:** emissão de referências e notificação de pagamento (EMIS / Multicaixa Express) e tokenização de cartões. O contrato acima já tem a forma final.
+- **Levantamentos e pagamentos electrónicos:** fora da app nesta fase (só numerário).

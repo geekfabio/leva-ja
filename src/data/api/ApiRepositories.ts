@@ -135,6 +135,7 @@ export function createApiRepositories({ realtime, pollIntervalMs = env.pollInter
       updateLocation: (providerId, coords) => none(http.put(`/providers/${providerId}/location`, map.fromCoordinates(coords))),
       withdraw: async (providerId, amount) => map.toTransaction(await one(Dto.TransactionDto, http.post(`/providers/${providerId}/withdrawals`, { amount_kz: amount }), "levantamento")),
       earnings: async (providerId) => map.toEarnings(await one(Dto.EarningsDto, http.get(`/providers/${providerId}/earnings`), "ganhos")),
+      cashBalance: async (providerId) => map.toCashBalance(await one(Dto.ProviderCashBalanceDto, http.get(`/providers/${providerId}/balance`), "saldo de numerário")),
       reviews: async (providerId) => (await many(Dto.ReviewDto, http.get(`/providers/${providerId}/reviews`), "avaliações")).map(map.toReview),
       subscribe: (providerId, listener) =>
         channel.subscribe(`providers/${providerId}`, (payload) => {
@@ -198,6 +199,19 @@ export function createApiRepositories({ realtime, pollIntervalMs = env.pollInter
     payments: {
       start: async (requestId, method) => map.toPayment(await one(Dto.PaymentDto, http.post(`/requests/${requestId}/payments`, { payment_method: method }), "pagamento")),
       get: async (paymentId) => map.toPayment(await one(Dto.PaymentDto, http.get(`/payments/${paymentId}`), "pagamento")),
+    },
+
+    discounts: {
+      validatePromo: async (check) =>
+        map.toPromoPreview(
+          await one(
+            Dto.PromoPreviewDto,
+            http.post("/promotions/validate", { code: check.code, service_type: check.kind, pickup: map.fromCoordinates(check.origin), total_kz: check.total }),
+            "código promocional",
+          ),
+        ),
+      referral: async () => map.toReferralSummary(await one(Dto.ReferralSummaryDto, http.get("/referrals/me"), "convites")),
+      redeemReferral: async (code) => map.toReferralSummary(await one(Dto.ReferralSummaryDto, http.post("/referrals/redeem", { code }), "convites")),
     },
 
     notifications: {

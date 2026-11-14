@@ -4,6 +4,7 @@ import { MockAccountRepository } from "./MockAccountRepository";
 import { MockApplicationsRepository } from "./MockApplicationsRepository";
 import { MockAuthRepository } from "./MockAuthRepository";
 import { MockChatRepository } from "./MockChatRepository";
+import { MockDiscountRepository } from "./MockDiscountRepository";
 import { MockLocationRepository } from "./MockLocationRepository";
 import { MockMediaRepository } from "./MockMediaRepository";
 import { MockNotificationRepository } from "./MockNotificationRepository";
@@ -26,6 +27,7 @@ export function createMockRepositories(database = db): Repositories {
     media: new MockMediaRepository(),
     notifications: new MockNotificationRepository(database),
     payments: new MockPaymentRepository(requests, database),
+    discounts: new MockDiscountRepository(database),
   };
 }
 
