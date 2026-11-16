@@ -1,6 +1,6 @@
 # AngoLeva
 
-Aplicação mobile de assistência, transporte e logística em Luanda: reboque de viaturas, transporte de carga com pickup, pequenas mudanças e mudanças completas de casa. Tem dois perfis — **Cliente** e **Prestador de Serviço** — e, nesta fase, funciona inteiramente com dados mockados, sem backend.
+Aplicação mobile de assistência, transporte e logística em Luanda: reboque de viaturas, transporte de carga (de tuk-tuk a camião), pequenas mudanças e mudanças completas de casa. Tem dois perfis — **Cliente** e **Prestador de Serviço** — e, nesta fase, funciona inteiramente com dados mockados, sem backend.
 
 O projecto chamava-se **Leva Já**. Com a mudança para AngoLeva passaram a ser `angoleva`: o nome do pacote npm, o slug Expo, o esquema de links (`angoleva://`), os identificadores Android/iOS (`ao.angoleva.app`), as chaves do armazenamento seguro (`angoleva.*`), o domínio de demonstração (`@angoleva.ao`) e o prefixo dos códigos de pedido (`AL-`). O repositório GitHub mantém o nome `leva-ja`.
 
@@ -101,7 +101,7 @@ Detalhes, regras e passos para ligar a API em [docs/arquitectura.md](docs/arquit
 | 12 | O que precisas transportar? | `/services` |
 | 13 | Reboque: problema | `/booking/incident` |
 | 14 | Reboque: dados da viatura | `/booking/vehicle` |
-| 15 | Carga: tipo, peso, volume, pickup, ajudante | `/booking/cargo` |
+| 15 | Carga: tipo, peso, volume, viatura (tuk-tuk, pickup, carrinha, camião), ajudante | `/booking/cargo` |
 | 16 | Mudança: imóvel, divisões, mobília, ajudantes, pisos, elevador | `/booking/moving` |
 | 17 | Mudança: data, hora e desmontagem | `/booking/schedule` |
 | 18 | Fotos e instruções | `/booking/photos` |
@@ -141,7 +141,7 @@ Ecrãs de apoio: `/trips` (as minhas viagens), `/alerts` (notificações do clie
 **Pedido dinâmico.** O formulário só mostra os passos do serviço escolhido e valida cada passo com Zod:
 
 - Reboque: incidente → viatura (marca, modelo, matrícula `LD-12-34-AB`, cor, se se desloca) → trajecto → fotos.
-- Carga (e entrega de mercadoria): tipo, descrição, peso, volume, pickup/carrinha/camião, ajudante → trajecto → fotos.
+- Carga (e entrega de mercadoria): tipo, descrição, peso, volume, viatura, ajudante → trajecto → fotos. A viatura é sugerida pelo peso e pelo volume: tuk-tuk até 100 kg e 1 m³, pickup até 300 kg, carrinha até 500 kg e camião acima disso (a entrega de mercadoria não tem camião). O utilizador pode trocá-la.
 - Mudança pequena / de casa: tipo de imóvel e divisões (só casa), mobília, ajudantes, pisos, elevador → data e desmontagem → trajecto → fotos.
 
 A estimativa (`features/booking/pricing.ts`) soma base, distância e extras, arredonda a 500 Kz e acrescenta 500 Kz de taxa; o ganho do prestador desconta 15% de comissão.

@@ -49,13 +49,26 @@ export function VehiclePicker<T extends string>({ options, value, onChange }: { 
         />
       ) : null}
       {options.map((option) => (
-        <VehicleCard key={option.value} option={option} selected={option.value === value} highlightReady={ready} onPress={() => onChange(option.value)} />
+        <VehicleCard key={option.value} option={option} selected={option.value === value} highlightReady={ready} imageWidth={Math.min(84, Math.max(48, cardWidth - 16))} onPress={() => onChange(option.value)} />
       ))}
     </View>
   );
 }
 
-function VehicleCard<T extends string>({ option, selected, highlightReady, onPress }: { option: VehiclePickerOption<T>; selected: boolean; highlightReady: boolean; onPress: () => void }) {
+function VehicleCard<T extends string>({
+  option,
+  selected,
+  highlightReady,
+  imageWidth,
+  onPress,
+}: {
+  option: VehiclePickerOption<T>;
+  selected: boolean;
+  highlightReady: boolean;
+  /** Largura da ilustração: encolhe quando há mais cartões na linha. */
+  imageWidth: number;
+  onPress: () => void;
+}) {
   const enabled = useMotionEnabled();
   const drive = useSharedValue(0);
   const scale = useSharedValue(1);
@@ -90,9 +103,10 @@ function VehicleCard<T extends string>({ option, selected, highlightReady, onPre
       }}
     >
       <Animated.View style={art}>
-        <VehicleImage art={option.art} width={84} height={52} label="" />
+        <VehicleImage art={option.art} width={imageWidth} height={imageWidth * 0.62} label="" />
       </Animated.View>
-      <AppText variant="h3" align="center" color={selected ? colors.primary : colors.ink}>
+      {/* Letra mais pequena que um título: com 4 cartões, "Tuk-tuk" e "Carrinha" têm de caber numa só linha. */}
+      <AppText variant="label" weight="bold" align="center" color={selected ? colors.primary : colors.ink}>
         {option.label}
       </AppText>
       <AppText variant="caption" color={colors.muted} align="center">

@@ -60,15 +60,21 @@ describe("viatura sugerida pelo peso da carga", () => {
   });
 });
 
-describe("entrega de mercadoria: tuk-tuk para cargas pequenas", () => {
+describe("tuk-tuk para cargas pequenas (carga e entrega de mercadoria)", () => {
   it("sugere tuk-tuk até 100 kg e volume pequeno; acima disso, pela regra do peso sem camião", () => {
     expect(suggestVehicle("goods", "upto100", "small")).toBe("tuk_tuk");
     expect(suggestVehicle("goods", "upto100", "medium")).toBe("pickup");
     expect(suggestVehicle("goods", "101to300", "small")).toBe("pickup");
     expect(suggestVehicle("goods", "301to500", "small")).toBe("van");
     expect(suggestVehicle("goods", "over500", "large")).toBe("van");
-    // Transporte de carga normal não tem tuk-tuk.
-    expect(suggestVehicle(undefined, "upto100", "small")).toBe("pickup");
+  });
+
+  it("a carga também tem tuk-tuk e, ao contrário da mercadoria, camião", () => {
+    expect(suggestVehicle(undefined, "upto100", "small")).toBe("tuk_tuk");
+    expect(suggestVehicle(undefined, "upto100", "medium")).toBe("pickup");
+    expect(suggestVehicle(undefined, "over500", "large")).toBe("truck");
+    expect(cargoVehicleOptions.map((o) => o.value)).toEqual(["tuk_tuk", "pickup", "van", "truck"]);
+    expect(goodsVehicleOptions.map((o) => o.value)).toEqual(["tuk_tuk", "pickup", "van"]);
   });
 
   it("todas as sugestões existem nas opções da variante", () => {
