@@ -7,6 +7,8 @@ test("cliente: pedido de carga do início ao recibo, pago em numerário, sem ecr
   await page.goto("/home");
   await tap(page, "Carga");
   await page.waitForURL(/\/booking\/cargo/);
+  // Até 100 kg e volume pequeno (por omissão): tuk-tuk. Mais peso → outra viatura.
+  await expect(page.getByRole("radio", { name: /^Tuk-tuk/ })).toBeChecked();
   // O peso escolhe a viatura: 301–500 kg → carrinha.
   await page.getByRole("radio", { name: "301 – 500 kg" }).click();
   await expect(page.getByRole("radio", { name: /^Carrinha/ })).toBeChecked();

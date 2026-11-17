@@ -25,6 +25,10 @@ beforeEach(() => {
 
 test("escolher o peso selecciona a viatura adequada e explica a sugestão", () => {
   render(<CargoStep />);
+  // Por omissão (até 100 kg, volume pequeno) a carga também sugere o tuk-tuk.
+  expect(checked(/^Tuk-tuk/)).toBe(true);
+
+  fireEvent.press(screen.getByRole("radio", { name: "101 – 300 kg" }));
   expect(checked(/^Pickup/)).toBe(true);
 
   fireEvent.press(screen.getByRole("radio", { name: "301 – 500 kg" }));
@@ -35,8 +39,20 @@ test("escolher o peso selecciona a viatura adequada e explica a sugestão", () =
   fireEvent.press(screen.getByRole("radio", { name: "Mais de 500 kg" }));
   expect(checked(/^Camião/)).toBe(true);
 
-  fireEvent.press(screen.getByRole("radio", { name: "Até 100 kg" }));
+  // «Até 100 kg» é também a descrição do cartão do tuk-tuk: o primeiro é o peso.
+  fireEvent.press(screen.getAllByRole("radio", { name: "Até 100 kg" })[0]!);
+  expect(checked(/^Tuk-tuk/)).toBe(true);
+  expect(screen.getByText(/Sugerimos tuk-tuk para até 100 kg e volume pequeno/)).toBeTruthy();
+
+  // O volume também conta: carga leve mas média já pede pickup.
+  fireEvent.press(screen.getByRole("radio", { name: "Médio · 1 a 3 m³" }));
   expect(checked(/^Pickup/)).toBe(true);
+});
+
+test("a carga oferece tuk-tuk, pickup, carrinha e camião; a mercadoria não tem camião", () => {
+  render(<CargoStep />);
+  for (const name of [/^Tuk-tuk/, /^Pickup/, /^Carrinha/, /^Camião/]) expect(vehicle(name)).toBeTruthy();
+  expect(screen.getAllByText("Camião").length).toBeGreaterThan(0);
 });
 
 test("o utilizador pode trocar a viatura sugerida; a escolha segue para o pedido", async () => {
@@ -66,4 +82,15 @@ test("entrega de mercadoria: tuk-tuk para cargas pequenas, troca automática ao 
 
   fireEvent.press(screen.getByRole("radio", { name: "Médio · 1 a 3 m³" }));
   expect(checked(/^Pickup/)).toBe(true);
+});
+
+test("as viaturas estão numa lista horizontal que se centra na viatura escolhida", () => {
+  const { UNSAFE_getAllByType } = render(<CargoStep />);
+  const { ScrollView } = require("react-native") as typeof import("react-native");
+  const list = UNSAFE_getAllByType(ScrollView).find((s) => s.props.accessibilityLabel === "Viaturas disponíveis, desliza para ver mais");
+  expect(list).toBeTruthy();
+  expect(list!.props.horizontal).toBe(true);
+  // Cartões com tamanho confortável e snap por cartão, para ecrãs pequenos ou com zoom.
+  expect(list!.props.snapToInterval).toBeGreaterThanOrEqual(124);
+  expect(list!.props.showsHorizontalScrollIndicator).toBe(false);
 });

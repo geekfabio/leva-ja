@@ -25,7 +25,8 @@ const emptyDraft = (kind: ServiceKind, variant?: "goods"): BookingDraft => ({
     description: "",
     weight: "upto100",
     volume: "small",
-    vehicleClass: variant === "goods" ? "tuk_tuk" : "pickup",
+    // Peso e volume por omissão são os mais pequenos: a viatura sugerida é o tuk-tuk.
+    vehicleClass: "tuk_tuk",
     helper: true,
   },
   moving: {
