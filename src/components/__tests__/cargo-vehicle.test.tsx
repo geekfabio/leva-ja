@@ -83,3 +83,14 @@ test("entrega de mercadoria: tuk-tuk para cargas pequenas, troca automática ao 
   fireEvent.press(screen.getByRole("radio", { name: "Médio · 1 a 3 m³" }));
   expect(checked(/^Pickup/)).toBe(true);
 });
+
+test("as viaturas estão numa lista horizontal que se centra na viatura escolhida", () => {
+  const { UNSAFE_getAllByType } = render(<CargoStep />);
+  const { ScrollView } = require("react-native") as typeof import("react-native");
+  const list = UNSAFE_getAllByType(ScrollView).find((s) => s.props.accessibilityLabel === "Viaturas disponíveis, desliza para ver mais");
+  expect(list).toBeTruthy();
+  expect(list!.props.horizontal).toBe(true);
+  // Cartões com tamanho confortável e snap por cartão, para ecrãs pequenos ou com zoom.
+  expect(list!.props.snapToInterval).toBeGreaterThanOrEqual(124);
+  expect(list!.props.showsHorizontalScrollIndicator).toBe(false);
+});
