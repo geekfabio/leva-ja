@@ -61,7 +61,7 @@ export function ErrorState({ title = "Não foi possível carregar", description 
   );
 }
 
-/** Esqueleto pulsante (Reanimated) enquanto a consulta simulada carrega. */
+/** Esqueleto pulsante (Reanimated) enquanto a consulta carrega. */
 export function Skeleton({ height = 16, width = "100%", rounded = radius.sm }: { height?: number; width?: number | `${number}%`; rounded?: number }) {
   const opacity = useSharedValue(0.5);
   useEffect(() => {

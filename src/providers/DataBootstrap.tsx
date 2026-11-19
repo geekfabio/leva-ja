@@ -47,6 +47,7 @@ export function DataBootstrap({ children }: PropsWithChildren) {
   );
 
   useEffect(() => {
+    if (userId === "guest") return;
     useServiceStore.getState().hydrate();
     return repositories().requests.subscribe((request) => useServiceStore.getState().upsert(request));
   }, [userId, providerId]);

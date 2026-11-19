@@ -10,7 +10,7 @@ import { colors, radius } from "@/theme/colors";
 
 const MAX = 6;
 
-/** 18 · Fotos da carga/viatura e instruções. Câmara ou galeria (na demonstração, fotos de exemplo). */
+/** 18 · Fotos da carga/viatura e instruções. Câmara ou galeria. */
 export default function PhotosStep() {
   const { position, next, kind } = useBookingStep("photos");
   const photos = useBookingStore((s) => s.draft.photos);

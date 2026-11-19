@@ -54,6 +54,7 @@ test("login valida com Zod e entra na área do cliente", async () => {
   render(<LoginScreen />);
   fireEvent.press(screen.getByRole("button", { name: "Entrar" }));
   expect(await screen.findByText("A palavra-passe tem pelo menos 6 caracteres.")).toBeTruthy();
+  fireEvent.changeText(screen.getByLabelText("Email"), "armando@email.com");
   fireEvent.changeText(screen.getByLabelText("Palavra-passe"), "segredo1");
   fireEvent.press(screen.getByRole("button", { name: "Entrar" }));
   await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/home"), { timeout: 2000 });

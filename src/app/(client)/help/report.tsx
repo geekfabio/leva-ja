@@ -11,7 +11,7 @@ import { toast } from "@/lib/toast";
 
 const reasons = ["Atraso do prestador", "Carga danificada", "Valor cobrado incorrecto", "Comportamento do prestador", "Objecto esquecido", "Outro"];
 
-/** Registar um problema com um pedido (ocorrência simulada). */
+/** Registar um problema com um pedido (ocorrência enviada à API). */
 export default function ReportScreen() {
   const userId = useSessionStore((s) => s.user.id);
   const role = useSessionStore((s) => s.role);
