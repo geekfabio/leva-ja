@@ -10,7 +10,7 @@ import { colors, radius } from "@/theme/colors";
 
 const icons = { service: Truck, payment: Wallet, account: CircleUser, promo: Megaphone };
 
-/** Notificações do cliente ou do prestador (simuladas a partir dos dados mockados). */
+/** Notificações do cliente ou do prestador (derivadas dos pedidos e da carteira). */
 export default function AlertsScreen() {
   const { items, unread } = useNotifications();
   const markRead = useAccountStore((s) => s.markNotificationsRead);

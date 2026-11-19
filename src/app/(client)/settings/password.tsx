@@ -4,7 +4,7 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Lock, ShieldCheck } from "lucide-react-native";
-import { AppHeader, IconCircle, InfoNote, PrimaryButton, ScreenContainer, ScreenTitle, TextField } from "@/components/kit";
+import { AppHeader, IconCircle, PrimaryButton, ScreenContainer, ScreenTitle, TextField } from "@/components/kit";
 import { toast } from "@/lib/toast";
 import { useSessionStore } from "@/stores/useSessionStore";
 import { colors } from "@/theme/colors";
@@ -53,7 +53,6 @@ export default function ChangePasswordScreen() {
       {field("current", "Palavra-passe actual")}
       {field("password", "Nova palavra-passe", "Pelo menos 8 caracteres e um número.")}
       {field("confirm", "Confirmar nova palavra-passe")}
-      <InfoNote>Demonstração: a alteração é validada localmente e não é guardada.</InfoNote>
     </ScreenContainer>
   );
 }

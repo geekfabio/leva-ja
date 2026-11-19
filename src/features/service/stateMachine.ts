@@ -80,18 +80,6 @@ export const statusTone: Record<ServiceStatus, StatusTone> = {
   cancelled: "neutral",
 };
 
-/**
- * Transições que o cliente vê acontecer sozinhas na simulação (equivalem a
- * eventos que chegarão por push/websocket quando houver backend).
- */
-export const clientAutoAdvance: Partial<Record<ServiceStatus, { to: ServiceStatus; afterMs: number }>> = {
-  searching: { to: "assigned", afterMs: 4000 },
-  assigned: { to: "en_route", afterMs: 2500 },
-  en_route: { to: "arrived", afterMs: 15000 },
-  pickup_confirmed: { to: "in_transit", afterMs: 3000 },
-  in_transit: { to: "delivered", afterMs: 15000 },
-};
-
 /** Ecrã do cliente que corresponde a cada estado. */
 export const clientScreenFor: Record<ServiceStatus, string> = {
   searching: "/trip/matching",

@@ -63,7 +63,7 @@ export default function RegisterSecurityScreen() {
           </View>
         )}
       />
-      <InfoNote>Vamos enviar um código de 6 dígitos para confirmares o email. Na demonstração o código é 123456.</InfoNote>
+      <InfoNote>Vamos enviar um código de 6 dígitos para confirmares o email.</InfoNote>
     </ScreenContainer>
   );
 }

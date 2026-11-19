@@ -8,7 +8,7 @@ import { AvailabilityToggle } from "@/components/partner/AvailabilityToggle";
 import { NotificationBell, ProviderSummaryCard } from "@/components/partner/ProviderHeader";
 import { serviceTitle } from "@/features/booking/catalog";
 import { statusLabel } from "@/features/service/stateMachine";
-import { repositories } from "@/data";
+import { distanceKm as straightKm } from "@/utils/geo";
 import { useMyProvider } from "@/features/provider/useProvider";
 import { useNearbyRequests, useProviderRequests } from "@/services/queries";
 import { useProviderStore } from "@/stores/useProviderStore";
@@ -33,7 +33,7 @@ export default function ProviderRequests() {
   const nearby = useNearbyRequests();
   const mine = useProviderRequests();
   const fresh = (nearby.data ?? []).filter((n) => kindFilter.includes(n.request.kind) && n.distanceKm <= maxKm);
-  const current = (mine.data ?? []).filter(ongoing).map((request) => ({ request, distanceKm: Math.max(1, repositories().locations.distanceKm({ ...request.origin, coords: me.coords }, request.origin) - 1) }));
+  const current = (mine.data ?? []).filter(ongoing).map((request) => ({ request, distanceKm: Math.max(1, Math.round(straightKm(me.coords, request.origin.coords))) }));
   const list = tab === "new" ? fresh : tab === "ongoing" ? current : [...current, ...fresh];
   const loading = nearby.isLoading || mine.isLoading;
   const error = nearby.isError || mine.isError;

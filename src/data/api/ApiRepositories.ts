@@ -1,15 +1,14 @@
 import { z } from "zod";
 import { env } from "@/config/env";
 import type { Repositories } from "../repositories";
-import { MockMediaRepository } from "../mock/MockMediaRepository";
-import { roadDistanceKm } from "@/utils/geo";
 import { call, http, setAuthToken, setAuthTokens, setTokenRefresher } from "../http/client";
 import * as Dto from "./dto";
 import * as map from "./mappers";
 import { PollingRealtime, type RealtimeChannel } from "./realtime";
 import { parse } from "./parse";
 import { ApiMediaRepository } from "./ApiMediaRepository";
-import type { DeviceCamera } from "../device/DeviceCamera";
+import { ExpoDeviceCamera, type DeviceCamera } from "../device/DeviceCamera";
+import type { MediaRepository } from "../repositories/MediaRepository";
 import type { DeviceLocation } from "../device/DeviceLocation";
 
 /**
@@ -27,8 +26,10 @@ export type ApiRepositoriesOptions = {
   pollIntervalMs?: number;
   /** GPS do dispositivo; sem ele, a posição é a aproximada da API. */
   location?: DeviceLocation;
-  /** Câmara/galeria do dispositivo; sem ela, as fotos são as de exemplo. */
+  /** Câmara/galeria do dispositivo; por omissão, a do Expo. */
   camera?: DeviceCamera;
+  /** Só testes: troca o repositório de fotografias. */
+  media?: MediaRepository;
 };
 
 export { parse } from "./parse";
@@ -50,7 +51,7 @@ async function none(request: Promise<{ data: unknown }>): Promise<void> {
 
 const bearer = (token: string) => ({ headers: { Authorization: `Bearer ${token}` } });
 
-export function createApiRepositories({ realtime, pollIntervalMs = env.pollIntervalMs, location, camera }: ApiRepositoriesOptions = {}): Repositories {
+export function createApiRepositories({ realtime, pollIntervalMs = env.pollIntervalMs, location, camera, media }: ApiRepositoriesOptions = {}): Repositories {
   const channel = realtime ?? new PollingRealtime(pollIntervalMs);
 
   const startSession = async (request: Promise<{ data: unknown }>) => {
@@ -151,8 +152,6 @@ export function createApiRepositories({ realtime, pollIntervalMs = env.pollInter
       areas: async () => (await many(Dto.PlaceDto, http.get("/locations/areas"), "bairros")).map(map.toPlace),
       nearbyVehicles: async (around) =>
         (await many(Dto.NearbyVehicleDto, http.get("/vehicles/nearby", { params: map.fromCoordinates(around) }), "viaturas próximas")).map(map.toNearbyVehicle),
-      // Estimativa local; o valor oficial vem no pedido devolvido pela API.
-      distanceKm: roadDistanceKm,
     },
 
     chat: {
@@ -194,6 +193,10 @@ export function createApiRepositories({ realtime, pollIntervalMs = env.pollInter
       get: async (paymentId) => map.toPayment(await one(Dto.PaymentDto, http.get(`/payments/${paymentId}`), "pagamento")),
     },
 
+    pricing: {
+      estimate: async (input) => map.toEstimate(await one(Dto.EstimateDto, http.post("/pricing/estimate", map.fromEstimateInput(input)), "estimativa")),
+    },
+
     discounts: {
       validatePromo: async (check) =>
         map.toPromoPreview(
@@ -212,7 +215,7 @@ export function createApiRepositories({ realtime, pollIntervalMs = env.pollInter
       unregisterDevice: (token) => none(http.delete(`/devices/${encodeURIComponent(token)}`)),
     },
 
-    // Com câmara: foto real enviada para POST /uploads. Sem ela (demonstração): fotos de exemplo.
-    media: camera ? new ApiMediaRepository(camera) : new MockMediaRepository(),
+    // Foto real da câmara/galeria, enviada para POST /uploads (`media` só é trocado em testes).
+    media: media ?? new ApiMediaRepository(camera ?? new ExpoDeviceCamera()),
   };
 }

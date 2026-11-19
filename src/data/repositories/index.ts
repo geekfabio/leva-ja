@@ -10,6 +10,7 @@ export type * from "./MediaRepository";
 export type * from "./NotificationRepository";
 export type * from "./PaymentRepository";
 export type * from "./DiscountRepository";
+export type * from "./PricingRepository";
 
 import type { AccountRepository } from "./AccountRepository";
 import type { AuthRepository } from "./AuthRepository";
@@ -19,6 +20,7 @@ import type { LocationRepository } from "./LocationRepository";
 import type { MediaRepository } from "./MediaRepository";
 import type { NotificationRepository } from "./NotificationRepository";
 import type { PaymentRepository } from "./PaymentRepository";
+import type { PricingRepository } from "./PricingRepository";
 import type { ProviderRepository } from "./ProviderRepository";
 import type { RequestRepository } from "./RequestRepository";
 import type { SupportRepository } from "./SupportRepository";
@@ -36,4 +38,5 @@ export type Repositories = {
   notifications: NotificationRepository;
   payments: PaymentRepository;
   discounts: DiscountRepository;
+  pricing: PricingRepository;
 };

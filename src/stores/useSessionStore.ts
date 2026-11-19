@@ -1,10 +1,10 @@
 import { create } from "zustand";
 import type { Client, Role } from "@/types/domain";
-import { demoIdentity, isRepositoryError, onTokensRefreshed, repositories, sessionVault, setAuthTokens, type Session } from "@/data";
+import { isRepositoryError, onTokensRefreshed, repositories, sessionVault, setAuthTokens, type Session } from "@/data";
 
 type PendingRegistration = { name: string; email: string; phone: string };
 
-/** Utilizador sem sessão (modo API antes do login). */
+/** Utilizador sem sessão (antes do login). */
 const GUEST: Client = { id: "guest", name: "Convidado", email: "", phone: "", initials: "AL", rating: 0 };
 
 type SessionState = {
@@ -71,9 +71,9 @@ export const useSessionStore = create<SessionState>((set, get) => {
     hasOnboarded: false,
     role: null,
     authenticated: false,
-    token: demoIdentity?.token ?? null,
-    user: demoIdentity?.user ?? GUEST,
-    providerId: demoIdentity?.providerId ?? null,
+    token: null,
+    user: GUEST,
+    providerId: null,
     pendingRegistration: null,
     verificationEmail: null,
     verificationPurpose: null,

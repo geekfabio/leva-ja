@@ -1,9 +1,9 @@
 import { AxiosError, AxiosHeaders, type InternalAxiosRequestConfig } from "axios";
-import { configureMock } from "@/data";
+import { configureMock } from "@/__test-support__/mock";
 import { http, onUnauthorized, setAuthToken, toRepositoryError } from "@/data/http/client";
 import { createApiRepositories } from "@/data/api/ApiRepositories";
-import { MockDatabase } from "@/data/mock/database";
-import { createMockServer } from "@/data/mock/server";
+import { MockDatabase } from "@/__test-support__/mock/database";
+import { createMockServer } from "@/__test-support__/mock/server";
 import { parseEnv } from "@/config/env";
 
 const config = (headers: Record<string, string> = {}) => ({ headers: new AxiosHeaders(headers) }) as InternalAxiosRequestConfig;
@@ -66,15 +66,21 @@ describe("cliente HTTP", () => {
 });
 
 describe("configuração (.env)", () => {
-  const base = { dataSource: undefined, apiUrl: undefined, apiTimeoutMs: undefined, pollIntervalMs: undefined, secureStorage: undefined };
+  const base = { apiUrl: "http://api.test", apiTimeoutMs: undefined, pollIntervalMs: undefined, realtimeUrl: undefined, mapTilesUrl: undefined, routingUrl: undefined };
 
-  it("usa mocks por omissão", () => {
-    expect(parseEnv(base)).toEqual({ dataSource: "mock", apiTimeoutMs: 10000, pollIntervalMs: 5000, secureStorage: "mock" });
+  it("exige a URL da API e aplica os valores por omissão", () => {
+    expect(parseEnv(base)).toEqual({
+      apiUrl: "http://api.test",
+      apiTimeoutMs: 10000,
+      pollIntervalMs: 5000,
+      mapTilesUrl: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+      routingUrl: "https://router.project-osrm.org",
+    });
   });
 
-  it("recusa o modo http sem URL e valores inválidos", () => {
-    expect(() => parseEnv({ ...base, dataSource: "http" })).toThrow(/EXPO_PUBLIC_API_URL/);
-    expect(() => parseEnv({ ...base, dataSource: "graphql" })).toThrow(/Configuração inválida/);
-    expect(parseEnv({ ...base, dataSource: "http", apiUrl: "mock://local", pollIntervalMs: "2000" })).toMatchObject({ apiUrl: "mock://local", pollIntervalMs: 2000 });
+  it("recusa a configuração sem URL da API e valores inválidos", () => {
+    expect(() => parseEnv({ ...base, apiUrl: undefined })).toThrow(/EXPO_PUBLIC_API_URL/);
+    expect(() => parseEnv({ ...base, apiUrl: "não é um url" })).toThrow(/Configuração inválida/);
+    expect(parseEnv({ ...base, pollIntervalMs: "2000", realtimeUrl: "wss://api.test/realtime" })).toMatchObject({ pollIntervalMs: 2000, realtimeUrl: "wss://api.test/realtime" });
   });
 });

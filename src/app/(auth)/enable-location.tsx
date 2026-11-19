@@ -12,7 +12,7 @@ import { colors } from "@/theme/colors";
 
 /**
  * 10 · Activar localização. Pede autorização ao sistema (GPS real com a API;
- * na demonstração, um ponto simulado em Luanda) e usa a morada devolvida pela API.
+ * o GPS do telemóvel) e usa a morada devolvida pela API.
  */
 export default function EnableLocationScreen() {
   const [loading, setLoading] = useState(false);
@@ -40,7 +40,7 @@ export default function EnableLocationScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <View style={{ flex: 1 }}>
-        <MapPreview height="100%" pulse markers={here ? [{ id: "me", kind: "origin", coords: here.coords, label: here.area }] : []} accessibilityLabel="Mapa de Luanda com a tua posição simulada" />
+        <MapPreview height="100%" pulse markers={here ? [{ id: "me", kind: "origin", coords: here.coords, label: here.area }] : []} accessibilityLabel="Mapa de Luanda com a tua posição" />
       </View>
       <SafeAreaView edges={["bottom"]} style={{ backgroundColor: colors.background, borderTopLeftRadius: 28, borderTopRightRadius: 28, marginTop: -28, paddingHorizontal: 20, paddingTop: 12, gap: 14 }}>
         <View style={{ alignSelf: "center", width: 44, height: 5, borderRadius: 3, backgroundColor: colors.borderStrong }} />

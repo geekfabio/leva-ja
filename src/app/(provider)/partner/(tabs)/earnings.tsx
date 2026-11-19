@@ -1,15 +1,11 @@
-import { useRef, useState } from "react";
-import { Pressable, View } from "react-native";
+import { View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import type { BottomSheetModal } from "@gorhom/bottom-sheet";
-import { CalendarDays, ChartColumn, ChevronDown, CircleAlert, FileText, Gift, List, Settings, Wallet } from "lucide-react-native";
-import { AppText, BrandLogo, Card, EarningsChart, ErrorState, IconButton, IconCircle, InfoNote, LoadingState, ProviderMetric, ScreenContainer, SecondaryButton, SheetModal, Skeleton, AnimatedAmount } from "@/components/kit";
+import { CalendarDays, ChartColumn, CircleAlert, FileText, Gift, List, Settings, Wallet } from "lucide-react-native";
+import { AppText, BrandLogo, Card, EarningsChart, ErrorState, IconButton, IconCircle, InfoNote, LoadingState, ProviderMetric, ScreenContainer, SecondaryButton, Skeleton, AnimatedAmount } from "@/components/kit";
 import { NotificationBell, ProviderSummaryCard } from "@/components/partner/ProviderHeader";
 import { useCashBalance, useFinanceSummary } from "@/services/queries";
-import { formatMonthYear } from "@/utils/date";
 import { formatKz } from "@/utils/format";
 import { go } from "@/features/navigation";
-import { toast } from "@/lib/toast";
 import { colors, radius } from "@/theme/colors";
 
 const weekLabels = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
@@ -21,13 +17,6 @@ const weekLabels = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 export default function EarningsScreen() {
   const { data, isLoading, isError, refetch, isRefetching } = useFinanceSummary();
   const { data: cashBalance } = useCashBalance();
-  const monthSheet = useRef<BottomSheetModal>(null);
-  const months = Array.from({ length: 4 }, (_, i) => {
-    const d = new Date();
-    d.setMonth(d.getMonth() - i);
-    return formatMonthYear(d);
-  });
-  const [month, setMonth] = useState(months[0]!);
   // Positivo: a plataforma deve ao prestador (bónus, descontos que ela assume). Negativo: o prestador deve taxas.
   const owing = cashBalance ? Math.max(0, -cashBalance.balanceKz) : 0;
   const credit = cashBalance ? Math.max(0, cashBalance.balanceKz) : 0;
@@ -47,10 +36,6 @@ export default function EarningsScreen() {
           <AppText variant="display" accessibilityRole="header" style={{ fontSize: 32 }}>
             Ganhos
           </AppText>
-          <Pressable accessibilityRole="button" accessibilityLabel={`Período: ${month}. Alterar`} onPress={() => monthSheet.current?.present()} style={{ flexDirection: "row", alignItems: "center", gap: 4, minHeight: 44 }}>
-            <AppText variant="label">{month}</AppText>
-            <ChevronDown size={18} color={colors.ink} />
-          </Pressable>
         </View>
         {isLoading ? (
           <>
@@ -128,11 +113,6 @@ export default function EarningsScreen() {
           </>
         )}
       </ScreenContainer>
-      <SheetModal ref={monthSheet} title="Período">
-        {months.map((m) => (
-          <SecondaryButton key={m} tone={m === month ? "soft" : "outline"} size="md" label={m} onPress={() => { setMonth(m); monthSheet.current?.dismiss(); toast.info("Os dados do período são simulados"); }} />
-        ))}
-      </SheetModal>
     </View>
   );
 }

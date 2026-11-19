@@ -1,8 +1,9 @@
 import { createApiRepositories } from "@/data/api/ApiRepositories";
 import type { DeviceCamera, PickedImage } from "@/data/device/DeviceCamera";
 import { http } from "@/data/http/client";
-import { MockDatabase } from "@/data/mock/database";
-import { createMockServer } from "@/data/mock/server";
+import { MockMediaRepository } from "@/__test-support__/mock/MockMediaRepository";
+import { MockDatabase } from "@/__test-support__/mock/database";
+import { createMockServer } from "@/__test-support__/mock/server";
 
 jest.mock("expo-image-picker", () => ({
   requestCameraPermissionsAsync: jest.fn(),
@@ -41,9 +42,9 @@ describe("fotografias: câmara do dispositivo + POST /uploads", () => {
     await expect(repos.media.capture("cargo", 0)).rejects.toMatchObject({ code: "validation" });
   });
 
-  it("sem câmara configurada (demonstração), usa as fotos de exemplo", async () => {
+  it("a câmara simulada dos testes devolve as fotos de exemplo", async () => {
     http.defaults.adapter = createMockServer(new MockDatabase()).adapter;
-    const repos = createApiRepositories();
+    const repos = createApiRepositories({ media: new MockMediaRepository() });
     expect((await repos.media.capture("vehicle", 0))?.asset).toBe("hilux-street");
   });
 });

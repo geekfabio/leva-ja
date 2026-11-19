@@ -1,9 +1,9 @@
 import { createApiRepositories } from "@/data/api/ApiRepositories";
 import { http } from "@/data/http/client";
-import { MockDatabase } from "@/data/mock/database";
-import { SimulatedDeviceNotifications } from "@/data/mock/device";
-import { createMockServer } from "@/data/mock/server";
-import { places } from "@/mocks/places";
+import { MockDatabase } from "@/__test-support__/mock/database";
+import { SimulatedDeviceNotifications } from "@/__test-support__/mock/device";
+import { createMockServer } from "@/__test-support__/mock/server";
+import { places } from "@/__test-support__/mocks/places";
 import type { PushMessage } from "@/features/notifications/push";
 
 jest.mock("expo-notifications", () => ({

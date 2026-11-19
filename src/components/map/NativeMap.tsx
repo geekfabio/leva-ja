@@ -1,2 +1,2 @@
-/** Na web não existe react-native-maps: usa-se o mapa ilustrativo. */
-export { MockMapCanvas as NativeMap } from "./MockMapCanvas";
+/** Na web não existe react-native-maps: usa-se o mapa de tiles OpenStreetMap. */
+export { WebMap as NativeMap } from "./WebMap";

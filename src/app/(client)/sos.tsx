@@ -9,10 +9,11 @@ import { repositories } from "@/data";
 import { useCurrentLocation, useEmergencyContacts } from "@/services/queries";
 import { useServiceStore } from "@/stores/useServiceStore";
 import { serviceTitle } from "@/features/booking/catalog";
+import { callPhone } from "@/features/service/contact";
 import { toast } from "@/lib/toast";
 import { colors } from "@/theme/colors";
 
-/** SOS: alerta à equipa de segurança e contactos de emergência (tudo simulado). */
+/** SOS: alerta à equipa de segurança e contactos de emergência. */
 export default function SosScreen() {
   const active = useServiceStore((s) => s.requests.find((r) => r.id === s.activeClientRequestId || r.id === s.activeProviderRequestId));
   const [sent, setSent] = useState(false);
@@ -66,7 +67,7 @@ export default function SosScreen() {
           Contactos de emergência
         </AppText>
         {emergencyContacts.map((c) => (
-          <ListRow key={c.id} variant="plain" icon={<Phone size={22} color={colors.danger} />} title={c.label} value={c.number} chevron={false} onPress={() => toast.info({ title: `A ligar para ${c.number}`, message: "Chamada simulada nesta fase." })} />
+          <ListRow key={c.id} variant="plain" icon={<Phone size={22} color={colors.danger} />} title={c.label} value={c.number} chevron={false} onPress={() => callPhone(c.number)} />
         ))}
         <TextButton label="Estou bem, fechar" onPress={() => router.back()} />
       </ScrollView>

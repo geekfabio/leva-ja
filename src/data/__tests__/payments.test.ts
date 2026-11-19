@@ -1,9 +1,9 @@
 import { createApiRepositories } from "@/data/api/ApiRepositories";
 import { http } from "@/data/http/client";
-import { MockDatabase } from "@/data/mock/database";
-import { createMockServer } from "@/data/mock/server";
-import { places } from "@/mocks/places";
-import { deliveryPhotos } from "@/mocks/photos";
+import { MockDatabase } from "@/__test-support__/mock/database";
+import { createMockServer } from "@/__test-support__/mock/server";
+import { places } from "@/__test-support__/mocks/places";
+import { deliveryPhotos } from "@/__test-support__/mocks/photos";
 
 const tick = (ms = 20) => new Promise((resolve) => setTimeout(resolve, ms));
 

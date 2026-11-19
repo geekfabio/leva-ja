@@ -1,9 +1,9 @@
-import { configureMock, mockRuntime } from "@/data";
+import { configureMock, mockRuntime } from "@/__test-support__/mock";
 import { createApiRepositories } from "@/data/api/ApiRepositories";
 import { http, onTokensRefreshed, onUnauthorized, setAuthTokens } from "@/data/http/client";
-import { MockDatabase } from "@/data/mock/database";
-import { createMockServer } from "@/data/mock/server";
-import { places } from "@/mocks/places";
+import { MockDatabase } from "@/__test-support__/mock/database";
+import { createMockServer } from "@/__test-support__/mock/server";
+import { places } from "@/__test-support__/mocks/places";
 
 const TTL = mockRuntime.accessTokenTtlMs;
 

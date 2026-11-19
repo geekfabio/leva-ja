@@ -1,22 +1,20 @@
 import { useMemo } from "react";
 import MapView, { Circle, Marker, Polyline, PROVIDER_DEFAULT } from "react-native-maps";
 import { colors } from "@/theme/colors";
-import { mockRoute, regionFor } from "@/utils/geo";
-import { useAreas } from "@/services/queries";
+import { regionFor } from "@/utils/geo";
+import { LUANDA_VIEW } from "@/utils/mapProjection";
 import { MarkerView } from "./MarkerView";
+
+const LUANDA = LUANDA_VIEW.center;
 import type { MapPreviewProps } from "./types";
 
-/**
- * Mapa nativo (react-native-maps) com dados mockados: marcadores, trajecto
- * simulado e zonas. Não usa GPS real nem serviços de rotas.
- */
+/** Mapa nativo (react-native-maps): marcadores, trajecto por estrada e zonas. */
 export function NativeMap({ markers = [], route, zones = [], static: isStatic, onZonePress }: MapPreviewProps) {
-  const { data: placeList = [] } = useAreas();
-  const routePoints = useMemo(() => (route ? mockRoute(route.from, route.to) : []), [route]);
+  const routePoints = useMemo(() => route?.points ?? (route ? [route.from, route.to] : []), [route]);
   const region = useMemo(() => {
     const pts = [...markers.map((m) => m.coords), ...routePoints, ...zones.map((z) => z.coords)];
-    return regionFor(pts.length ? pts : placeList.map((p) => p.coords));
-  }, [markers, routePoints, zones, placeList]);
+    return regionFor(pts.length ? pts : [LUANDA]);
+  }, [markers, routePoints, zones]);
 
   return (
     <MapView

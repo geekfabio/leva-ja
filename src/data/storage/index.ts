@@ -1,3 +1,3 @@
 export * from "./SecureStorage";
-export { MockSecureStorage } from "./MockSecureStorage";
+export { WebSecureStorage } from "./WebSecureStorage";
 export { SessionVault, type StoredSession } from "./SessionVault";

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { PaymentMethod, SavedAddress } from "@/types/domain";
-import { configureMock, dataSource, repositories } from "@/data";
+import { repositories } from "@/data";
 
 export type Preferences = {
   notifications: { serviceUpdates: boolean; promotions: boolean; sound: boolean };
@@ -8,10 +8,6 @@ export type Preferences = {
   language: "pt-PT" | "en";
   accessibility: { largerText: boolean; reduceMotion: boolean; highContrast: boolean };
   privacy: { shareTripStatus: boolean; analytics: boolean };
-  /** Simulação: estados do serviço avançam sozinhos no lado do cliente. */
-  autoAdvance: boolean;
-  /** Simulação: os repositórios mock falham como se não houvesse rede. */
-  simulateNetworkErrors: boolean;
 };
 
 type AccountState = {
@@ -58,8 +54,6 @@ export const useAccountStore = create<AccountState>((set, get) => {
       language: "pt-PT",
       accessibility: { largerText: false, reduceMotion: false, highContrast: false },
       privacy: { shareTripStatus: true, analytics: false },
-      autoAdvance: true,
-      simulateNetworkErrors: false,
     },
     readNotifications: [],
     hydrate: async (clientId) => {
@@ -72,7 +66,6 @@ export const useAccountStore = create<AccountState>((set, get) => {
     addCard: (last4) => run(() => repo().addCard(id(), last4)),
     setPreferences: (fn) => {
       const preferences = fn(get().preferences);
-      if (dataSource === "mock") configureMock({ failNetwork: preferences.simulateNetworkErrors });
       set({ preferences });
     },
     markNotificationsRead: (ids) => set((s) => ({ readNotifications: [...new Set([...s.readNotifications, ...ids])] })),

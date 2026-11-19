@@ -3,7 +3,6 @@ import { create } from "zustand";
 import type { DeliveryProofData, Photo, ServiceRequest, ServiceStatus } from "@/types/domain";
 import { repositories, type RequestActor } from "@/data";
 import { isDraftComplete } from "@/features/booking/validation";
-import { estimatePrice } from "@/features/booking/pricing";
 import type { BookingDraft } from "./useBookingStore";
 import { useSessionStore } from "./useSessionStore";
 
@@ -162,5 +161,3 @@ export function useRequest(id?: string | null) {
   return request;
 }
 
-/** Recalcula a estimativa de um rascunho (usado no ecrã de estimativa antes de criar o pedido). */
-export { estimatePrice };

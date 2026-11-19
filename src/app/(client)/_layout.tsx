@@ -3,8 +3,7 @@ import { useScreenTransition, useStackOptions, webScreenLayout, type TransitionK
 
 /** Ecrãs trocados pela mudança de estado do serviço: esbatem em vez de deslizar. */
 const statusScreens = ["trip/matching", "trip/found", "trip/arrived", "trip/in-transit", "trip/receipt"];
-const modalScreens = ["trip/call", "sos"];
-const kindFor = (route: string): TransitionKind => (statusScreens.includes(route) || route === "trip/call" ? "fade" : route === "sos" ? "modal" : "push");
+const kindFor = (route: string): TransitionKind => (statusScreens.includes(route) ? "fade" : route === "sos" ? "modal" : "push");
 const screenLayout = webScreenLayout(kindFor);
 
 /** Área do cliente: separadores, formulário de pedido, acompanhamento e conta. */
@@ -18,8 +17,7 @@ export default function ClientLayout() {
       {statusScreens.map((name) => (
         <Stack.Screen key={name} name={name} options={fade} />
       ))}
-      <Stack.Screen name={modalScreens[0]} options={{ ...fade, presentation: "fullScreenModal", gestureEnabled: false }} />
-      <Stack.Screen name={modalScreens[1]} options={{ ...modal, presentation: "modal" }} />
+      <Stack.Screen name="sos" options={{ ...modal, presentation: "modal" }} />
     </Stack>
   );
 }

@@ -11,7 +11,7 @@ import { colors } from "@/theme/colors";
 
 const RESEND_SECONDS = 45;
 
-/** 09 · Confirmar email com código de 6 dígitos (código de demonstração: 123456). */
+/** 09 · Confirmar email com código de 6 dígitos. */
 export default function VerifyEmailScreen() {
   const email = useSessionStore((s) => s.verificationEmail) ?? "o teu email";
   const purpose = useSessionStore((s) => s.verificationPurpose);
@@ -81,7 +81,7 @@ export default function VerifyEmailScreen() {
           onPress={() => {
             setLeft(RESEND_SECONDS);
             useSessionStore.getState().resendCode().catch(() => undefined);
-            toast.info({ title: "Código reenviado", message: "Verifica a tua caixa de correio (simulado)." });
+            toast.info({ title: "Código reenviado", message: "Verifica a tua caixa de correio." });
           }}
         />
       )}

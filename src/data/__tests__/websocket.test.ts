@@ -2,10 +2,10 @@ import { createApiRepositories } from "@/data/api/ApiRepositories";
 import { WebSocketRealtime, type SocketLike } from "@/data/api/WebSocketRealtime";
 import type { RealtimeChannel } from "@/data/api/realtime";
 import { http, setAuthTokens } from "@/data/http/client";
-import { MockDatabase } from "@/data/mock/database";
-import { DEMO_TOKEN } from "@/data/mock/demo";
-import { createMockServer } from "@/data/mock/server";
-import { places } from "@/mocks/places";
+import { MockDatabase } from "@/__test-support__/mock/database";
+import { DEMO_TOKEN } from "@/__test-support__/mock/demo";
+import { createMockServer } from "@/__test-support__/mock/server";
+import { places } from "@/__test-support__/mocks/places";
 
 const tick = (ms = 5) => new Promise((resolve) => setTimeout(resolve, ms));
 

@@ -6,7 +6,7 @@ import ReportScreen from "@/app/(client)/help/report";
 import AlertsScreen from "@/app/(client)/alerts";
 import EstimateStep from "@/app/(client)/booking/estimate";
 import { buildNotifications } from "@/features/notifications/build";
-import { resetMockDatabase } from "@/data";
+import { resetMockDatabase } from "@/__test-support__/mock";
 import { useAccountStore } from "@/stores/useAccountStore";
 import { useBookingStore } from "@/stores/useBookingStore";
 import { useServiceStore } from "@/stores/useServiceStore";

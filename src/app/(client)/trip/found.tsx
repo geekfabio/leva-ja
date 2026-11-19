@@ -6,27 +6,27 @@ import { AppText, PrimaryButton, ProviderCard, SecondaryButton, VehicleRow } fro
 import { ContactSheet } from "@/components/service/ContactSheet";
 import { MapSheetLayout } from "@/components/service/MapSheetLayout";
 import { NoActiveRequest } from "@/components/service/NoActiveRequest";
-import { useActiveClientRequest, useClientSimulation, useStatusRoute } from "@/features/service/useClientSimulation";
+import { callPhone } from "@/features/service/contact";
+import { useActiveClientRequest, useStatusRoute } from "@/features/service/useActiveRequest";
+import { useTripProgress } from "@/features/service/useTripProgress";
 import { go } from "@/features/navigation";
-import { approachStart } from "@/utils/geo";
 import { colors } from "@/theme/colors";
 
 /** 22 · Prestador encontrado. */
 export default function FoundScreen() {
   const request = useActiveClientRequest();
-  useClientSimulation(request);
   useStatusRoute(request, ["assigned", "en_route"]);
   const contact = useRef<BottomSheetModal>(null);
   const provider = request?.provider;
+  const { etaMin: eta, route } = useTripProgress(request);
   if (!request || !provider) return <NoActiveRequest />;
-  const eta = 8;
   return (
     <MapSheetLayout
       mapRatio={0.45}
       map={{
-        route: { from: approachStart(request.origin.coords), to: request.origin.coords },
+        route: { from: provider.coords, to: request.origin.coords, points: route?.points },
         markers: [
-          { id: "v", kind: "vehicle", coords: approachStart(request.origin.coords), bubble: `Chega em ${eta} min`, icon: request.kind === "tow" ? "tow" : "cargo" },
+          { id: "v", kind: "vehicle", coords: provider.coords, bubble: eta !== undefined ? `Chega em ${eta} min` : undefined, icon: request.kind === "tow" ? "tow" : "cargo" },
           { id: "o", kind: "destination", coords: request.origin.coords, label: request.origin.area },
         ],
       }}
@@ -54,7 +54,7 @@ export default function FoundScreen() {
         }}
         onCall={() => {
           contact.current?.dismiss();
-          go("/trip/call");
+          callPhone(provider.phone);
         }}
       />
     </MapSheetLayout>

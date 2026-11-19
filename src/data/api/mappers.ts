@@ -31,6 +31,7 @@ import type { Session } from "../repositories/AuthRepository";
 import type { ChatEvent } from "../repositories/ChatRepository";
 import type { NearbyVehicle } from "../repositories/LocationRepository";
 import type { CashBalance, Coverage, EarningsSummary, ProviderState } from "../repositories/ProviderRepository";
+import type { EstimateInput, Estimate } from "../repositories/PricingRepository";
 import type { NearbyRequest } from "../repositories/RequestRepository";
 import type { EmergencyContact, TicketInput } from "../repositories/SupportRepository";
 import type * as Dto from "./dto";
@@ -338,6 +339,27 @@ export const toCreateRequest = (body: CreateRequestBody): CreateRequestInput => 
   paymentMethod: orUndefined(body.payment_method),
   promoCode: orUndefined(body.promo_code),
 });
+
+export const fromEstimateInput = (input: EstimateInput) => ({
+  service_type: input.kind,
+  pickup: fromPlace(input.origin),
+  dropoff: fromPlace(input.destination),
+  stops: (input.stops ?? []).map(fromPlace),
+  tow_details: input.tow ? fromTow(input.tow) : null,
+  cargo_details: input.cargo ? fromCargo(input.cargo) : null,
+  moving_details: input.moving ? fromMoving(input.moving) : null,
+});
+export const toEstimateInput = (body: ReturnType<typeof fromEstimateInput>): EstimateInput => ({
+  kind: body.service_type,
+  origin: toPlace(body.pickup),
+  destination: toPlace(body.dropoff),
+  stops: body.stops.map(toPlace),
+  tow: body.tow_details ? toTow(body.tow_details) : undefined,
+  cargo: body.cargo_details ? toCargo(body.cargo_details) : undefined,
+  moving: body.moving_details ? toMoving(body.moving_details) : undefined,
+});
+export const toEstimate = (dto: D<typeof Dto.EstimateDto>): Estimate => ({ distanceKm: dto.distance_km, durationMin: dto.duration_min, price: toPrice(dto.pricing) });
+export const fromEstimate = (e: Estimate): D<typeof Dto.EstimateDto> => ({ distance_km: e.distanceKm, duration_min: e.durationMin, pricing: fromPrice(e.price) });
 
 export const fromProofInput = (p: Omit<DeliveryProofData, "at">) => ({ photos: p.photos.map(fromPhoto), signed_by: p.signedBy, good_condition: p.goodCondition, notes: orNull(p.notes) });
 export const toProofInput = (body: ReturnType<typeof fromProofInput>): Omit<DeliveryProofData, "at"> => ({

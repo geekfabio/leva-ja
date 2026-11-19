@@ -10,12 +10,12 @@ import { useProviderStore } from "@/stores/useProviderStore";
 import { enterApp, go } from "@/features/navigation";
 import { colors } from "@/theme/colors";
 
-/** 06 · Login com email e palavra-passe (validação simulada). */
+/** 06 · Login com email e palavra-passe. */
 export default function LoginScreen() {
   const role = useSessionStore((s) => s.role) ?? "client";
   const { control, handleSubmit, formState, setError } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: role === "provider" ? "joao.manuel@angoleva.ao" : "armando@email.com", password: "" },
+    defaultValues: { email: "", password: "" },
   });
   const submit = handleSubmit(async ({ email, password }) => {
     try {
@@ -88,7 +88,6 @@ export default function LoginScreen() {
       </View>
       <PrimaryButton label="Entrar" loading={formState.isSubmitting} onPress={submit} trailingIcon={<ArrowRight size={20} color={colors.white} />} />
       <AppText variant="caption" color={colors.muted} align="center">
-        Demonstração: usa qualquer email válido e uma palavra-passe com 6 ou mais caracteres.
       </AppText>
       <Divider />
       <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", flexWrap: "wrap" }}>

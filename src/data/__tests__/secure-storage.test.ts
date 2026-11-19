@@ -1,4 +1,5 @@
-import { MockSecureStorage, SessionVault } from "@/data/storage";
+import { SessionVault } from "@/data/storage";
+import { MockSecureStorage } from "@/__test-support__/MockSecureStorage";
 
 describe("armazenamento seguro (mock)", () => {
   it("guarda, lê e apaga como o expo-secure-store", async () => {

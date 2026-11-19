@@ -14,7 +14,7 @@ export function AppProviders({ children }: PropsWithChildren) {
     defaultOptions: { queries: { staleTime: 30_000, retry: 1 } },
   }));
 
-  // Os dados mockados vivem nas stores: qualquer alteração invalida as consultas correspondentes.
+  // Os dados vivem nas stores: qualquer alteração invalida as consultas correspondentes.
   useEffect(() => {
     const subs = [
       useServiceStore.subscribe(() => queryClient.invalidateQueries({ queryKey: ['service'] })),

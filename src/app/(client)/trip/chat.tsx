@@ -1,7 +1,7 @@
 import { ChatThread } from "@/components/service/ChatThread";
 import { NoActiveRequest } from "@/components/service/NoActiveRequest";
-import { useActiveClientRequest } from "@/features/service/useClientSimulation";
-import { go } from "@/features/navigation";
+import { useActiveClientRequest } from "@/features/service/useActiveRequest";
+import { callPhone } from "@/features/service/contact";
 
 /** 24 · Chat com o prestador do pedido activo. */
 export default function ClientChatScreen() {
@@ -14,7 +14,7 @@ export default function ClientChatScreen() {
       me="client"
      
       counterpart={{ name: provider.name, initials: provider.initials, photo: provider.avatar }}
-      onCall={() => go("/trip/call")}
+      onCall={() => callPhone(provider.phone)}
     />
   );
 }

@@ -1,4 +1,6 @@
-import { configureMock, MockSecureStorage, mockRuntime, resetMockDatabase, sessionVault, setSecureStorage } from "@/data";
+import { sessionVault, setSecureStorage } from "@/data";
+import { configureMock, mockRuntime, resetMockDatabase } from "@/__test-support__/mock";
+import { MockSecureStorage } from "@/__test-support__/MockSecureStorage";
 import { useSessionStore } from "@/stores/useSessionStore";
 
 const initial = useSessionStore.getState();

@@ -5,14 +5,13 @@ import { useProviderStore } from "@/stores/useProviderStore";
 import { useSessionStore } from "@/stores/useSessionStore";
 import { useLocationReporting } from "@/features/provider/useLocationReporting";
 import { colors } from "@/theme/colors";
-import { useScreenTransition, useStackOptions, webScreenLayout } from "@/components/core/ScreenTransitions";
+import { useStackOptions, webScreenLayout } from "@/components/core/ScreenTransitions";
 
-const screenLayout = webScreenLayout((route) => (route.startsWith("partner/call") ? "fade" : "push"));
+const screenLayout = webScreenLayout(() => "push");
 
 /** Área operacional do prestador. */
 export default function ProviderLayout() {
   const options = useStackOptions("push");
-  const fade = useScreenTransition("fade");
   const providerId = useSessionStore((s) => s.providerId);
   const ready = useProviderStore((s) => !!s.profile && s.providerId === providerId);
   useLocationReporting();
@@ -28,7 +27,6 @@ export default function ProviderLayout() {
   return (
     <Stack screenOptions={options} screenLayout={screenLayout}>
       <Stack.Screen name="partner/(tabs)" />
-      <Stack.Screen name="partner/call/[id]" options={{ ...fade, presentation: "fullScreenModal", gestureEnabled: false }} />
     </Stack>
   );
 }

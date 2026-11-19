@@ -1,9 +1,9 @@
 import * as map from "@/data/api/mappers";
 import * as Dto from "@/data/api/dto";
 import { RepositoryError } from "@/data/repositories/types";
-import { MockDatabase } from "@/data/mock/database";
-import { MockRequestRepository } from "@/data/mock/MockRequestRepository";
-import { places } from "@/mocks/places";
+import { MockDatabase } from "@/__test-support__/mock/database";
+import { MockRequestRepository } from "@/__test-support__/mock/MockRequestRepository";
+import { places } from "@/__test-support__/mocks/places";
 
 function setup() {
   const database = new MockDatabase();

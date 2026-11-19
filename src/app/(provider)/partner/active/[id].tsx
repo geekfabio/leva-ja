@@ -2,11 +2,13 @@ import { useRef } from "react";
 import { View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
-import { ArrowLeft, Camera, Clock3, Ellipsis, Flag, Layers, LocateFixed, PackageCheck, Siren } from "lucide-react-native";
-import { AppHeader, AppText, Avatar, Card, ContactActions, EmptyState, IconButton, InfoNote, ListRow, PrimaryButton, ScreenContainer, SecondaryButton, ServiceTimeline, SheetModal, StatusBadge, VehicleImage } from "@/components/kit";
+import { ArrowLeft, Camera, Clock3, Ellipsis, Flag, PackageCheck, Siren } from "lucide-react-native";
+import { AppHeader, AppText, Avatar, Card, ContactActions, EmptyState, IconButton, InfoNote, ListRow, PrimaryButton, ScreenContainer, ServiceTimeline, SheetModal, StatusBadge, VehicleImage } from "@/components/kit";
 import { MapSheetLayout } from "@/components/service/MapSheetLayout";
 import { serviceTitle } from "@/features/booking/catalog";
 import { providerAction, statusLabel } from "@/features/service/stateMachine";
+import { callPhone } from "@/features/service/contact";
+import { useRoute } from "@/features/map/useRoute";
 import { repositories } from "@/data";
 import { useRequest, useServiceStore } from "@/stores/useServiceStore";
 import { unreadCount, useChatStore } from "@/stores/useChatStore";
@@ -36,6 +38,8 @@ export default function ActiveServiceScreen() {
   const vehicle = me.vehicle;
   const unread = useChatStore((s) => unreadCount(id ? s.threads[id] : undefined, "provider"));
   const more = useRef<BottomSheetModal>(null);
+  const going = !!request && ["assigned", "en_route"].includes(request.status);
+  const { data: route } = useRoute(me.coords, request ? (going || request.status === "arrived" ? request.origin.coords : request.destination.coords) : undefined);
   if (!request || request.status === "searching" || request.status === "cancelled")
     return (
       <ScreenContainer header={<AppHeader title="Serviço em curso" />}>
@@ -45,16 +49,15 @@ export default function ActiveServiceScreen() {
   const client = clientOf(request);
   const action = providerAction[request.status];
   const step = ["assigned", "en_route", "arrived"].includes(request.status) ? 0 : request.status === "pickup_confirmed" ? 1 : request.status === "in_transit" ? 1 : 2;
-  const going = ["assigned", "en_route"].includes(request.status);
   const start = me.coords;
   const steps = going ? ["Pedido aceite", "A caminho", "No local"] : ["Recolha concluída", "Em transporte", "Confirmar entrega"];
   const stepIndex = going ? (request.status === "assigned" ? 0 : 1) : step === 0 ? 0 : step;
-  const eta = going ? 8 : Math.round(request.durationMin / 2);
+  const eta = route ? Math.max(1, Math.round(route.durationMin)) : undefined;
 
   const run = async () => {
     if (!action) return;
     if (action.to === "proof") return go(`/partner/proof/${request.id}`);
-    const ok = await useServiceStore.getState().transition(request.id, action.to, action.to === "pickup_confirmed" ? "system" : "provider");
+    const ok = await useServiceStore.getState().transition(request.id, action.to, "provider");
     if (ok) toast.success(statusLabel[action.to]);
     else toast.error({ title: "Não foi possível actualizar", message: useServiceStore.getState().lastError ?? undefined });
   };
@@ -73,7 +76,6 @@ export default function ActiveServiceScreen() {
           ) : (
             <InfoNote tone="soft" title="A aguardar o cliente">O cliente está a confirmar a recolha na app.</InfoNote>
           )}
-          <SecondaryButton label="Simular confirmação do cliente" disabled={!request.pickupPhotos.length} onPress={run} />
         </>
       );
     if (action) return <PrimaryButton label={action.label} icon={action.to === "proof" ? <PackageCheck size={22} color={colors.white} /> : undefined} onPress={run} />;
@@ -84,7 +86,7 @@ export default function ActiveServiceScreen() {
     <MapSheetLayout
       mapRatio={0.46}
       map={{
-        route: going ? { from: start, to: request.origin.coords } : { from: request.origin.coords, to: request.destination.coords },
+        route: going ? { from: start, to: request.origin.coords, points: route?.points } : { from: request.origin.coords, to: request.destination.coords },
         markers: going
           ? [
               { id: "v", kind: "vehicle", coords: start, icon: request.kind === "tow" ? "tow" : "cargo" },
@@ -92,7 +94,7 @@ export default function ActiveServiceScreen() {
             ]
           : [
               { id: "o", kind: "origin", coords: request.origin.coords, label: request.origin.area },
-              { id: "v", kind: "vehicle", coords: request.status === "in_transit" ? { latitude: (request.origin.coords.latitude + request.destination.coords.latitude) / 2, longitude: (request.origin.coords.longitude + request.destination.coords.longitude) / 2 } : request.origin.coords, icon: request.kind === "tow" ? "tow" : "cargo" },
+              { id: "v", kind: "vehicle", coords: start, icon: request.kind === "tow" ? "tow" : "cargo" },
               { id: "d", kind: "destination", coords: request.destination.coords, label: request.destination.area },
             ],
       }}
@@ -104,10 +106,6 @@ export default function ActiveServiceScreen() {
               <AppText variant="h3">Serviço em curso</AppText>
             </View>
             <IconButton variant="floating" label="Mais opções" icon={<Ellipsis size={22} color={colors.ink} />} onPress={() => more.current?.present()} />
-          </View>
-          <View style={{ alignItems: "flex-end", gap: 10 }}>
-            <IconButton variant="floating" label="Centrar" icon={<LocateFixed size={22} color={colors.ink} />} onPress={() => toast.info("Mapa centrado")} />
-            <IconButton variant="floating" label="Camadas do mapa" icon={<Layers size={22} color={colors.ink} />} onPress={() => toast.info("Camadas indisponíveis no mapa simulado")} />
           </View>
         </View>
       }
@@ -131,13 +129,13 @@ export default function ActiveServiceScreen() {
             {subtitleFor[request.status]?.(request.destination.area, request.origin.area)}
           </AppText>
         </View>
-        <ContactActions variant="compact" unread={unread} onChat={() => go(`/partner/chat/${request.id}`)} onCall={() => go(`/partner/call/${request.id}`)} />
+        <ContactActions variant="compact" unread={unread} onChat={() => go(`/partner/chat/${request.id}`)} onCall={() => callPhone(client.phone)} />
       </View>
       <ServiceTimeline steps={steps} current={stepIndex} />
       <View style={{ flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: colors.primarySoft, borderRadius: 14, padding: 14 }}>
         <Clock3 size={22} color={colors.ink} />
         <AppText variant="title" weight="medium">
-          Previsão: <AppText variant="title">{eta} min</AppText>
+          Previsão: <AppText variant="title">{eta !== undefined ? `${eta} min` : "—"}</AppText>
         </AppText>
         <View style={{ flex: 1 }} />
         <AppText variant="label" color={colors.primary}>

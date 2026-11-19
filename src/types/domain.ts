@@ -106,7 +106,7 @@ export type Provider = {
   verified: boolean;
   avatar?: string;
   vehicle: Vehicle;
-  /** Posição simulada actual. */
+  /** Posição actual (o GPS do prestador, enviado à API). */
   coords: Coordinates;
 };
 

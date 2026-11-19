@@ -48,8 +48,8 @@ type Me = ChatMessage["from"];
 const NO_MESSAGES: ChatMessage[] = [];
 
 /**
- * Conversa simulada (ref. 24): mensagens locais, resposta automática do outro
- * lado e indicação "a escrever…". Não há envio real nem anexos.
+ * Conversa do pedido (ref. 24): mensagens do ChatRepository, em tempo real.
+ * Não há anexos.
  */
 export function ChatThread({
   threadId,

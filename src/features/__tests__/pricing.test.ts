@@ -1,5 +1,6 @@
 import { cargoVehicleOptions, goodsVehicleOptions, suggestVehicle, vehicleForWeight } from "@/features/booking/catalog";
-import { estimatePrice, needsProposal, PLATFORM_FEE, providerEarningFor, recommendVehicle } from "@/features/booking/pricing";
+import { needsProposal, recommendVehicle } from "@/features/booking/pricing";
+import { estimatePrice, PLATFORM_FEE, providerEarningFor } from "@/__test-support__/mock/pricing";
 
 describe("estimativa de preço", () => {
   it("reproduz a referência: carga com pickup e ajudante, 18 km = 12 500 Kz", () => {
@@ -31,8 +32,8 @@ describe("estimativa de preço", () => {
   });
 
   it("recomenda a viatura e indica quando há proposta", () => {
-    expect(recommendVehicle({ kind: "tow", distanceKm: 5 }).art).toBe("tow");
-    expect(recommendVehicle({ kind: "cargo", distanceKm: 5, cargo: { vehicleClass: "pickup", helper: true } }).title).toBe("Pickup com ajudante");
+    expect(recommendVehicle({ kind: "tow" }).art).toBe("tow");
+    expect(recommendVehicle({ kind: "cargo", cargo: { vehicleClass: "pickup", helper: true } }).title).toBe("Pickup com ajudante");
     expect(needsProposal("house_move")).toBe(true);
     expect(needsProposal("cargo")).toBe(false);
   });
@@ -40,7 +41,7 @@ describe("estimativa de preço", () => {
   it("recomenda tuk-tuk e preço mais leve para entregas pequenas", () => {
     const tukTuk = estimatePrice({ kind: "cargo", distanceKm: 5, cargo: { weight: "upto100", volume: "small", vehicleClass: "tuk_tuk", helper: false } });
     const pickup = estimatePrice({ kind: "cargo", distanceKm: 5, cargo: { weight: "upto100", volume: "small", vehicleClass: "pickup", helper: false } });
-    expect(recommendVehicle({ kind: "cargo", distanceKm: 5, cargo: { vehicleClass: "tuk_tuk" } }).art).toBe("tuk_tuk");
+    expect(recommendVehicle({ kind: "cargo", cargo: { vehicleClass: "tuk_tuk" } }).art).toBe("tuk_tuk");
     expect(tukTuk.total).toBeLessThan(pickup.total);
   });
 });

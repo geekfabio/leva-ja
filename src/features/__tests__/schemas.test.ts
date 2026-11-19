@@ -1,7 +1,7 @@
 import { cargoSchema, movingSchema, routeSchema, scheduleSchema, towVehicleSchema } from "@/features/booking/schemas";
 import { loginSchema, registerSchema, registerSecuritySchema } from "@/features/auth/schemas";
 import { proofSchema, proposalSchema, withdrawSchema } from "@/features/provider/schemas";
-import { places } from "@/mocks/places";
+import { places } from "@/__test-support__/mocks/places";
 
 const messages = (r: { success: boolean; error?: { issues: { message: string }[] } }) => r.error?.issues.map((i) => i.message) ?? [];
 

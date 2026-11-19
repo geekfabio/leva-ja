@@ -1,11 +1,11 @@
 import { useMemo, useRef, useState } from "react";
 import { Pressable, View } from "react-native";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { ArrowRight, Banknote, Info, Package, Tag, UserRound } from "lucide-react-native";
-import { AppHeader, AppText, BrandLogo, Card, Divider, EmptyState, InfoNote, MapPreview, PriceSummary, PrimaryButton, RouteSummary, ScreenContainer, SecondaryButton, SheetModal, TextButton, TextField, VehicleImage, AnimatedAmount } from "@/components/kit";
+import { AppHeader, AppText, BrandLogo, Card, Divider, EmptyState, ErrorState, InfoNote, LoadingState, MapPreview, PriceSummary, PrimaryButton, RouteSummary, ScreenContainer, SecondaryButton, SheetModal, TextButton, TextField, VehicleImage, AnimatedAmount } from "@/components/kit";
 import { bookingSteps, serviceTitle } from "@/features/booking/catalog";
-import { estimatePrice, payable, recommendVehicle } from "@/features/booking/pricing";
+import { payable, recommendVehicle } from "@/features/booking/pricing";
 import { draftIssues } from "@/features/booking/validation";
 import { repositories } from "@/data";
 import { useBookingStore } from "@/stores/useBookingStore";
@@ -15,7 +15,7 @@ import { formatKz } from "@/utils/format";
 import { swap } from "@/features/navigation";
 import { toast } from "@/lib/toast";
 import { colors } from "@/theme/colors";
-import type { PromoPreview } from "@/types/domain";
+import type { CargoDetails, MovingDetails, PromoPreview, TowDetails } from "@/types/domain";
 
 /** 20 · Estimativa e confirmação do pedido. */
 export default function EstimateStep() {
@@ -23,16 +23,31 @@ export default function EstimateStep() {
   const clientId = useSessionStore((s) => s.user.id);
   const detail = useRef<BottomSheetModal>(null);
   const issues = useMemo(() => draftIssues(draft), [draft]);
-  const distanceKm = draft.origin && draft.destination ? repositories().locations.distanceKm(draft.origin, draft.destination) : 0;
-  const input = { kind: draft.kind, distanceKm, tow: draft.tow, cargo: draft.cargo, moving: draft.moving };
-  const estimate = estimatePrice(input);
-  const vehicle = recommendVehicle(input);
+  const ready = !issues.length && !!draft.origin && !!draft.destination;
+  // Preço e trajecto vêm do servidor, com a tabela de preços do painel.
+  const quote = useQuery({
+    queryKey: ["estimate", draft.kind, draft.origin?.id, draft.destination?.id, draft.stops.map((s) => s.id), draft.tow, draft.cargo, draft.moving],
+    queryFn: () =>
+      repositories().pricing.estimate({
+        kind: draft.kind,
+        origin: draft.origin!,
+        destination: draft.destination!,
+        stops: draft.stops,
+        tow: draft.kind === "tow" ? (draft.tow as TowDetails) : undefined,
+        cargo: draft.kind === "cargo" ? (draft.cargo as CargoDetails) : undefined,
+        moving: draft.kind === "small_move" || draft.kind === "house_move" ? (draft.moving as MovingDetails) : undefined,
+      }),
+    enabled: ready,
+    staleTime: 60_000,
+  });
+  const estimate = quote.data?.price;
+  const distanceKm = quote.data?.distanceKm ?? 0;
+  const vehicle = recommendVehicle({ kind: draft.kind, tow: draft.tow, cargo: draft.cargo, moving: draft.moving });
   const [code, setCode] = useState(draft.promoCode ?? "");
   const [promo, setPromo] = useState<PromoPreview | null>(null);
-  const price = promo ? { ...estimate, discount: Math.min(promo.discount, estimate.total), discountLabel: promo.label } : estimate;
 
   const applyPromo = useMutation({
-    mutationFn: () => repositories().discounts.validatePromo({ code: code.trim(), kind: draft.kind, origin: draft.origin!.coords, total: estimate.total }),
+    mutationFn: () => repositories().discounts.validatePromo({ code: code.trim(), kind: draft.kind, origin: draft.origin!.coords, total: estimate!.total }),
     onSuccess: (preview) => {
       setPromo(preview);
       useBookingStore.getState().patch({ promoCode: preview.code });
@@ -55,7 +70,7 @@ export default function EstimateStep() {
     onError: (error) => toast.error({ title: "Não foi possível criar o pedido", message: error instanceof Error && error.message ? error.message : "Revê os dados e tenta novamente." }),
   });
 
-  if (issues.length || !draft.origin || !draft.destination)
+  if (!ready || !draft.origin || !draft.destination)
     return (
       <ScreenContainer header={<AppHeader title="O teu pedido" />}>
         <EmptyState
@@ -66,6 +81,14 @@ export default function EstimateStep() {
         />
       </ScreenContainer>
     );
+
+  if (quote.isLoading || quote.isError || !estimate)
+    return (
+      <ScreenContainer header={<AppHeader title="O teu pedido" />}>
+        {quote.isError ? <ErrorState onRetry={quote.refetch} /> : <LoadingState rows={3} label="A calcular o preço" />}
+      </ScreenContainer>
+    );
+  const price = promo ? { ...estimate, discount: Math.min(promo.discount, estimate.total), discountLabel: promo.label } : estimate;
 
   return (
     <ScreenContainer
@@ -167,7 +190,7 @@ export default function EstimateStep() {
       <SheetModal ref={detail} title="Detalhe da estimativa">
         <PriceSummary price={price} detailed totalLabel="Total estimado" />
         <AppText variant="caption" color={colors.muted}>
-          Calculado com {distanceKm} km de trajecto, o tipo de serviço e os extras escolhidos. Valores simulados.
+          Calculado com {distanceKm} km de trajecto, o tipo de serviço e os extras escolhidos, com a tabela de preços da AngoLeva.
         </AppText>
       </SheetModal>
     </ScreenContainer>

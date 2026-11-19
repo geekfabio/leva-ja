@@ -1,7 +1,6 @@
 import { View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
-  ArrowLeftRight,
   CircleHelp,
   Gift,
   History,
@@ -20,7 +19,7 @@ import {
   Appear,
 } from "@/components/kit";
 import { useSessionStore } from "@/stores/useSessionStore";
-import { enterApp, go } from "@/features/navigation";
+import { go } from "@/features/navigation";
 import { colors } from "@/theme/colors";
 
 /** 31 · Perfil do cliente: histórico, endereços, pagamentos, definições e ajuda. */
@@ -125,17 +124,6 @@ export default function AccountScreen() {
               icon={<CircleHelp {...icon} />}
               title="Ajuda e suporte"
               onPress={() => go("/help")}
-            />
-          </Appear>
-          <Appear index={5} delay={120}>
-            <ListRow
-              icon={<ArrowLeftRight {...icon} />}
-              title="Mudar para prestador"
-              subtitle="Abre a área profissional (demonstração)"
-              onPress={() => {
-                useSessionStore.getState().setRole("provider");
-                enterApp("provider");
-              }}
             />
           </Appear>
         </View>

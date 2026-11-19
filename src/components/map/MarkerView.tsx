@@ -5,7 +5,7 @@ import { AppText } from "@/components/core/AppText";
 import type { MapMarker } from "./types";
 import { TowTruckIcon } from "@/components/service/ServiceIcon";
 
-/** Aparência dos marcadores, partilhada pelo mapa nativo e pelo mapa mock. */
+/** Aparência dos marcadores, partilhada pelo mapa nativo e pelo mapa web. */
 export function MarkerView({ marker }: { marker: MapMarker }) {
   const bubble = marker.bubble ? (
     <View style={[{ backgroundColor: colors.card, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, marginLeft: 6 }, shadow.card]}>

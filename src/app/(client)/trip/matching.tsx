@@ -4,10 +4,9 @@ import { AppText, Avatar, BrandLogo, Card, ChoiceChip, ConfirmDialog, DotsIndica
 import { MapSheetLayout } from "@/components/service/MapSheetLayout";
 import { NoActiveRequest } from "@/components/service/NoActiveRequest";
 import { serviceTitle } from "@/features/booking/catalog";
-import { useActiveClientRequest, useClientSimulation, useStatusRoute } from "@/features/service/useClientSimulation";
+import { useActiveClientRequest, useStatusRoute } from "@/features/service/useActiveRequest";
 import { useNegotiationActions, useRequestNegotiations } from "@/features/service/useNegotiations";
 import { useServiceStore } from "@/stores/useServiceStore";
-import { useAccountStore } from "@/stores/useAccountStore";
 import { formatRating } from "@/utils/format";
 import { swap } from "@/features/navigation";
 import { toast } from "@/lib/toast";
@@ -18,9 +17,7 @@ const reasons = ["Já não preciso", "Demora demasiado", "Enganei-me nos dados",
 /** 21 · A procurar prestador: negociações de preço abertas por diferentes prestadores. */
 export default function MatchingScreen() {
   const request = useActiveClientRequest();
-  useClientSimulation(request);
   useStatusRoute(request, ["searching"]);
-  const autoAdvance = useAccountStore((s) => s.preferences.autoAdvance);
   const [dot, setDot] = useState(0);
   const [confirm, setConfirm] = useState(false);
   const [reason, setReason] = useState(reasons[0]!);
@@ -110,11 +107,6 @@ export default function MatchingScreen() {
             </View>
           </Card>
           <DotsIndicator count={3} active={dot} />
-          {!autoAdvance ? (
-            <AppText variant="caption" color={colors.muted} align="center">
-              Simulação automática desligada: aceita o pedido na área do prestador.
-            </AppText>
-          ) : null}
         </>
       )}
       <ConfirmDialog

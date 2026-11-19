@@ -36,7 +36,7 @@ export default function EditProfileScreen() {
       </View>
       <Controller control={control} name="name" render={({ field, fieldState }) => <TextField label="Nome completo" icon={<UserRound size={20} color={colors.muted} />} value={field.value} onChangeText={field.onChange} error={fieldState.error?.message} />} />
       <Controller control={control} name="email" render={({ field, fieldState }) => <TextField label="Email" icon={<Mail size={20} color={colors.muted} />} keyboardType="email-address" autoCapitalize="none" value={field.value} onChangeText={field.onChange} error={fieldState.error?.message} />} />
-      <Controller control={control} name="phone" render={({ field, fieldState }) => <TextField label="Telefone" icon={<Phone size={20} color={colors.muted} />} keyboardType="phone-pad" value={field.value} onChangeText={field.onChange} error={fieldState.error?.message} hint="Vais receber um código para confirmar um número novo (simulado)." />} />
+      <Controller control={control} name="phone" render={({ field, fieldState }) => <TextField label="Telefone" icon={<Phone size={20} color={colors.muted} />} keyboardType="phone-pad" value={field.value} onChangeText={field.onChange} error={fieldState.error?.message} />} />
     </ScreenContainer>
   );
 }

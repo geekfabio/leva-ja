@@ -17,14 +17,14 @@ export const clientCopy: Partial<Record<ServiceStatus, (r: ServiceRequest) => [s
   en_route: (r) => ["Prestador a caminho", `Segue para ${r.origin.area}.`],
   arrived: () => ["O prestador chegou", "Confirma a viatura antes de começar."],
   in_transit: (r) => ["Em transporte", `A caminho de ${r.destination.area}.`],
-  delivered: () => ["Serviço concluído", "Escolhe como queres pagar."],
+  delivered: () => ["Serviço concluído", "Paga ao prestador em numerário."],
   paid: (r) => ["Pagamento confirmado", `Recibo ${r.code} disponível.`],
   cancelled: (r) => ["Pedido cancelado", r.cancelReason ?? "Não foi cobrado nenhum valor."],
 };
 
 /**
- * Notificações simuladas, derivadas dos dados mockados (cronologia dos pedidos,
- * transacções e documentos). Com backend, chegam por push e ficam guardadas na API.
+ * Notificações derivadas dos dados reais (cronologia dos pedidos, transacções e
+ * documentos). O push do servidor ainda não existe: aparecem aqui ao abrir a app.
  */
 export function buildNotifications(
   role: Role,
@@ -46,7 +46,6 @@ export function buildNotifications(
         });
       }
     }
-    items.push({ id: "promo-luanda", title: "10% na próxima mudança", body: "Usa o código LUANDA10 até ao fim do mês (demonstração).", at: new Date(Date.now() - 3 * 86_400_000).toISOString(), kind: "promo" });
   } else {
     for (const r of data.requests.filter((x) => x.status === "searching" && !x.providerId).slice(0, 3)) {
       items.push({ id: `new-${r.id}`, title: `Novo pedido: ${serviceTitle[r.kind]}`, body: `${r.origin.area} → ${r.destination.area} · ganho ${formatKz(r.providerEarning)}`, at: r.createdAt, kind: "service", href: `/partner/request/${r.id}` });

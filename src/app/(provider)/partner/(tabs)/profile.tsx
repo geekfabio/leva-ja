@@ -1,6 +1,5 @@
 import { View } from "react-native";
 import {
-  ArrowLeftRight,
   ChevronRight,
   CircleHelp,
   FileText,
@@ -20,9 +19,8 @@ import {
   Appear,
 } from "@/components/kit";
 import { useProviderStore } from "@/stores/useProviderStore";
-import { useSessionStore } from "@/stores/useSessionStore";
 import { formatRating } from "@/utils/format";
-import { enterApp, go } from "@/features/navigation";
+import { go } from "@/features/navigation";
 import { colors } from "@/theme/colors";
 import { useMyProvider } from "@/features/provider/useProvider";
 
@@ -124,17 +122,6 @@ export default function ProviderProfile() {
           icon={<CircleHelp {...icon} />}
           title="Ajuda e suporte"
           onPress={() => go("/help")}
-        />
-      </Appear>
-      <Appear index={4} delay={120}>
-        <ListRow
-          icon={<ArrowLeftRight {...icon} />}
-          title="Mudar para cliente"
-          subtitle="Abre a área de pedidos (demonstração)"
-          onPress={() => {
-            useSessionStore.getState().setRole("client");
-            enterApp("client");
-          }}
         />
       </Appear>
     </ScreenContainer>

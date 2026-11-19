@@ -17,6 +17,13 @@ const areaRoutes = ["index", "(auth)", "(client)", "(provider)"];
 const rootKind = (route: string): TransitionKind => (areaRoutes.includes(route) ? "fade" : "push");
 const rootScreenLayout = webScreenLayout(rootKind);
 
+// Só nos testes e2e (EXPO_PUBLIC_E2E=1): liga a app a um servidor falso em memória. Nos outros builds o
+// Metro troca `__test-support__` por um módulo vazio (metro.config.js), por isso nada disto vai para a app.
+if (process.env.EXPO_PUBLIC_E2E === "1") {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  require("@/__test-support__/bootstrap").installTestBackend({ autoAdvance: true });
+}
+
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
 export default function RootLayout() {

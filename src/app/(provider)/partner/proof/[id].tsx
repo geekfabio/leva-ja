@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { View } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { useMutation } from "@tanstack/react-query";
@@ -6,8 +6,8 @@ import { ArrowRight, BadgeCheck, CircleCheck, MapPin } from "lucide-react-native
 import { AppHeader, AppText, Card, DeliveryProofForm, Divider, EmptyState, IconCircle, PrimaryButton, ScreenContainer, ServiceIcon, TextField, VehicleImage } from "@/components/kit";
 import { Avatar } from "@/components/core/Avatar";
 import { serviceTitle } from "@/features/booking/catalog";
+import { repositories } from "@/data";
 import { proofSchema } from "@/features/provider/schemas";
-import { deviceFeatures, repositories } from "@/data";
 import { useRequest, useServiceStore } from "@/stores/useServiceStore";
 import type { Photo } from "@/types/domain";
 import { formatKz } from "@/utils/format";
@@ -24,13 +24,6 @@ export default function DeliveryProofScreen() {
   const me = useMyProvider();
   const vehicle = me.vehicle;
   const [photos, setPhotos] = useState<Photo[]>([]);
-  // Na demonstração, começa com três fotos de exemplo; com a câmara real, começa vazio.
-  useEffect(() => {
-    if (deviceFeatures.camera !== "simulated") return;
-    Promise.all([0, 1, 2].map((i) => repositories().media.capture("delivery", i)))
-      .then((list) => setPhotos(list.filter((p): p is Photo => !!p)))
-      .catch(() => undefined);
-  }, []);
   const [signed, setSigned] = useState(false);
   const [good, setGood] = useState(true);
   const [notes, setNotes] = useState("");

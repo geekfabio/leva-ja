@@ -2,14 +2,14 @@ import * as map from "@/data/api/mappers";
 import * as Dto from "@/data/api/dto";
 import { createApiRepositories } from "@/data/api/ApiRepositories";
 import { http } from "@/data/http/client";
-import { MockDatabase } from "@/data/mock/database";
-import { MockDiscountRepository } from "@/data/mock/MockDiscountRepository";
-import { MockProviderRepository } from "@/data/mock/MockProviderRepository";
-import { MockRequestRepository } from "@/data/mock/MockRequestRepository";
-import { DEMO_DRIVER_BONUS, DEMO_PROMO, DEMO_REFERRAL, referralCodeFor } from "@/data/mock/discounts";
-import { createMockServer } from "@/data/mock/server";
+import { MockDatabase } from "@/__test-support__/mock/database";
+import { MockDiscountRepository } from "@/__test-support__/mock/MockDiscountRepository";
+import { MockProviderRepository } from "@/__test-support__/mock/MockProviderRepository";
+import { MockRequestRepository } from "@/__test-support__/mock/MockRequestRepository";
+import { DEMO_DRIVER_BONUS, DEMO_PROMO, DEMO_REFERRAL, referralCodeFor } from "@/__test-support__/mock/discounts";
+import { createMockServer } from "@/__test-support__/mock/server";
 import { payable } from "@/features/booking/pricing";
-import { places } from "@/mocks/places";
+import { places } from "@/__test-support__/mocks/places";
 
 const CLIENT = "cli-armando";
 

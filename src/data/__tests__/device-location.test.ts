@@ -1,9 +1,9 @@
 import { createApiRepositories } from "@/data/api/ApiRepositories";
 import { http } from "@/data/http/client";
-import { SimulatedDeviceLocation } from "@/data/mock/device";
-import { MockDatabase } from "@/data/mock/database";
-import { createMockServer } from "@/data/mock/server";
-import { places, userLocation } from "@/mocks/places";
+import { SimulatedDeviceLocation } from "@/__test-support__/mock/device";
+import { MockDatabase } from "@/__test-support__/mock/database";
+import { createMockServer } from "@/__test-support__/mock/server";
+import { places, userLocation } from "@/__test-support__/mocks/places";
 
 jest.mock("expo-location", () => ({
   Accuracy: { Balanced: 3 },

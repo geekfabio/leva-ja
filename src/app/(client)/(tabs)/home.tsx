@@ -36,7 +36,7 @@ export default function ClientHome() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <View style={{ height: "48%" }}>
-        <MapPreview height="100%" markers={markers} pulse accessibilityLabel="Mapa de Luanda com prestadores próximos (simulado)" />
+        <MapPreview height="100%" markers={markers} pulse accessibilityLabel="Mapa de Luanda com prestadores próximos" />
         <SafeAreaView edges={["top"]} style={{ position: "absolute", left: 0, right: 0, top: 0, paddingHorizontal: 16, paddingTop: 6, flexDirection: "row", alignItems: "flex-start" }}>
           <View style={{ flex: 1, backgroundColor: "rgba(255,255,255,0.85)", alignSelf: "flex-start", borderRadius: radius.md, paddingHorizontal: 10, paddingVertical: 6 }}>
             <BrandLogo size="sm" tagline="Reboque • Carga • Mudança" />

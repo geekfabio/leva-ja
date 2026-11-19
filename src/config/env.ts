@@ -7,22 +7,16 @@ import { z } from "zod";
  */
 const schema = z
   .object({
-    dataSource: z.enum(["mock", "http"]).default("mock"),
-    apiUrl: z.string().url("EXPO_PUBLIC_API_URL tem de ser um URL (ex.: https://api.angoleva.ao/v1).").optional(),
+    apiUrl: z
+      .string({ required_error: "EXPO_PUBLIC_API_URL é obrigatório: é o endereço da API (ex.: https://api.angoleva.ao)." })
+      .url("EXPO_PUBLIC_API_URL tem de ser um URL (ex.: https://api.angoleva.ao)."),
     apiTimeoutMs: z.coerce.number().int().positive().default(10_000),
     pollIntervalMs: z.coerce.number().int().min(1_000).default(5_000),
     /** WebSocket do tempo real (ex.: wss://api.angoleva.ao/v1/realtime). Sem ele, a app usa polling. */
     realtimeUrl: z.string().url("EXPO_PUBLIC_REALTIME_URL tem de ser um URL ws:// ou wss://.").optional(),
-    secureStorage: z.enum(["mock", "device"]).default("mock"),
-    /** GPS: `simulated` (ponto em Luanda) ou `device`. Por omissão, simulado com dados mock e real com a API. */
-    location: z.enum(["simulated", "device"]).optional(),
-    /** Fotografias: `simulated` (fotos de exemplo) ou `device` (câmara/galeria + envio). Mesma regra por omissão. */
-    camera: z.enum(["simulated", "device"]).optional(),
-  })
-  .superRefine((value, ctx) => {
-    if (value.dataSource === "http" && !value.apiUrl) {
-      ctx.addIssue({ code: "custom", path: ["apiUrl"], message: "EXPO_PUBLIC_DATA_SOURCE=http exige EXPO_PUBLIC_API_URL." });
-    }
+    /** Mapa: servidor de tiles OpenStreetMap e de rotas OSRM. Os públicos são só para desenvolvimento. */
+    mapTilesUrl: z.string().default("https://tile.openstreetmap.org/{z}/{x}/{y}.png"),
+    routingUrl: z.string().url().default("https://router.project-osrm.org"),
   });
 
 export type AppEnv = z.infer<typeof schema>;
@@ -39,18 +33,10 @@ export function parseEnv(raw: Partial<Record<keyof AppEnv, string | undefined>>)
 }
 
 export const env = parseEnv({
-  dataSource: process.env.EXPO_PUBLIC_DATA_SOURCE,
   apiUrl: process.env.EXPO_PUBLIC_API_URL,
   apiTimeoutMs: process.env.EXPO_PUBLIC_API_TIMEOUT_MS,
   pollIntervalMs: process.env.EXPO_PUBLIC_POLL_INTERVAL_MS,
   realtimeUrl: process.env.EXPO_PUBLIC_REALTIME_URL,
-  secureStorage: process.env.EXPO_PUBLIC_SECURE_STORAGE,
-  location: process.env.EXPO_PUBLIC_LOCATION,
-  camera: process.env.EXPO_PUBLIC_CAMERA,
+  mapTilesUrl: process.env.EXPO_PUBLIC_MAP_TILES_URL,
+  routingUrl: process.env.EXPO_PUBLIC_ROUTING_URL,
 });
-
-/** Origem da posição do utilizador. */
-export const locationSource = env.location ?? (env.dataSource === "http" ? "device" : "simulated");
-
-/** Origem das fotografias. */
-export const cameraSource = env.camera ?? (env.dataSource === "http" ? "device" : "simulated");

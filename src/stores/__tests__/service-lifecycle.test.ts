@@ -1,12 +1,13 @@
-import { repositories, resetMockDatabase, setAuthTokens, setRepositories } from "@/data";
+import { repositories, setAuthTokens, setRepositories } from "@/data";
+import { resetMockDatabase } from "@/__test-support__/mock";
 import { RepositoryError } from "@/data/repositories/types";
-import { DEMO_TOKEN } from "@/data/mock/demo";
+import { DEMO_TOKEN } from "@/__test-support__/mock/demo";
 import { useServiceStore } from "@/stores/useServiceStore";
 import { useProviderStore } from "@/stores/useProviderStore";
 import { useBookingStore } from "@/stores/useBookingStore";
 import { useSessionStore } from "@/stores/useSessionStore";
-import { places } from "@/mocks/places";
-import { deliveryPhotos } from "@/mocks/photos";
+import { places } from "@/__test-support__/mocks/places";
+import { deliveryPhotos } from "@/__test-support__/mocks/photos";
 
 function cargoDraft() {
   const booking = useBookingStore.getState();

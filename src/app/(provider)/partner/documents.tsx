@@ -7,7 +7,7 @@ import { useProviderStore } from "@/stores/useProviderStore";
 import { toast } from "@/lib/toast";
 import { colors } from "@/theme/colors";
 
-/** 43 · Documentos e estado de validação. O envio é simulado e valida-se sozinho. */
+/** 43 · Documentos e estado de validação pela equipa da AngoLeva. */
 export default function DocumentsScreen() {
   const documents = useProviderStore((s) => s.documents);
   const [selected, setSelected] = useState(() => documents.find((d) => d.state !== "verified")?.id ?? documents[0]?.id);
@@ -15,7 +15,7 @@ export default function DocumentsScreen() {
   const submit = async () => {
     if (!doc) return;
     if (!(await useProviderStore.getState().submitDocument(doc.id))) return toast.error("Não foi possível enviar o documento");
-    toast.success({ title: "Documento enviado", message: `${doc.title} está em análise (simulado).` });
+    toast.success({ title: "Documento enviado", message: `${doc.title} está em análise.` });
   };
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>

@@ -7,7 +7,7 @@ import { ContactSheet } from "@/components/service/ContactSheet";
 import { MapSheetLayout } from "@/components/service/MapSheetLayout";
 import { NoActiveRequest } from "@/components/service/NoActiveRequest";
 import { SuccessBurst } from "@/components/service/SuccessBurst";
-import { useActiveClientRequest, useStatusRoute } from "@/features/service/useClientSimulation";
+import { useActiveClientRequest, useStatusRoute } from "@/features/service/useActiveRequest";
 import { go } from "@/features/navigation";
 import { colors, radius } from "@/theme/colors";
 

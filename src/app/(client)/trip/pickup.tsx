@@ -3,7 +3,7 @@ import { Pressable, View } from "react-native";
 import { ArrowRight, Check, CheckCircle2, Circle, ShieldCheck } from "lucide-react-native";
 import { AppHeader, AppText, Card, Divider, PhotoCount, PhotoTile, PrimaryButton, ScreenContainer, ScreenTitle } from "@/components/kit";
 import { NoActiveRequest } from "@/components/service/NoActiveRequest";
-import { useActiveClientRequest, useStatusRoute } from "@/features/service/useClientSimulation";
+import { useActiveClientRequest, useStatusRoute } from "@/features/service/useActiveRequest";
 import { useServiceStore } from "@/stores/useServiceStore";
 import { swap } from "@/features/navigation";
 import { toast } from "@/lib/toast";

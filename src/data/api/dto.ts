@@ -302,6 +302,17 @@ export const CreateRequestBodyDto = z.object({
   promo_code: z.string().nullable().default(null),
 });
 
+export const EstimateBodyDto = CreateRequestBodyDto.pick({
+  service_type: true,
+  pickup: true,
+  dropoff: true,
+  stops: true,
+  tow_details: true,
+  cargo_details: true,
+  moving_details: true,
+});
+export const EstimateDto = z.object({ distance_km: z.number(), duration_min: z.number(), pricing: PricingDto });
+
 export const ProofBodyDto = ProofDto.omit({ delivered_at: true });
 export const VehiclePatchDto = VehicleDto.omit({ id: true }).partial();
 export const ProfilePatchDto = z.object({ full_name: z.string().min(1), email: z.string().email(), phone: z.string() }).partial();

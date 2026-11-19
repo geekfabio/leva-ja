@@ -2,50 +2,49 @@ import { useRef } from "react";
 import { View } from "react-native";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { router } from "expo-router";
-import { ArrowLeft, Clock3, FileText, LocateFixed, Phone } from "lucide-react-native";
+import { ArrowLeft, Clock3, FileText, Phone } from "lucide-react-native";
 import { AppText, Card, IconButton, PriceSummary, PrimaryButton, ProviderCard, RouteTimeline, SecondaryButton, ServiceTimeline, SheetModal, Appear } from "@/components/kit";
 import { ContactSheet } from "@/components/service/ContactSheet";
 import { MapSheetLayout } from "@/components/service/MapSheetLayout";
 import { NoActiveRequest } from "@/components/service/NoActiveRequest";
 import { serviceTitle } from "@/features/booking/catalog";
 import { describeLoad } from "@/features/booking/factory";
-import { clientAutoAdvance } from "@/features/service/stateMachine";
-import { useActiveClientRequest, useClientSimulation, useStageProgress, useStatusRoute } from "@/features/service/useClientSimulation";
-import { mockRoute, pointAlong } from "@/utils/geo";
+import { callPhone } from "@/features/service/contact";
+import { useActiveClientRequest, useProviderLocationPolling, useStatusRoute } from "@/features/service/useActiveRequest";
+import { useAnimatedProviderPosition } from "@/features/service/useProviderPosition";
+import { useTripProgress } from "@/features/service/useTripProgress";
 import { go } from "@/features/navigation";
-import { toast } from "@/lib/toast";
 import { colors } from "@/theme/colors";
 
 /** 28 · Em transporte para o destino. */
 export default function InTransitScreen() {
   const request = useActiveClientRequest();
-  useClientSimulation(request);
   useStatusRoute(request, ["pickup_confirmed", "in_transit"]);
-  const progress = useStageProgress(request, "in_transit", clientAutoAdvance.in_transit!.afterMs);
+  useProviderLocationPolling(request);
+  const { etaMin, route } = useTripProgress(request);
   const contact = useRef<BottomSheetModal>(null);
   const details = useRef<BottomSheetModal>(null);
   const provider = request?.provider;
+  const position = useAnimatedProviderPosition(provider?.coords);
   if (!request || !provider) return <NoActiveRequest />;
   const moving = request.status === "in_transit";
-  const position = pointAlong(mockRoute(request.origin.coords, request.destination.coords), moving ? progress : 0);
-  const eta = Math.max(1, Math.round(request.durationMin * (1 - (moving ? progress : 0))));
+  const eta = moving && etaMin !== undefined ? etaMin : request.durationMin;
   const what = request.kind === "tow" ? "A tua viatura segue" : "A tua carga segue";
 
   return (
     <MapSheetLayout
       mapRatio={0.52}
       map={{
-        route: { from: request.origin.coords, to: request.destination.coords },
+        route: { from: request.origin.coords, to: request.destination.coords, points: moving ? route?.points : undefined },
         markers: [
           { id: "o", kind: "origin", coords: request.origin.coords, label: request.origin.area },
-          { id: "v", kind: "vehicle", coords: position, icon: request.kind === "tow" ? "tow" : "cargo" },
+          { id: "v", kind: "vehicle", coords: position ?? provider.coords, icon: request.kind === "tow" ? "tow" : "cargo" },
           { id: "d", kind: "destination", coords: request.destination.coords, label: request.destination.area },
         ],
       }}
       overlay={
         <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
           <IconButton variant="floating" label="Voltar" icon={<ArrowLeft size={22} color={colors.ink} />} onPress={() => (router.canGoBack() ? router.back() : go("/home"))} />
-          <IconButton variant="floating" label="Centrar mapa" icon={<LocateFixed size={22} color={colors.ink} />} onPress={() => toast.info("Mapa centrado na viatura")} />
         </View>
       }
       footer={
@@ -78,7 +77,7 @@ export default function InTransitScreen() {
       <Card>
         <ProviderCard provider={provider} layout="rating" onPress={() => contact.current?.present()} />
       </Card>
-      <ContactSheet ref={contact} name={provider.name} onChat={() => { contact.current?.dismiss(); go("/trip/chat"); }} onCall={() => { contact.current?.dismiss(); go("/trip/call"); }} />
+      <ContactSheet ref={contact} name={provider.name} onChat={() => { contact.current?.dismiss(); go("/trip/chat"); }} onCall={() => { contact.current?.dismiss(); callPhone(provider.phone); }} />
       <SheetModal ref={details} title={serviceTitle[request.kind]}>
         <AppText variant="caption" color={colors.muted}>
           Pedido {request.code} · {describeLoad(request)}

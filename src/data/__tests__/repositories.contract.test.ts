@@ -3,10 +3,10 @@ import { RepositoryError } from "@/data";
 import { getAuthToken, http } from "@/data/http/client";
 import { WebSocketRealtime } from "@/data/api/WebSocketRealtime";
 import { createApiRepositories } from "@/data/api/ApiRepositories";
-import { createMockRepositories } from "@/data/mock";
-import { MockDatabase } from "@/data/mock/database";
-import { createMockServer } from "@/data/mock/server";
-import { places } from "@/mocks/places";
+import { createMockRepositories } from "@/__test-support__/mock";
+import { MockDatabase } from "@/__test-support__/mock/database";
+import { createMockServer } from "@/__test-support__/mock/server";
+import { places } from "@/__test-support__/mocks/places";
 
 /** Espera que a condição se cumpra (o tempo real por polling não é imediato). */
 async function eventually(check: () => boolean, timeoutMs = 1000) {

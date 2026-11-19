@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { View } from "react-native";
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ChevronRight, LocateFixed, Navigation, Radio, SlidersHorizontal, Wallet } from "lucide-react-native";
+import { ChevronRight, Navigation, Radio, SlidersHorizontal, Wallet } from "lucide-react-native";
 import { AppText, Avatar, Card, EmptyState, ErrorState, IconButton, IconCircle, LoadingState, MapPreview, OrderCard, PrimaryButton, VehicleImage, type MapMarker, Appear, AnimatedAmount } from "@/components/kit";
 import { AvailabilityToggle } from "@/components/partner/AvailabilityToggle";
 import { serviceTitle } from "@/features/booking/catalog";
@@ -41,9 +41,8 @@ export default function ProviderDashboard() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <View style={{ height: "44%" }}>
-        <MapPreview height="100%" markers={markers} accessibilityLabel="Mapa com pedidos próximos (simulado)" />
+        <MapPreview height="100%" markers={markers} accessibilityLabel="Mapa com pedidos próximos" />
         <SafeAreaView edges={["top"]} style={{ position: "absolute", right: 16, top: 4, gap: 10 }}>
-          <IconButton variant="floating" label="Centrar na minha posição" icon={<LocateFixed size={22} color={colors.ink} />} onPress={() => toast.info("Posição simulada: Maculusso")} />
           <IconButton variant="floating" label="Navegação" icon={<Navigation size={22} color={colors.ink} />} onPress={() => (active ? go(`/partner/active/${active.id}`) : toast.info("Sem serviço activo para navegar"))} />
         </SafeAreaView>
       </View>

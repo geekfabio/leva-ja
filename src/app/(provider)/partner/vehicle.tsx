@@ -1,10 +1,10 @@
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { View } from "react-native";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { BadgeCheck, Calendar, Car, CircleCheck, ImagePlus, Package, Pencil, Settings2, Weight } from "lucide-react-native";
-import { AppHeader, AppText, Avatar, Card, Divider, PhotoTile, PrimaryButton, ScreenContainer, SecondaryButton, ServiceIcon, SheetModal, TextField } from "@/components/kit";
+import { BadgeCheck, Calendar, Car, CircleCheck, Package, Pencil, Settings2, Weight } from "lucide-react-native";
+import { AppHeader, AppText, Avatar, Card, Divider, PhotoTile, PrimaryButton, ScreenContainer, ServiceIcon, SheetModal, TextField } from "@/components/kit";
 import { serviceShortTitle } from "@/features/booking/catalog";
 import { vehicleSchema, type VehicleForm } from "@/features/provider/schemas";
 import { useProviderStore } from "@/stores/useProviderStore";
@@ -18,7 +18,6 @@ export default function VehicleScreen() {
   const me = useMyProvider();
   const vehicle = me.vehicle;
   const services = useProviderStore((s) => s.services);
-  const [photos, setPhotos] = useState(1);
   const edit = useRef<BottomSheetModal>(null);
   const { control, handleSubmit, reset } = useForm<VehicleForm>({
     resolver: zodResolver(vehicleSchema),
@@ -27,7 +26,7 @@ export default function VehicleScreen() {
   const save = handleSubmit(async (values) => {
     if (!(await useProviderStore.getState().updateVehicle(values))) return toast.error("Não foi possível guardar a viatura");
     edit.current?.dismiss();
-    toast.success({ title: "Viatura actualizada", message: "A alteração fica sujeita a validação (simulada)." });
+    toast.success({ title: "Viatura actualizada", message: "A alteração fica sujeita a validação." });
   });
   const rows: [React.ReactNode, string, string][] = [
     [<Settings2 key="a" size={18} color={colors.muted} />, "Marca e modelo", `${vehicle.brand} ${vehicle.model}`],
@@ -61,7 +60,7 @@ export default function VehicleScreen() {
             <AppText variant="h3">{vehicle.plate}</AppText>
           </View>
           <AppText variant="body" color={colors.muted}>
-            {vehicle.categoryLabel} · {photos} {photos === 1 ? "fotografia" : "fotografias"}
+            {vehicle.categoryLabel}
           </AppText>
           <Divider />
           <View style={{ flexDirection: "row" }}>
@@ -92,7 +91,6 @@ export default function VehicleScreen() {
         </View>
       </Card>
       <PrimaryButton label="Editar viatura" icon={<Pencil size={20} color={colors.white} />} onPress={() => { reset({ brand: vehicle.brand, model: vehicle.model, plate: vehicle.plate, capacityKg: vehicle.capacityKg }); edit.current?.present(); }} />
-      <SecondaryButton label="Adicionar fotografias" icon={<ImagePlus size={20} color={colors.primary} />} onPress={() => { setPhotos((p) => p + 1); toast.success("Fotografia adicionada (simulada)"); }} />
       <Card style={{ gap: 10 }}>
         <AppText variant="title">Detalhes da viatura</AppText>
         {rows.map(([icon, label, value]) => (

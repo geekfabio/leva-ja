@@ -1,7 +1,7 @@
 import { formatFloor, formatKz, formatNumber, formatSignedKz, initialsOf, maskPhone, parseAmount } from "@/utils/format";
 import { dayGroupLabel } from "@/utils/date";
-import { mockRoute, pointAlong } from "@/utils/geo";
-import { places, roadDistanceKm } from "@/mocks/places";
+import { mockRoute, pointAlong } from "@/__test-support__/mock/geo";
+import { places, roadDistanceKm } from "@/__test-support__/mocks/places";
 
 describe("formatação pt-PT", () => {
   it("valores em kwanzas com espaço de milhares", () => {

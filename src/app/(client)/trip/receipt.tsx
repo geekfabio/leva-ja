@@ -188,7 +188,7 @@ export default function ReceiptScreen() {
         <PriceSummary price={request.price} detailed totalLabel="Total pago" />
         {request.proof ? <DeliveryProofSummary proof={request.proof} /> : null}
         <AppText variant="tiny" color={colors.muted}>
-          Documento sem valor fiscal — dados de demonstração.
+          Documento sem valor fiscal.
         </AppText>
       </SheetModal>
     </ScreenContainer>
