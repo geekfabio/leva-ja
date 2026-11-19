@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 import { press, tap, trackErrors } from "./helpers";
 
 test("prestador: aceita um pedido próximo, conclui o serviço e recebe o ganho", async ({ page }) => {
@@ -14,13 +14,16 @@ test("prestador: aceita um pedido próximo, conclui o serviço e recebe o ganho"
   await press(page, "Cheguei ao local");
   await press(page, "Registar fotos da carga");
   await expect(page.getByText("Fotos registadas").first()).toBeVisible();
-  await press(page, "Simular confirmação do cliente");
+  // O cliente confirma a recolha na app dele (o servidor falso confirma por ele depois das fotos).
+  await expect(page.getByText("A aguardar o cliente").first()).toBeVisible();
   await press(page, "Iniciar transporte");
   await press(page, "Confirmar entrega");
 
   await page.waitForURL(/\/partner\/proof\/req-near-1/);
-  // O cliente assina com o dedo: um traço na área de assinatura.
+  // Foto da entrega (o servidor falso devolve uma de exemplo) e assinatura do cliente com o dedo.
+  await press(page, "Tirar foto da entrega");
   const pad = page.getByLabel(/Área de assinatura/).first();
+  await pad.scrollIntoViewIfNeeded();
   const box = (await pad.boundingBox())!;
   await page.mouse.move(box.x + 30, box.y + box.height / 2);
   await page.mouse.down();

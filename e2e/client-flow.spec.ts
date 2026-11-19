@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 import { tap, trackErrors } from "./helpers";
 
 test("cliente: pedido de carga do início ao recibo, pago em numerário, sem ecrã de pagamento", async ({ page }) => {

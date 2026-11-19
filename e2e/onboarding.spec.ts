@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 import { tap, trackErrors } from "./helpers";
 
 test.describe("entrada na app", () => {
