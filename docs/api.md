@@ -8,9 +8,9 @@ Este documento descreve a API REST que a app consome, no formato exacto de fio.
 | Tradução JSON ↔ modelo da app | `src/data/api/mappers.ts` |
 | Chamadas da app | `src/data/api/ApiRepositories.ts` |
 | Exemplos reais de respostas | `src/data/api/__fixtures__/*.json` |
-| API simulada (backend da fase mock) | `src/data/mock/server.ts` |
+| Servidor falso (só testes) | `src/__test-support__/mock/server.ts` |
 
-A API simulada responde a todos estes endpoints neste formato. Por omissão, a app já recebe os dados mockados assim e passa pelo mesmo caminho que vai usar com o backend real. É uma **especificação executável**: se o backend se comportar como ela, a app funciona sem alterações.
+A app usa estes endpoints contra a API real (`api/`). O servidor falso dos testes responde-lhes no mesmo formato e é uma **especificação executável**: se o backend se comportar como ela, a app funciona sem alterações.
 
 ## Convenções
 
@@ -154,7 +154,7 @@ Há três tópicos, e cada mensagem traz JSON no formato acima:
 
 ## Regras de acesso
 
-O servidor decide sempre com base no token. A API simulada aplica estas regras (`src/data/mock/server.ts`, testadas em `api-security.test.ts`):
+O servidor decide sempre com base no token. A API simulada aplica estas regras (`src/__test-support__/mock/server.ts`, testadas em `api-security.test.ts`):
 
 | Recurso | Quem |
 | --- | --- |
@@ -170,7 +170,7 @@ O servidor decide sempre com base no token. A API simulada aplica estas regras (
 | `proposal/answer`, `payments`, `rating` | o cliente do pedido |
 | `pickup-photos`, `proof` | o prestador atribuído |
 
-Em modo demonstração, a app simula os outros intervenientes (o prestador que aceita, o cliente que confirma a recolha), por isso a API simulada aceita aí `actor: system` e propostas em nome de prestadores simulados. Com `createMockServer(db, { simulation: false })` comporta-se como o backend real.
+A app já não simula os outros intervenientes: cada transição é feita pelo actor real.
 
 ## Pedidos de serviço
 
@@ -189,7 +189,7 @@ Em modo demonstração, a app simula os outros intervenientes (o prestador que a
 | POST | `/requests/:id/proof` | `{ photos, signed_by, good_condition, notes }` | `ServiceRequest` (`delivered`; credita o ganho) |
 | POST | `/requests/:id/rating` | `{ rating: 1–5, review }` | `ServiceRequest` (`rated`) |
 
-**Regras que o servidor tem de garantir** (hoje estão nos serviços mock, `src/data/mock/Mock*Repository.ts`):
+**Regras que o servidor tem de garantir** (hoje estão nos serviços mock, `src/__test-support__/mock/Mock*Repository.ts`):
 
 - **Máquina de estados:** `searching → assigned → en_route → arrived → pickup_confirmed → in_transit → delivered → paid → rated`.
   - Cancelar só é possível em `searching`, `assigned`, `en_route` e `arrived`.
@@ -301,7 +301,7 @@ Na demonstração, a API simulada entrega as notificações por um serviço inte
 | --- | --- | --- | --- |
 | POST | `/uploads` | `multipart/form-data`: `file` (imagem) e `context` (`cargo` \| `vehicle` \| `delivery` \| `document`) | `201`, `{ data: { id, url, content_type } }`; 422 se faltar o ficheiro ou se não for uma imagem |
 
-A app tira a foto (câmara ou, sem câmara, galeria; `src/data/device/DeviceCamera.ts`) e envia-a. O `url` devolvido é o que vai nos pedidos (`photos[].url`). Na demonstração (`EXPO_PUBLIC_CAMERA=simulated`), as fotos são imagens de exemplo empacotadas, referidas por chave; o `imageSource` aceita as duas formas.
+A app tira a foto (câmara ou, sem câmara, galeria; `src/data/device/DeviceCamera.ts`) e envia-a. O `url` devolvido é o que vai nos pedidos (`photos[].url`). 
 
 ## Pagamento em numerário, descontos e convites
 
@@ -317,7 +317,7 @@ Por agora o único meio de pagamento é dinheiro em mão: a app cria todos os pe
 
 `pricing.total_kz` é sempre o preço completo; o cliente entrega ao prestador `total_kz - discount_kz`. Sem `promo_code`, o servidor aplica sozinho o desconto de convite mais antigo por usar (um desconto por pedido). O desconto e o bónus por corrida (transacção `bonus` na carteira) são pagos pela plataforma: contam como crédito do prestador em `balance_kz`.
 
-Na demonstração, o código `LUANDA10` dá 10 % (até 1 500 Kz, uma vez por cliente), os convites valem 500 Kz para cada lado e o bónus é de 250 Kz por corrida (`src/data/mock/discounts.ts`).
+Nos testes, o código `LUANDA10` dá 10 % (até 1 500 Kz, uma vez por cliente), os convites valem 500 Kz para cada lado e o bónus é de 250 Kz por corrida (`src/__test-support__/mock/discounts.ts`).
 
 ## Ainda por integrar
 

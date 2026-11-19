@@ -1,6 +1,6 @@
 # AngoLeva
 
-Aplicação mobile de assistência, transporte e logística em Luanda: reboque de viaturas, transporte de carga com pickup, pequenas mudanças e mudanças completas de casa. Tem dois perfis — **Cliente** e **Prestador de Serviço** — e, nesta fase, funciona inteiramente com dados mockados, sem backend.
+Aplicação mobile de assistência, transporte e logística em Luanda: reboque de viaturas, transporte de carga com pickup, pequenas mudanças e mudanças completas de casa. Tem dois perfis — **Cliente** e **Prestador de Serviço** — e fala sempre com a API real (`EXPO_PUBLIC_API_URL`): pedidos, preços, prestadores e zonas vêm da base de dados.
 
 O projecto chamava-se **Leva Já**. Com a mudança para AngoLeva passaram a ser `angoleva`: o nome do pacote npm, o slug Expo, o esquema de links (`angoleva://`), os identificadores Android/iOS (`ao.angoleva.app`), as chaves do armazenamento seguro (`angoleva.*`), o domínio de demonstração (`@angoleva.ao`) e o prefixo dos códigos de pedido (`AL-`). O repositório GitHub mantém o nome `leva-ja`.
 
@@ -12,18 +12,12 @@ A interface segue as 46 referências documentadas em [docs/ui-reference.md](docs
 npm install
 npx expo start            # development build (script "start" usa --dev-client)
 npx expo start --go       # Expo Go
-npx expo start --web      # pré-visualização no browser (mapa ilustrativo em SVG)
+npx expo start --web      # pré-visualização no browser (mapa OpenStreetMap)
 ```
 
-Fluxo de entrada: **splash → onboarding → escolha de perfil → login**. Os acessos são locais:
+Fluxo de entrada: **splash → onboarding → escolha de perfil → login**. A conta é criada na API; o código de confirmação (OTP) chega por SMS/e-mail. Enquanto não houver fornecedor configurado, a API usa um código fixo definido em `OTP_FIXED_CODE` (ver `api/README.md`).
 
-| Perfil | Como entrar | Dados |
-| --- | --- | --- |
-| Cliente | Escolhe «Preciso de um serviço» e entra | `armando@email.com` + qualquer palavra-passe com 6+ caracteres |
-| Prestador | Escolhe «Sou prestador» e entra | `joao.manuel@angoleva.ao` + qualquer palavra-passe com 6+ caracteres |
-| Registo / recuperação | «Criar conta» ou «Esqueci-me da palavra-passe» | Código de confirmação `123456` |
-
-Atalho: no perfil de cada área existe «Mudar para prestador/cliente».
+Antes de arrancar, define `EXPO_PUBLIC_API_URL` num `.env` (ver `.env.example`).
 
 ### Verificações
 
@@ -34,7 +28,7 @@ npm test            # Jest: lógica de negócio, API (contrato, segurança, temp
 npm run test:e2e    # Playwright: gera o build web e percorre a app no browser
 ```
 
-A suite E2E (`e2e/`) abre todas as rotas e verifica que nenhuma dá erro. Corre também três percursos completos com a API simulada:
+A suite E2E (`e2e/`) abre todas as rotas e verifica que nenhuma dá erro. Corre também três percursos completos. Nos testes (e só neles, `EXPO_PUBLIC_E2E=1`) a API é um servidor falso em memória, em `src/__test-support__/`, que o Metro exclui das builds de produção:
 
 - a entrada na app (onboarding, login e localização);
 - o pedido do cliente até ao recibo, com o pagamento por referência Multicaixa confirmado pelo «banco»;
@@ -76,12 +70,12 @@ src/
 
 Os ecrãs e as stores nunca importam mocks: falam com repositórios (`src/data`). Cada repositório tem um contrato (`AuthRepository`, `RequestRepository`, `ProviderRepository`, `LocationRepository`, `ChatRepository`, `AccountRepository`, `SupportRepository`, `MediaRepository`). A implementação é sempre a da API (`src/data/api`): recebe JSON no formato do backend (`snake_case`, envelopes `{ data }`), valida-o com Zod e converte-o para o domínio com mappers.
 
-- **mock** (por omissão): quem responde é uma **API simulada dentro da app** (`src/data/mock/server.ts`), sobre dados de demonstração. Simula latência, erros, falhas de rede e tempo real por socket.
-- **http**: o backend real em `EXPO_PUBLIC_API_URL` (`EXPO_PUBLIC_DATA_SOURCE=http`), com tempo real por polling até haver WebSocket.
+- **Produção e desenvolvimento**: o backend real em `EXPO_PUBLIC_API_URL`; o tempo real chega por WebSocket (`EXPO_PUBLIC_REALTIME_URL`) e, sem ele, por polling.
+- **Testes**: Jest e Playwright injectam um servidor falso em memória (`src/__test-support__/`, `installTestBackend()`). O Metro substitui qualquer import desse caminho por um módulo vazio, por isso nenhuma build de produção o inclui.
 
 A configuração está em `.env` (copiar de [.env.example](.env.example)). O contrato que o backend tem de cumprir está em [docs/api.md](docs/api.md).
 
-A sessão (token e perfil) e o fim do onboarding ficam no **armazenamento seguro** (`SecureStorage` + `SessionVault`), retomados no splash. Por omissão é um SecureStore simulado em memória; com `EXPO_PUBLIC_SECURE_STORAGE=device` passa a usar o `expo-secure-store` (Keychain/Keystore) no Android e iOS.
+A sessão (token e perfil) e o fim do onboarding ficam no **armazenamento seguro** (`SecureStorage` + `SessionVault`), retomados no splash: `expo-secure-store` (Keychain/Keystore) no Android e iOS e `localStorage` na web.
 
 Detalhes, regras e passos para ligar a API em [docs/arquitectura.md](docs/arquitectura.md).
 
@@ -144,23 +138,19 @@ Ecrãs de apoio: `/trips` (as minhas viagens), `/alerts` (notificações do clie
 - Carga (e entrega de mercadoria): tipo, descrição, peso, volume, pickup/carrinha/camião, ajudante → trajecto → fotos.
 - Mudança pequena / de casa: tipo de imóvel e divisões (só casa), mobília, ajudantes, pisos, elevador → data e desmontagem → trajecto → fotos.
 
-A estimativa (`features/booking/pricing.ts`) soma base, distância e extras, arredonda a 500 Kz e acrescenta 500 Kz de taxa; o ganho do prestador desconta 15% de comissão.
+O preço vem do servidor (`POST /pricing/estimate`): distância, extras, taxa e ganho do prestador são calculados na API, com as tarifas e zonas da base de dados.
 
 **Estados do serviço.** `features/service/stateMachine.ts` define o fluxo partilhado: a procurar → atribuído → a caminho → no local → recolha confirmada → em transporte → entregue → pago → avaliado (cancelamento só antes da recolha). Cada transição tem um actor (cliente, prestador ou sistema) e fica registada na cronologia do pedido.
 
-**Simulação.** Do lado do cliente, os estados que viriam do servidor avançam sozinhos (prestador atribuído em ~4 s, chegada ~15 s, entrega ~15 s). Nas mudanças de casa, o prestador simulado envia uma proposta que o cliente aceita ou recusa. Em **Definições → Demonstração** é possível:
-
-- desligar o avanço automático e conduzir o mesmo pedido pela área do prestador (aceitar, deslocar, registar fotos, transportar, comprovativo);
-- simular falhas de rede para ver os estados de erro das listas;
-- repor os dados de demonstração.
-
-**Sem integrações reais.** Pagamentos (referência Multicaixa, cartão, numerário), localização (posição fixa em Luanda), chamadas, chat (respostas automáticas), câmara (fotos de exemplo), assinatura (desenhada mas não enviada), documentos, levantamentos e notificações são simulados. Nenhum dado sai do dispositivo e a sessão reinicia ao fechar a app.
+**Sem simulação.** Os estados do pedido avançam por acção do prestador, do cliente ou do painel, nunca sozinhos. A posição, a câmara e as notificações vêm sempre do dispositivo. O pagamento é só em numerário, entregue ao prestador.
 
 **Imagens.** As ilustrações, fotos de carga/entrega, a Hilux e os retratos de João Manuel e Armando Manuel são recortes das próprias referências (`assets/illustrations`, `assets/photos`, `assets/avatars`); as viaturas 3D vêm de `assets/vehicles/fleet-3d.png`, separadas em ficheiros individuais.
 
 ## Mapa
 
-`MapPreview` usa `react-native-maps` no Android e iOS, com marcadores, trajecto simulado e zonas mockadas. Na web, nos testes ou com `EXPO_PUBLIC_MOCK_MAP=1` usa um mapa ilustrativo em SVG, sem rede. No Android, uma build de produção precisa de uma chave Google Maps (`android.config.googleMaps.apiKey` no `app.json`); sem ela os marcadores aparecem sobre um fundo vazio — usa `EXPO_PUBLIC_MOCK_MAP=1` nesse caso.
+`MapPreview` usa `react-native-maps` no Android e iOS e mosaicos OpenStreetMap na web (`EXPO_PUBLIC_MAP_TILES_URL`). Trajecto e tempo estimado vêm de um serviço OSRM (`EXPO_PUBLIC_ROUTING_URL`); se falhar, a app mostra a linha recta e uma estimativa aproximada. Os prestadores e os pedidos próximos aparecem nas coordenadas reais da API.
+
+Passos manuais: no Android, uma build de produção precisa de uma chave Google Maps (`android.config.googleMaps.apiKey` no `app.json`, criada na consola Google Cloud e restringida ao pacote `ao.angoleva.app`); sem ela o mapa fica em branco. Os servidores públicos do OSM e do OSRM não servem tráfego de produção: aponta as duas variáveis para um fornecedor próprio.
 
 ## Animações
 
@@ -189,8 +179,6 @@ O protótipo anterior (separadores `/legacy`, fluxos `request/`, `transport/`, `
 
 ## Limites conhecidos
 
-- Os dados mockados vivem em memória (`MockDatabase`) e voltam ao início ao recarregar a app.
-- O armazenamento seguro mock também é em memória: a sessão é retomada enquanto a app estiver aberta (ex.: voltar ao splash), não depois de a fechar. Para persistir de verdade no dispositivo, usar `EXPO_PUBLIC_SECURE_STORAGE=device`.
-- A revisão visual e os testes E2E correm no browser (Playwright, 390 × 844). As builds Android e iOS foram exportadas mas não testadas em dispositivo. GPS, câmara, notificações push e WebSocket reais (`device` / `EXPO_PUBLIC_REALTIME_URL`) estão testados com módulos simulados e precisam de validação num telemóvel — ver [design-qa.md](design-qa.md).
+- A revisão visual e os testes E2E correm no browser (Playwright, 390 × 844). As builds Android e iOS foram exportadas mas não testadas em dispositivo. GPS, câmara, notificações push e WebSocket reais estão testados com módulos simulados e precisam de validação num telemóvel — ver [design-qa.md](design-qa.md).
 - As notificações push reais precisam de `extra.eas.projectId` no `app.json` (projecto EAS) e de uma development build; no Expo Go não há push remoto.
-- O processador de pagamentos é simulado: a forma da API está fechada (`docs/api.md` → Pagamentos), falta ligar a EMIS / Multicaixa Express e a tokenização de cartões no backend.
+- Só há pagamento em numerário; Multicaixa e cartão ficam para mais tarde.
